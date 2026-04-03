@@ -120,7 +120,6 @@
     }
 
     function loadData() {
-        // [연도에 따른 시트명 동적 생성]
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
@@ -129,7 +128,6 @@
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                // [강력한 컬럼 찾기] GameChanger 리포트의 긴 이름들을 포함하여 검색
                 const getIdx = (names) => headers.findIndex(h => names.some(n => h === n || h.includes(n)));
                 
                 const lnIdx = getIdx(['LAST NAME', 'PLAYER', 'NAME']);
@@ -138,43 +136,56 @@
                 const ipIdx = getIdx(['INNINGS PITCHED', 'IP', 'INN']);
 
                 const hCols = [
-                    {label: '타율', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
-                    {label: '홈런', id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
-                    {label: '타점', id: 'RBI', idx: getIdx(['RUNS BATTED IN', 'RBI'])},
+                    {label: (currentYear === '2026' ? '타율' : 'AVG'), id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
+                    {label: (currentYear === '2026' ? '홈런' : 'HR'), id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
+                    {label: (currentYear === '2026' ? '타점' : 'RBI'), id: 'RBI', idx: getIdx(['RUNS BATTED IN', 'RBI'])},
                     {label: 'OPS', id: 'OPS', idx: getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']), fix: 3},
-                    {label: '안타', id: 'H', idx: getIdx(['HITS', 'H'])},
-                    {label: '출루율', id: 'OBP', idx: getIdx(['ON-BASE PERCENTAGE', 'OBP']), fix: 3}
+                    {label: (currentYear === '2026' ? '안타' : 'H'), id: 'H', idx: getIdx(['HITS', 'H'])},
+                    {label: (currentYear === '2026' ? '출루율' : 'OBP'), id: 'OBP', idx: getIdx(['ON-BASE PERCENTAGE', 'OBP']), fix: 3}
                 ];
 
                 const pCols = [
-                    {label: '방어율', id: 'ERA', idx: getIdx(['EARNED RUN AVERAGE', 'ERA']), fix: 2},
-                    {label: '승', id: 'W', idx: getIdx(['WINS', 'W'])},
-                    {label: '이닝', id: 'IP', idx: ipIdx, fix: 1},
-                    {label: '탈삼진', id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
-                    {label: '실점', id: 'R', idx: getIdx(['RUNS ALLOWED', 'R'])},
+                    {label: (currentYear === '2026' ? '방어율' : 'ERA'), id: 'ERA', idx: getIdx(['EARNED RUN AVERAGE', 'ERA']), fix: 2},
+                    {label: (currentYear === '2026' ? '승' : 'W'), id: 'W', idx: getIdx(['WINS', 'W'])},
+                    {label: 'IP', id: 'IP', idx: ipIdx, fix: 1},
+                    {label: (currentYear === '2026' ? '탈삼진' : 'SO'), id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
+                    {label: (currentYear === '2026' ? '실점' : 'R'), id: 'R', idx: getIdx(['RUNS ALLOWED', 'R'])},
                     {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
                 ];
 
-                // [데이터 전처리] 이름 합치기 및 OPS 자동 계산 로직 유지
+                // ⭐ 여기서부터 이름 결합 강화 로직이 적용됩니다 ⭐
                 allData = rows.map(r => {
-                    const gv = (idx) => (r.c[idx]?.v !== undefined) ? r.c[idx].v : 0;
+                    const gv = (idx) => (idx > -1 && r.c[idx]?.v !== undefined) ? r.c[idx].v : '';
                     
-                    let lastName = (lnIdx > -1 && r.c[lnIdx]?.v) ? r.c[lnIdx].v : '';
-                    let firstName = (fnIdx > -1 && r.c[fnIdx]?.v) ? r.c[fnIdx].v : '';
-                    let name = (firstName + " " + lastName).trim() || "-";
-                    if (name === "-") name = lastName || firstName || "-";
+                    // 1. 각 컬럼에서 값을 가져와서 공백 제거
+                    let full = gv(lnIdx).toString().trim(); // 2025년은 Last Name에 전체 이름이 있는 경우가 많음
+                    let first = gv(fnIdx).toString().trim();
+                    let last = gv(lnIdx).toString().trim();
+                    
+                    let finalName = "";
 
-                    // OPS가 없는 경우 OBP + SLG 수동 계산 시도
+                    // 2. 이름 결정 로직 (빈 칸 방지)
+                    if (first && last && first !== last) {
+                        // 성과 이름이 따로 존재하고 서로 다를 때 (예: KyungPyo + Lee)
+                        finalName = first + " " + last;
+                    } else {
+                        // 하나만 있거나 둘이 같으면 있는 쪽을 선택 (예: Last Name에만 "KyungPyo Lee"가 있는 경우)
+                        finalName = first || last || "-";
+                    }
+
+                    // "null" 문자열이 섞이는 것 방지
+                    finalName = finalName.replace(/null/g, '').trim();
+
                     const calculateOps = () => {
                         const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-                        if (opsIdx > -1) return parseFloat(gv(opsIdx));
-                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP'])));
-                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG'])));
+                        if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
+                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP']))) || 0;
+                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG']))) || 0;
                         return obp + slg;
                     };
 
                     return {
-                        name: name,
+                        name: finalName,
                         team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
                         isPitcher: parseFloat(gv(ipIdx)) > 0,
                         hitterStats: hCols.map(c => {
