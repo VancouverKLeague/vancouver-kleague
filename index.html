@@ -256,92 +256,104 @@
     }
 
     function loadStats() {
-        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
-        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+    const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
+    tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
 
-        // [MOD] Year-dependent Sheet Name
-        let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+    let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
 
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows; 
-            const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-            const ipI = cols.findIndex(c => c === 'IP' || c.includes('INNINGS PITCHED'));
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
+        const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+        const rows = data.rows; 
+        const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
+        
+        // Find Innings Pitched column for filtering
+        const ipI = cols.findIndex(c => c === 'IP' || c === 'INN' || c.includes('INNINGS PITCHED'));
 
-            const fi = (arr, isPit = false) => {
-                let start = (isPit && ipI !== -1) ? ipI : 0;
-                let slice = cols.slice(start);
-                let idx = slice.findIndex(c => arr.some(n => c === n || c.includes(n)));
-                return idx !== -1 ? start + idx : -1;
-            };
+        const fi = (arr, isPit = false) => {
+            let start = (isPit && ipI !== -1) ? ipI : 0;
+            let slice = cols.slice(start);
+            let idx = slice.findIndex(c => arr.some(n => c === n || c.includes(n)));
+            return idx !== -1 ? start + idx : -1;
+        };
 
-            const playerI = fi(['PLAYER']); const lnI = fi(['LAST NAME']); const fnI = fi(['FIRST NAME']); const nameI = fi(['NAME']); const tmI = fi(['TEAM']);
+        const playerI = fi(['PLAYER']); const lnI = fi(['LAST NAME']); const fnI = fi(['FIRST NAME']); const nameI = fi(['NAME']); const tmI = fi(['TEAM']);
 
-            const metrics = [
-                {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
-                {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'ops-leaders', n: ['OPS', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'], d: 3, asc: false, pit: false},
-                {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
-                {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'whip-leaders', n: ['WHIP', 'WALKS HITS INNINGS PITCHED'], d: 2, asc: true, pit: true}
-            ];
+        const metrics = [
+            {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
+            {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
+            {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false, countStat: true},
+            {id: 'ops-leaders', n: ['OPS', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'], d: 3, asc: false, pit: false},
+            {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
+            {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
+            {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
+            {id: 'whip-leaders', n: ['WHIP', 'WALKS HITS INNINGS PITCHED'], d: 2, asc: true, pit: true}
+        ];
 
-            metrics.forEach(m => {
-                let vI = fi(m.n, m.pit);
-                let isCalc = false; let calcFn = null;
-                if (vI === -1 && m.id === 'ops-leaders') {
-                    const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
-                    const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
-                    if (obpI !== -1 && slgI !== -1) { isCalc = true; calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0); }
+        metrics.forEach(m => {
+            let vI = fi(m.n, m.pit);
+            let isCalc = false; let calcFn = null;
+            if (vI === -1 && m.id === 'ops-leaders') {
+                const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
+                const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
+                if (obpI !== -1 && slgI !== -1) { isCalc = true; calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0); }
+            }
+
+            const target = document.getElementById(m.id);
+            // [MOD] English message
+            if (vI === -1 && !isCalc) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; return; }
+
+            const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
+            
+            // Strong Filtering Logic
+            let validRows = rows.filter(r => {
+                const val = getVal(r);
+                // 1. For Pitchers: IP must be > 0
+                if (m.pit) {
+                    const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
+                    return ipValue > 0;
                 }
-
-                const target = document.getElementById(m.id);
-                if (vI === -1 && !isCalc) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; return; }
-
-                const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
-                let validRows = rows;
-                if(m.pit && ipI !== -1) validRows = rows.filter(r => (parseFloat(gv(r, ipI)) || 0) > 0);
-                if(m.countStat || m.id === 'ops-leaders' || m.id === 'avg-leaders') validRows = validRows.filter(r => getVal(r) > 0);
-                
-                const sorted = [...validRows].sort((a,b) => {
-                    const vA = getVal(a); const vB = getVal(b);
-                    if(m.asc) { 
-                        const realA = (vA === 0 && !isCalc && (gv(a,vI)==='' || gv(a,vI)==='-')) ? 999 : vA;
-                        const realB = (vB === 0 && !isCalc && (gv(b,vI)==='' || gv(b,vI)==='-')) ? 999 : vB;
-                        return realA - realB; 
-                    }
-                    return vB - vA;
-                }).slice(0, 5);
-
-                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; return; }
-
-                sorted.forEach((r, i) => {
-                    let name = "";
-                    if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
-                    else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = (gv(r, fnI) + " " + gv(r, lnI)).trim();
-                    else if (nameI !== -1 && gv(r, nameI)) name = gv(r, nameI);
-                    else name = gv(r, lnI) || "Unknown";
-
-                    let val = getVal(r);
-                    let valStr = (m.asc && val === 999) ? '-' : val.toFixed(m.d);
-                    
-                    target.innerHTML += `
-                        <tr>
-                            <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
-                            <td style="text-align: left; padding-left: 4px;">
-                                <div class="player-info">
-                                    <span class="player-name" title="${name.trim()}">${name.trim()}</span>
-                                    <span class="player-team">${gv(r, tmI)}</span>
-                                </div>
-                            </td>
-                            <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${valStr}</td>
-                        </tr>`;
-                });
+                // 2. For Batters: Value must be > 0
+                return val > 0;
             });
-        }).catch(e=>{ console.error(e); });
-    }
+
+            const sorted = [...validRows].sort((a,b) => {
+                const vA = getVal(a); const vB = getVal(b);
+                if(m.asc) { 
+                    const realA = (vA === 0 && !isCalc && (gv(a,vI)==='' || gv(a,vI)==='-')) ? 999 : vA;
+                    const realB = (vB === 0 && !isCalc && (gv(b,vI)==='' || gv(b,vI)==='-')) ? 999 : vB;
+                    return realA - realB; 
+                }
+                return vB - vA;
+            }).slice(0, 5);
+
+            // [MOD] English message
+            if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; return; }
+
+            sorted.forEach((r, i) => {
+                let name = "";
+                if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
+                else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = (gv(r, fnI) + " " + gv(r, lnI)).trim();
+                else if (nameI !== -1 && gv(r, nameI)) name = gv(r, nameI);
+                else name = gv(r, lnI) || "Unknown";
+
+                let val = getVal(r);
+                let valStr = (m.asc && val === 999) ? '-' : val.toFixed(m.d);
+                
+                target.innerHTML += `
+                    <tr>
+                        <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
+                        <td style="text-align: left; padding-left: 4px;">
+                            <div class="player-info">
+                                <span class="player-name" title="${name.trim()}">${name.trim()}</span>
+                                <span class="player-team">${gv(r, tmI)}</span>
+                            </div>
+                        </td>
+                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${valStr}</td>
+                    </tr>`;
+            });
+        });
+    }).catch(e=>{ console.error(e); });
+}
 
     // [MOD] Initial Load
     changeYear('2026');
