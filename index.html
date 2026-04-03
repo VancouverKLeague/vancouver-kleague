@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (GameChanger 완벽 호환 + OPS, WHIP 자동 계산기 탑재)
+    // 기록실 로딩 (GameChanger의 긴 풀네임 컬럼명 완벽 대응)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -198,7 +198,6 @@
                 if (idx === -1) {
                     idx = slice.findIndex(c => arr.some(n => {
                         if (n === 'OPS' && c.includes('POPS')) return false;
-                        if (n === 'WHIP' && c.includes('WHIP')) return true;
                         return c.includes(n);
                     }));
                 }
@@ -211,15 +210,16 @@
             const nameI = fi(['NAME']);
             const tmI = fi(['TEAM']);
 
+            // 🔥 게임체인저의 길고 정확한 풀네임을 배열에 모두 추가했습니다!
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG', 'BATTING'], d: 3, asc: false, pit: false},
+                {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
                 {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
+                {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false, countStat: true},
+                {id: 'ops-leaders', n: ['OPS', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'], d: 3, asc: false, pit: false},
                 {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
                 {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
                 {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
+                {id: 'whip-leaders', n: ['WHIP', 'WALKS HITS INNINGS PITCHED'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
@@ -227,39 +227,18 @@
                 let isCalc = false;
                 let calcFn = null;
 
-                // 🔥 [핵심 로직] CSV에 OPS나 WHIP 컬럼이 없을 경우 자동 계산 실행
-                if (vI === -1) {
-                    if (m.id === 'ops-leaders') {
-                        const obpI = fi(['OBP', 'ON BASE'], false);
-                        const slgI = fi(['SLG', 'SLUGGING'], false);
-                        if (obpI !== -1 && slgI !== -1) {
-                            isCalc = true;
-                            calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0);
-                        }
-                    } else if (m.id === 'whip-leaders') {
-                        const bbI = fi(['BB', 'WALKS'], true);
-                        const hI = fi(['H', 'HITS'], true);
-                        if (bbI !== -1 && hI !== -1 && ipI !== -1) {
-                            isCalc = true;
-                            calcFn = (r) => {
-                                let ipRaw = parseFloat(gv(r, ipI)) || 0;
-                                let ipInt = Math.floor(ipRaw);
-                                let ipDec = Math.round((ipRaw - ipInt) * 10);
-                                // GameChanger의 1.1이닝, 1.2이닝을 실제 수학적 분수(1/3, 2/3)로 변환
-                                let realIp = ipInt + (ipDec === 1 ? 0.3333 : (ipDec === 2 ? 0.6667 : 0));
-                                if (realIp <= 0) return 999; // 0으로 나누기 방지
-                                
-                                const bb = parseFloat(gv(r, bbI)) || 0;
-                                const h = parseFloat(gv(r, hI)) || 0;
-                                return (bb + h) / realIp;
-                            };
-                        }
+                // 혹시라도 구버전 게임체인저에서 OPS 풀네임조차 없을 때를 대비한 자동계산 백업 로직
+                if (vI === -1 && m.id === 'ops-leaders') {
+                    const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
+                    const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
+                    if (obpI !== -1 && slgI !== -1) {
+                        isCalc = true;
+                        calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0);
                     }
                 }
 
                 const target = document.getElementById(m.id);
 
-                // 계산조차 불가능할 정도로 데이터가 부족할 경우 안내 문구 출력
                 if (vI === -1 && !isCalc) {
                     target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No data.</td></tr>`;
                     return;
@@ -271,10 +250,13 @@
                 };
 
                 let validRows = rows;
-                // 투수 기록은 이닝을 소화한 사람만
+                // 투수 기록은 1아웃 이상 잡은 사람만
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => (parseFloat(gv(r, ipI)) || 0) > 0);
-                // 누적 스탯(HR, RBI, 승리, 삼진)은 0개인 사람 제외
-                if(m.countStat) validRows = validRows.filter(r => getVal(r) > 0);
+                
+                // 누적 스탯이 0이거나, 타석이 부족해 OPS가 0이 된 선수 제외
+                if(m.countStat || m.id === 'ops-leaders') {
+                    validRows = validRows.filter(r => getVal(r) > 0);
+                }
                 
                 const sorted = [...validRows].sort((a,b) => {
                     const vA = getVal(a); const vB = getVal(b);
