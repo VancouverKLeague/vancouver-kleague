@@ -15,18 +15,25 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* Notice Styles */
-        #notice-content { font-weight: bold; color: #444; margin-bottom: 12px; white-space: pre-wrap; font-size: 0.95rem; }
-        .btn-rulebook { display: inline-block; padding: 10px 20px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
+        /* Notice & Rulebook Styles */
+        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; font-size: 0.95rem; }
+        .rulebook-container { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-rulebook { flex: 1; min-width: 140px; padding: 12px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.85rem; text-align: center; }
+        .btn-rulebook.en { background: #555; }
 
-        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; text-align: center; margin-bottom: 6px; }
+        /* Mobile Responsive Table */
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; white-space: nowrap; }
+        
+        .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+        .stats-col { flex: 1; min-width: 250px; margin-bottom: 10px; }
         .val-highlight { color: #d32f2f; font-weight: bold; }
-        .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 0.9rem; }
+        .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+
+        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -34,19 +41,19 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Vancouver's Premier Amateur Baseball League</p>
+    <p>Official Amateur Baseball League in Vancouver</p>
 </header>
 
-<nav>
-    <a href="index.html">HOME</a>
-    <a href="schedule.html">SCHEDULE</a>
-</nav>
+<nav><a href="index.html">HOME</a> <a href="schedule.html">SCHEDULE</a></nav>
 
 <div class="container">
     <div class="card" id="notice-card" style="border-top: 5px solid #ff5722; display: none;">
         <h3>📢 Notice</h3>
-        <div id="notice-content">Loading...</div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook">📖 View 2026 Rule Book</a>
+        <div id="notice-content"></div>
+        <div class="rulebook-container">
+            <a id="rulebook-ko" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 Rule Book (KR)</a>
+            <a id="rulebook-en" href="#" target="_blank" class="btn-rulebook en" style="display:none;">📖 View Rule Book (EN)</a>
+        </div>
     </div>
 
     <div class="card">
@@ -54,7 +61,7 @@
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead>
-                <tbody id="standing-body"></tbody>
+                <tbody id="standing-body-en"></tbody>
             </table>
         </div>
     </div>
@@ -62,14 +69,14 @@
     <div class="card" style="border-top: 4px solid #17a2b8;">
         <h3>📍 Field & Weather Info</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-            <div style="flex: 1.5; min-width: 280px; background: #f9f9f9; border-radius: 5px;">
+            <div style="flex: 1.5; min-width: 280px;">
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="flex: 1; min-width: 240px;">
                 <a href="https://www.google.com/maps/search/?api=1&query=Queens+Park+Stadium+New+Westminster" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+Baseball+Diamond+Richmond" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Diamond+Burnaby" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+Richmond+BC" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Burnaby+Baseball" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
     </div>
@@ -77,19 +84,24 @@
     <div class="card">
         <h3>⚾ Recent & Upcoming Games</h3>
         <div class="table-wrapper">
-            <table style="min-width: 550px;">
-                <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
+            <table id="main-sched-table">
+                <thead id="main-sched-head"></thead>
                 <tbody id="main-sched-body"></tbody>
             </table>
         </div>
-        <a href="schedule.html" class="btn-more">Full Schedule →</a>
+        <a href="schedule.html" class="btn-more">View Full Season Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
-        <h3>🔥 League Leaders</h3>
-        <div class="stats-grid" id="stats-grid-en">
-            </div>
-        <a href="stats.html" class="btn-more" style="background: #444;">View Full Stats →</a>
+        <h3>🔥 League Leaders (TOP 5)</h3>
+        <h4 style="color: #0288d1; text-align:center;">Hitting</h4>
+        <div class="stats-grid">
+            <div class="stats-col"><table><thead><tr><th style="width:30px;">#</th><th>Name</th><th style="width:65px;">AVG</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th style="width:30px;">#</th><th>Name</th><th style="width:65px;">HR</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th style="width:30px;">#</th><th>Name</th><th style="width:65px;">RBI</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th style="width:30px;">#</th><th>Name</th><th style="width:65px;">OPS</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
+        </div>
+        <a href="stats.html" class="btn-more" style="background: #444;">View Full Player Stats →</a>
     </div>
 </div>
 
@@ -97,47 +109,112 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    let currentSeason = 'Reg';
+
+    function getIdx(headers, searchNames) {
+        return headers.findIndex(h => searchNames.some(name => h.includes(name.toUpperCase().trim())));
+    }
 
     function loadInitialData() {
-        // Fetch Notice
+        // Fetch Notice (A1=Content, B1=KR Rule Link, C1=EN Rule Link)
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
             .then(r => r.text()).then(d => {
                 const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
                 if(row && row.c[0]) {
                     document.getElementById('notice-card').style.display = 'block';
                     document.getElementById('notice-content').innerText = row.c[0].v;
-                    if(row.c[1]) document.getElementById('rulebook-link').href = row.c[1].v;
+                    if(row.c[1]?.v) { document.getElementById('rulebook-ko').href = row.c[1].v; document.getElementById('rulebook-ko').style.display = 'inline-block'; }
+                    if(row.c[2]?.v) { document.getElementById('rulebook-en').href = row.c[2].v; document.getElementById('rulebook-en').style.display = 'inline-block'; }
                 }
             });
 
-        // Standings & Schedule (Same logic as ko.html)
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(r => r.text()).then(d => {
-            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-            const tbody = document.getElementById('standing-body');
-            rows.forEach(row => { if(row.c && row.c[1]) {
-                const tr = document.createElement('tr');
-                row.c.forEach((cell, idx) => { if(idx < 7) { const td = document.createElement('td'); td.textContent = cell ? (cell.f || cell.v || '0') : '0'; tr.appendChild(td); }});
-                tbody.appendChild(tr);
-            }});
-        });
+        // Fetch Standings
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
+            .then(r => r.text()).then(d => {
+                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+                const tbody = document.getElementById('standing-body-en');
+                rows.forEach(row => {
+                    if(row.c && row.c[1] && row.c[1].v !== 'Team') {
+                        const tr = document.createElement('tr');
+                        for(let i=0; i<7; i++) {
+                            const td = document.createElement('td');
+                            td.textContent = row.c[i] ? (row.c[i].f || row.c[i].v || '0') : '0';
+                            tr.appendChild(td);
+                        }
+                        tbody.appendChild(tr);
+                    }
+                });
+            });
 
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(r => r.text()).then(d => {
-            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-            const tbody = document.getElementById('main-sched-body');
-            const played = rows.filter(r => r.c && r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
-            const upcoming = rows.filter(r => r.c && (!r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA'));
-            if (played.length > 0) { const last = played[played.length-1].c[0].v; played.filter(g => g.c[0].v === last).forEach(g => renderSchedRow(g, tbody)); }
-            if (upcoming.length > 0) { const next = upcoming[0].c[0].v; upcoming.filter(g => g.c[0].v === next).forEach(g => renderSchedRow(g, tbody)); }
-        });
-        // (Stats loading logic here...)
+        // Fetch Schedule (Auto-header detection)
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
+            .then(r => r.text()).then(d => {
+                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+                const rows = data.rows;
+                const tbody = document.getElementById('main-sched-body');
+                
+                const dIdx = getIdx(headers, ['DATE', '날짜']), tIdx = getIdx(headers, ['TIME', '시간']);
+                const fIdx = getIdx(headers, ['FIELD', '구장']), hIdx = getIdx(headers, ['HOME', '홈']);
+                const vIdx = getIdx(headers, ['AWAY', '원정', 'VISITOR']), sIdx = getIdx(headers, ['SCORE', '결과']);
+
+                const played = rows.filter(r => r.c && r.c[sIdx]?.v && r.c[sIdx].v !== '-' && r.c[sIdx].v !== 'TBA');
+                const upcoming = rows.filter(r => r.c && (!r.c[sIdx] || r.c[sIdx].v === '-' || r.c[sIdx].v === 'TBA'));
+                
+                document.getElementById('main-sched-head').innerHTML = `<tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr>`;
+                
+                if (played.length > 0) {
+                    const lastDate = played[played.length-1].c[dIdx]?.v;
+                    played.filter(g => g.c[dIdx]?.v === lastDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
+                }
+                if (upcoming.length > 0) {
+                    const nextDate = upcoming[0].c[dIdx]?.v;
+                    upcoming.filter(g => g.c[dIdx]?.v === nextDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
+                }
+            });
+        loadStats();
     }
 
-    function renderSchedRow(row, tbody) {
+    function renderSchedRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
         const c = row.c;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="white-space:nowrap;">${c[0]?.f||''} ${c[1]?.f||''}</td><td>${c[2]?.v||''}</td><td style="font-weight:bold;">${c[3]?.v} vs ${c[4]?.v}</td><td class="val-highlight">${c[5]?.v||'-'}</td>`;
+        const dateStr = (c[dIdx]?.f || '') + " " + (c[tIdx]?.f || '');
+        tr.innerHTML = `<td>${dateStr}</td><td>${c[fIdx]?.v || ''}</td>
+                        <td style="font-weight:bold;">${c[vIdx]?.v || ''} <span style="font-weight:normal; color:#888;">vs</span> ${c[hIdx]?.v || ''}</td>
+                        <td class="val-highlight">${c[sIdx]?.v || '-'}</td>`;
         tbody.appendChild(tr);
+    }
+
+    function loadStats() {
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
+            .then(r => r.text()).then(d => {
+                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+                const rows = data.rows;
+                
+                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']), fnIdx = getIdx(headers, ['FIRST NAME']), teamIdx = getIdx(headers, ['TEAM']);
+                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']), hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
+                const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']), opsIdx = getIdx(headers, ['OPS']);
+
+                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
+                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
+                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
+                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
+            });
+    }
+
+    function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
+        const tbody = document.getElementById(id);
+        data.forEach((r, i) => {
+            const tr = document.createElement('tr');
+            let name = r.c[lnIdx]?.v || '';
+            if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
+            const team = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : '';
+            let val = r.c[valIdx]?.v || 0;
+            if (isFixed3) val = parseFloat(val).toFixed(3);
+            tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${team}</span></div></td><td class="val-highlight">${val}</td>`;
+            tbody.appendChild(tr);
+        });
     }
     loadInitialData();
 </script>
