@@ -67,9 +67,9 @@
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="flex: 1; min-width: 240px;">
-                <a href="https://maps.app.goo.gl/wS7KkX49pXy8MvYPA" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://maps.app.goo.gl/k9e7R5jR9y4Xm8Vp8" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
-                <a href="https://maps.app.goo.gl/rY1Xk8pY9z2Xm7Vr9" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
+                <a href="https://maps.app.goo.gl/9ZpZ6z8y2P7XpU8" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
+                <a href="https://maps.app.goo.gl/uXpX9z8y2P7XpU8" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
+                <a href="https://maps.app.goo.gl/mXpX9z8y2P7XpU8" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
     </div>
@@ -77,7 +77,7 @@
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
         <div class="table-wrapper">
-            <table>
+            <table id="main-sched-table">
                 <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
                 <tbody id="main-sched-body"></tbody>
             </table>
@@ -102,123 +102,143 @@
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
 
-    function getSafe(cell) { return cell ? (cell.f || cell.v || '') : ''; }
-
-    function loadInitialData() {
-        // 공지사항
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
-            .then(r => r.text()).then(d => {
-                const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
-                if(row && row.c[0]) {
-                    document.getElementById('notice-card').style.display = 'block';
-                    document.getElementById('notice-content').innerText = getSafe(row.c[0]);
-                    if(row.c[1]?.v) {
-                        document.getElementById('rulebook-link').href = row.c[1].v;
-                        document.getElementById('rulebook-link').style.display = 'inline-block';
-                    }
-                }
-            }).catch(e => console.log("Notice error:", e));
-
-        // 순위표
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
-            .then(r => r.text()).then(d => {
-                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-                const tbody = document.getElementById('standing-body-ko');
-                rows.forEach(row => {
-                    if(row.c && row.c[1] && row.c[1].v !== 'Team') {
-                        const tr = document.createElement('tr');
-                        for(let i=0; i<7; i++) {
-                            const td = document.createElement('td');
-                            td.textContent = getSafe(row.c[i]) || '0';
-                            tr.appendChild(td);
-                        }
-                        tbody.appendChild(tr);
-                    }
-                });
-            }).catch(e => console.log("Standings error:", e));
-
-        // 일정표
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
-            .then(r => r.text()).then(d => {
-                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
-                const rows = data.rows;
-                const tbody = document.getElementById('main-sched-body');
-                
-                const dIdx = headers.findIndex(h => h.includes('DATE') || h.includes('날짜'));
-                const tIdx = headers.findIndex(h => h.includes('TIME') || h.includes('시간'));
-                const fIdx = headers.findIndex(h => h.includes('FIELD') || h.includes('구장'));
-                const hIdx = headers.findIndex(h => h.includes('HOME') || h.includes('홈'));
-                const vIdx = headers.findIndex(h => h.includes('AWAY') || h.includes('원정') || h.includes('VISITOR'));
-                const sIdx = headers.findIndex(h => h.includes('SCORE') || h.includes('결과'));
-
-                const played = rows.filter(r => r.c && getSafe(r.c[sIdx]) && getSafe(r.c[sIdx]) !== '-' && getSafe(r.c[sIdx]) !== 'TBA');
-                const upcoming = rows.filter(r => r.c && (!getSafe(r.c[sIdx]) || getSafe(r.c[sIdx]) === '-' || getSafe(r.c[sIdx]) === 'TBA'));
-                
-                if (played.length > 0) {
-                    const lastDate = getSafe(played[played.length-1].c[dIdx]);
-                    played.filter(g => getSafe(g.c[dIdx]) === lastDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
-                }
-                if (upcoming.length > 0) {
-                    const nextDate = getSafe(upcoming[0].c[dIdx]);
-                    upcoming.filter(g => getSafe(g.c[dIdx]) === nextDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
-                }
-            }).catch(e => console.log("Schedule error:", e));
-
-        // 리더 보드 따로 실행 (일정표 에러 나도 실행되게)
-        loadStats();
+    // 데이터 안전하게 가져오기 함수
+    function getSafe(row, idx) {
+        if (!row || !row.c || idx === undefined || idx < 0) return '';
+        const cell = row.c[idx];
+        return cell ? (cell.f || cell.v || '') : '';
     }
 
-    function renderSchedRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
-        const c = row.c;
+    // 헤더 인덱스 찾기 (더 유연하게 수정)
+    function findIdx(headers, searchList) {
+        return headers.findIndex(h => {
+            const headStr = String(h || '').toUpperCase().trim();
+            return searchList.some(s => headStr.includes(s.toUpperCase()));
+        });
+    }
+
+    // 공지사항 로딩
+    async function loadNotice() {
+        try {
+            const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`);
+            const d = await r.text();
+            const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
+            if (row && row.c[0]) {
+                document.getElementById('notice-card').style.display = 'block';
+                document.getElementById('notice-content').innerText = getSafe(row, 0);
+                if (row.c[1]?.v) {
+                    document.getElementById('rulebook-link').href = row.c[1].v;
+                    document.getElementById('rulebook-link').style.display = 'inline-block';
+                }
+            }
+        } catch(e) { console.error("Notice error:", e); }
+    }
+
+    // 순위표 로딩
+    async function loadStandings() {
+        try {
+            const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`);
+            const d = await r.text();
+            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+            const tbody = document.getElementById('standing-body-ko');
+            rows.forEach(row => {
+                if (row.c && row.c[1] && row.c[1].v !== 'Team' && row.c[1].v !== '팀명') {
+                    const tr = document.createElement('tr');
+                    for (let i = 0; i < 7; i++) {
+                        const td = document.createElement('td');
+                        td.textContent = getSafe(row, i) || '0';
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+            });
+        } catch(e) { console.error("Standings error:", e); }
+    }
+
+    // 일정표 로딩
+    async function loadSchedule() {
+        try {
+            const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`);
+            const d = await r.text();
+            const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+            const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+            const rows = data.rows;
+            const tbody = document.getElementById('main-sched-body');
+
+            const dIdx = findIdx(headers, ['DATE', '날짜']), tIdx = findIdx(headers, ['TIME', '시간']);
+            const fIdx = findIdx(headers, ['FIELD', '구장']), hIdx = findIdx(headers, ['HOME', '홈']);
+            const vIdx = findIdx(headers, ['AWAY', '원정', 'VISITOR']), sIdx = findIdx(headers, ['SCORE', '결과']);
+
+            const played = rows.filter(r => r.c && getSafe(r, sIdx) && getSafe(r, sIdx) !== '-' && getSafe(r, sIdx) !== 'TBA');
+            const upcoming = rows.filter(r => r.c && (!getSafe(r, sIdx) || getSafe(r, sIdx) === '-' || getSafe(r, sIdx) === 'TBA'));
+
+            if (played.length > 0) {
+                const lastDate = getSafe(played[played.length - 1], dIdx);
+                played.filter(g => getSafe(g, dIdx) === lastDate).forEach(g => {
+                    renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx);
+                });
+            }
+            if (upcoming.length > 0) {
+                const nextDate = getSafe(upcoming[0], dIdx);
+                upcoming.filter(g => getSafe(g, dIdx) === nextDate).forEach(g => {
+                    renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx);
+                });
+            }
+        } catch(e) { console.error("Schedule error:", e); }
+    }
+
+    function renderRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
         const tr = document.createElement('tr');
-        const dt = (getSafe(c[dIdx]) + " " + getSafe(c[tIdx])).trim();
-        tr.innerHTML = `<td>${dt}</td><td>${getSafe(c[fIdx])}</td>
-                        <td style="font-weight:bold;">${getSafe(c[vIdx])} vs ${getSafe(c[hIdx])}</td>
-                        <td class="val-highlight">${getSafe(c[sIdx]) || '-'}</td>`;
+        const dt = (getSafe(row, dIdx) + " " + getSafe(row, tIdx)).trim();
+        tr.innerHTML = `<td>${dt}</td><td>${getSafe(row, fIdx)}</td>
+                        <td style="font-weight:bold;">${getSafe(row, vIdx)} vs ${getSafe(row, hIdx)}</td>
+                        <td class="val-highlight">${getSafe(row, sIdx) || '-'}</td>`;
         tbody.appendChild(tr);
     }
 
-    function loadStats() {
-        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.innerHTML = '';
-        });
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
-            .then(r => r.text()).then(d => {
-                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
-                const rows = data.rows;
-                const lnIdx = headers.findIndex(h => ['LAST NAME', 'PLAYER', 'NAME'].includes(h));
-                const fnIdx = headers.findIndex(h => h === 'FIRST NAME');
-                const teamIdx = headers.findIndex(h => h === 'TEAM');
-                const avgIdx = headers.findIndex(h => ['BATTING AVERAGE', 'AVG'].includes(h));
-                const hrIdx = headers.findIndex(h => ['HOME RUNS', 'HR'].includes(h));
-                const rbiIdx = headers.findIndex(h => ['RUNS BATTED IN', 'RBI'].includes(h));
-                const opsIdx = headers.findIndex(h => h.includes('OPS'));
+    // 리그 리더 로딩
+    async function loadStats() {
+        try {
+            const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`);
+            const d = await r.text();
+            const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+            const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+            const rows = data.rows;
 
-                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
-                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
-                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
-                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
-            }).catch(e => console.log("Stats error:", e));
+            const lnIdx = findIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
+            const fnIdx = findIdx(headers, ['FIRST NAME']);
+            const teamIdx = findIdx(headers, ['TEAM']);
+            const avgIdx = findIdx(headers, ['BATTING AVERAGE', 'AVG']);
+            const hrIdx = findIdx(headers, ['HOME RUNS', 'HR']);
+            const rbiIdx = findIdx(headers, ['RUNS BATTED IN', 'RBI']);
+            const opsIdx = findIdx(headers, ['OPS']);
+
+            if (avgIdx > -1) renderLeader(rows, 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true, 'desc');
+            if (hrIdx > -1) renderLeader(rows, 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx, false, 'desc');
+            if (rbiIdx > -1) renderLeader(rows, 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx, false, 'desc');
+            if (opsIdx > -1) renderLeader(rows, 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true, 'desc');
+        } catch(e) { console.error("Stats error:", e); }
     }
 
-    function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
+    function renderLeader(rows, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3, order) {
         const tbody = document.getElementById(id);
-        if(!tbody) return;
-        data.forEach((r, i) => {
+        const sorted = [...rows].sort((a, b) => (parseFloat(getSafe(b, valIdx)) || 0) - (parseFloat(getSafe(a, valIdx)) || 0)).slice(0, 5);
+        sorted.forEach((row, i) => {
             const tr = document.createElement('tr');
-            let name = getSafe(r.c[lnIdx]);
-            if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
-            const team = (teamIdx > -1) ? getSafe(r.c[teamIdx]) : '';
-            let val = r.c[valIdx]?.v || 0;
-            if (isFixed3) val = parseFloat(val).toFixed(3);
-            tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${team}</span></div></td><td class="val-highlight">${val}</td>`;
+            let name = getSafe(row, lnIdx);
+            if (fnIdx > -1 && getSafe(row, fnIdx)) name = getSafe(row, fnIdx) + " " + name;
+            let val = parseFloat(getSafe(row, valIdx)) || 0;
+            if (isFixed3) val = val.toFixed(3);
+            tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${getSafe(row, teamIdx)}</span></div></td><td class="val-highlight">${val}</td>`;
             tbody.appendChild(tr);
         });
     }
-    loadInitialData();
+
+    // 모든 함수 독립 실행
+    loadNotice();
+    loadStandings();
+    loadSchedule();
+    loadStats();
 </script>
 </body>
 </html>
