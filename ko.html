@@ -73,34 +73,18 @@
 
         <h4 style="color: #0288d1;">타자 부문 (Batting TOP 5)</h4>
         <div class="stats-grid">
-            <div class="stats-col">
-                <h4>타율 (AVG)</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="avg-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>홈런 (HR)</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>타점 (RBI)</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>OPS</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="ops-leaders"></tbody></table>
-            </div>
+            <div class="stats-col"><h4>타율 (AVG)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>홈런 (HR)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>타점 (RBI)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
         <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching TOP 5)</h4>
         <div class="stats-grid">
-            <div class="stats-col">
-                <h4>방어율 (ERA)</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="era-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>다승 (WINS)</h4>
-                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="win-leaders"></tbody></table>
-            </div>
+            <div class="stats-col"><h4>방어율 (ERA)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>다승 (WINS)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>탈삼진 (SO)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>WHIP</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
         </div>
     </div>
 </div>
@@ -134,7 +118,7 @@
     }
 
     function loadInitialData() {
-        // Standings - 데이터가 1행부터 바로 시작하므로 i=0부터 읽음
+        // Standings
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -166,15 +150,11 @@
                     upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderSchedRow(g, tbody));
                 }
             });
-        
         loadStats();
     }
 
     function loadStats() {
-        // 테이블 초기화
-        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders'].forEach(id => {
-            document.getElementById(id).innerHTML = '';
-        });
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders', 'so-leaders', 'whip-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
 
         // Batting Stats
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting_'+currentSeason)}`)
@@ -182,11 +162,11 @@
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
-                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG', 'BA']);
+
+                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']);
                 const hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
                 const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']);
                 const opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
@@ -203,23 +183,21 @@
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
-                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
-                const winIdx = getIdx(headers, ['WINS', 'W', 'WIN']);
 
-                if(eraIdx > -1) {
-                    const sorted = [...rows].filter(r => (r.c[eraIdx]?.v || 0) > 0)
-                                           .sort((a,b) => (a.c[eraIdx]?.v || 0) - (b.c[eraIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
-                }
-                if(winIdx > -1) {
-                    const sorted = [...rows].sort((a,b) => (b.c[winIdx]?.v || 0) - (a.c[winIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
-                }
-            }).catch(e => console.log("Pitching data not ready."));
+                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
+                const winIdx = getIdx(headers, ['WINS', 'W']);
+                const soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']);
+                const whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']);
+
+                // ERA, WHIP는 낮은 순(Ascending), Wins, SO는 높은 순(Descending)
+                if(eraIdx > -1) renderStats([...rows].filter(r=>(r.c[eraIdx]?.v||0)>0).sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
+                if(winIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
+                if(soIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
+                if(whipIdx > -1) renderStats([...rows].filter(r=>(r.c[whipIdx]?.v||0)>0).sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
+            });
     }
 
     function renderSchedRow(row, tbody) {
