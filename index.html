@@ -170,24 +170,30 @@
         rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
     }).catch(e=>{});
 
-    // 일정표 로딩 (Home / Away 명시)
+    // 일정표 로딩 (Home / Away 자로 잰 듯한 완벽 정렬)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
         const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
         const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
         
-        // 🔥 대진표 렌더링 부분 수정: D열(gv(r,3)) = Away, E열(gv(r,4)) = Home
         const render = (r) => { 
             const awayTeam = gv(r, 3);
             const homeTeam = gv(r, 4);
             
             tb.innerHTML += `<tr>
-                <td>${gv(r, 0)} ${gv(r, 1)}</td>
-                <td>${gv(r, 2)}</td>
-                <td style="font-weight:bold;">
-                    <span style="color:#666; font-size:0.75rem; border:1px solid #ccc; padding:1px 4px; border-radius:3px;">Away</span> ${awayTeam}
-                    <br><span style="font-size:0.8rem; color:#aaa;">vs</span><br>
-                    <span style="color:#d32f2f; font-size:0.75rem; border:1px solid #d32f2f; padding:1px 4px; border-radius:3px;">Home</span> ${homeTeam}
+                <td style="vertical-align:middle;">${gv(r, 0)} ${gv(r, 1)}</td>
+                <td style="vertical-align:middle;">${gv(r, 2)}</td>
+                <td style="text-align:center; vertical-align:middle;">
+                    <div style="display:inline-flex; flex-direction:column; align-items:flex-start; text-align:left; font-weight:bold; gap:6px; padding: 4px 0;">
+                        <div style="display:flex; align-items:center;">
+                            <span style="display:inline-block; width:40px; text-align:center; color:#666; font-size:0.7rem; border:1px solid #ccc; border-radius:3px; padding:1px 0; margin-right:8px;">Away</span>
+                            <span>${awayTeam}</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <span style="display:inline-block; width:40px; text-align:center; color:#d32f2f; font-size:0.7rem; border:1px solid #d32f2f; border-radius:3px; padding:1px 0; margin-right:8px;">Home</span>
+                            <span>${homeTeam}</span>
+                        </div>
+                    </div>
                 </td>
                 <td class="val-highlight" style="vertical-align:middle;">${gv(r, 5) || '-'}</td>
             </tr>`; 
