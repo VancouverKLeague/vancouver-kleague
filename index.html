@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancouver K-League | 밴쿠버 야구 리그</title>
+    <title>Vancouver K-League | Baseball League in Vancouver</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
@@ -18,43 +18,43 @@
         table { width:100%; border-collapse: collapse; text-align: center; }
         th, td { border: 1px solid #ddd; padding: 10px; }
         th { background: #eee; }
-        #loading { text-align: center; color: #666; padding: 20px; }
+        #loading-en { text-align: center; color: #666; padding: 20px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="lang-switch">
-        <a href="index.html">KO</a> | <a href="en.html">EN</a>
+        <a href="ko.html">KO</a> | <a href="index.html">EN</a>
     </div>
     <h1>Vancouver K-League</h1>
-    <p>밴쿠버 최초읜 한인 사회인 야구 리그</p>
+    <p>Vancouver's First Korean-Canadian Baseball League</p>
 </header>
 
 <nav>
-    <a href="index.html">홈</a>
-    <a href="#">경기일정</a>
-    <a href="#">리그순위</a>
-    <a href="#">기록실</a>
+    <a href="index.html">Home</a>
+    <a href="#">Schedule</a>
+    <a href="#">Standings</a>
+    <a href="#">Stats</a>
 </nav>
 
 <div class="container">
     <div class="jumbotron">
-        <h2>2026 시즌 준비 중!</h2>
-        <p>총 6개 팀, 정규시즌 및 플레이오프 40경기의 대장정</p>
+        <h2>2026 Season Coming Soon!</h2>
+        <p>6 Teams, 40 Games including Regular Season and Playoffs</p>
     </div>
 
     <div class="card">
-        <h3>🏆 리그 순위 (Standings)</h3>
-        <div id="loading">기록을 불러오는 중...</div>
-        <table id="standings-table" style="display:none;">
+        <h3>🏆 League Standings</h3>
+        <div id="loading-en">Fetching live data...</div>
+        <table id="standings-table-en" style="display:none;">
             <thead>
                 <tr>
-                    <th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>승률</th>
+                    <th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>PCT</th>
                 </tr>
             </thead>
-            <tbody id="standings-body">
-                </tbody>
+            <tbody id="standings-body-en">
+            </tbody>
         </table>
     </div>
 </div>
@@ -64,7 +64,6 @@
 </footer>
 
 <script>
-    // 구글 시트 ID와 탭 이름 설정
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     const sheetName = encodeURIComponent('Standings(순위)');
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
@@ -74,8 +73,7 @@
         .then(data => {
             const json = JSON.parse(data.substr(47).slice(0, -2));
             const rows = json.table.rows;
-            const tbody = document.getElementById('standings-body');
-            
+            const tbody = document.getElementById('standings-body-en');
             rows.forEach(row => {
                 const tr = document.createElement('tr');
                 row.c.forEach(cell => {
@@ -85,15 +83,9 @@
                 });
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('standings-table').style.display = 'table';
-        })
-        .catch(err => {
-            console.error(err);
-            document.getElementById('loading').textContent = '기록을 불러오는데 실패했습니다.';
+            document.getElementById('loading-en').style.display = 'none';
+            document.getElementById('standings-table-en').style.display = 'table';
         });
 </script>
-
 </body>
 </html>
