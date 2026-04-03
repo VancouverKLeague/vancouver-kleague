@@ -217,10 +217,15 @@
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         const tb = document.getElementById('schedule-body');
         tb.innerHTML = '';
+
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); 
-            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
+            // 1. 유효한 데이터 필터링 (Away 팀 정보가 있는 행만)
+            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
+            
+            // 2. 결과(Score)가 있는 경기와 없는 경기 분류
+            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA' && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
+
             const render = (r) => { 
                 const away = gv(r, 3); const home = gv(r, 4);
                 tb.innerHTML += `<tr>
@@ -236,9 +241,22 @@
                     <td class="val-highlight" style="width:12%;">${gv(r, 5) || '-'}</td>
                 </tr>`; 
             };
-            if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
-            if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
-        }).catch(e=>{});
+
+            // [핵심 로직]
+            if (currentYear === '2026') {
+                // 2026년: 평소대로 최근 경기와 다음 경기를 보여줌
+                if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
+                if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
+            } else {
+                // 2025년(과거 시즌): 이미 모든 경기가 끝났으므로, 가장 마지막 일정(결승전 등) 3경기를 보여줌
+                const lastGames = played.slice(-3); 
+                if (lastGames.length > 0) {
+                    lastGames.forEach(render);
+                } else {
+                    tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">해당 시즌의 경기 기록이 없습니다.</td></tr>';
+                }
+            }
+        }).catch(e=>{ console.error("일정 로딩 에러:", e); });
     }
 
     function loadStats() {
