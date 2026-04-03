@@ -14,10 +14,10 @@
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 800px; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
+        h4 { text-align: center; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.95rem; }
         
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; font-size: 0.95rem; }
-        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
-        .btn-rulebook:hover { background: #e64a19; }
+        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
@@ -29,7 +29,6 @@
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
     </style>
 </head>
@@ -47,7 +46,7 @@
     <div class="card" id="notice-card" style="border-top: 5px solid #ff5722; display: none;">
         <h3>📢 공지사항 (Notice)</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집(Rule Book) 보기</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
     </div>
 
     <div class="card">
@@ -78,15 +77,15 @@
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
         <div class="table-wrapper">
-            <table id="main-sched-table">
-                <thead id="main-sched-head"></thead>
+            <table>
+                <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
                 <tbody id="main-sched-body"></tbody>
             </table>
         </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
     </div>
 
-    <div class="card" style="border-top: 4px solid #ffc107;">
+    <div class="card" id="leaders-card" style="border-top: 4px solid #ffc107;">
         <h3>🔥 리그 리더 (TOP 5)</h3>
         <div class="stats-grid">
             <div class="stats-col"><h4>타율 (AVG)</h4><table><thead><tr><th style="width:30px;">#</th><th>이름</th><th style="width:65px;">기록</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
@@ -103,24 +102,22 @@
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
 
-    function getIdx(headers, searchNames) {
-        return headers.findIndex(h => searchNames.some(name => h.includes(name.toUpperCase().trim())));
-    }
+    function getSafe(cell) { return cell ? (cell.f || cell.v || '') : ''; }
 
     function loadInitialData() {
-        // 공지사항 (B1 셀 하나만 사용하도록 수정)
+        // 공지사항
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
             .then(r => r.text()).then(d => {
                 const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
                 if(row && row.c[0]) {
                     document.getElementById('notice-card').style.display = 'block';
-                    document.getElementById('notice-content').innerText = row.c[0].v;
-                    if(row.c[1]?.v) { 
-                        document.getElementById('rulebook-link').href = row.c[1].v; 
-                        document.getElementById('rulebook-link').style.display = 'inline-block'; 
+                    document.getElementById('notice-content').innerText = getSafe(row.c[0]);
+                    if(row.c[1]?.v) {
+                        document.getElementById('rulebook-link').href = row.c[1].v;
+                        document.getElementById('rulebook-link').style.display = 'inline-block';
                     }
                 }
-            });
+            }).catch(e => console.log("Notice error:", e));
 
         // 순위표
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
@@ -132,13 +129,13 @@
                         const tr = document.createElement('tr');
                         for(let i=0; i<7; i++) {
                             const td = document.createElement('td');
-                            td.textContent = row.c[i] ? (row.c[i].f || row.c[i].v || '0') : '0';
+                            td.textContent = getSafe(row.c[i]) || '0';
                             tr.appendChild(td);
                         }
                         tbody.appendChild(tr);
                     }
                 });
-            });
+            }).catch(e => console.log("Standings error:", e));
 
         // 일정표
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
@@ -147,57 +144,74 @@
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
                 const tbody = document.getElementById('main-sched-body');
-                const dIdx = getIdx(headers, ['DATE', '날짜']), tIdx = getIdx(headers, ['TIME', '시간']);
-                const fIdx = getIdx(headers, ['FIELD', '구장']), hIdx = getIdx(headers, ['HOME', '홈']);
-                const vIdx = getIdx(headers, ['AWAY', '원정', 'VISITOR']), sIdx = getIdx(headers, ['SCORE', '결과']);
-                const played = rows.filter(r => r.c && r.c[sIdx]?.v && r.c[sIdx].v !== '-' && r.c[sIdx].v !== 'TBA');
-                const upcoming = rows.filter(r => r.c && (!r.c[sIdx] || r.c[sIdx].v === '-' || r.c[sIdx].v === 'TBA'));
-                document.getElementById('main-sched-head').innerHTML = `<tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr>`;
+                
+                const dIdx = headers.findIndex(h => h.includes('DATE') || h.includes('날짜'));
+                const tIdx = headers.findIndex(h => h.includes('TIME') || h.includes('시간'));
+                const fIdx = headers.findIndex(h => h.includes('FIELD') || h.includes('구장'));
+                const hIdx = headers.findIndex(h => h.includes('HOME') || h.includes('홈'));
+                const vIdx = headers.findIndex(h => h.includes('AWAY') || h.includes('원정') || h.includes('VISITOR'));
+                const sIdx = headers.findIndex(h => h.includes('SCORE') || h.includes('결과'));
+
+                const played = rows.filter(r => r.c && getSafe(r.c[sIdx]) && getSafe(r.c[sIdx]) !== '-' && getSafe(r.c[sIdx]) !== 'TBA');
+                const upcoming = rows.filter(r => r.c && (!getSafe(r.c[sIdx]) || getSafe(r.c[sIdx]) === '-' || getSafe(r.c[sIdx]) === 'TBA'));
+                
                 if (played.length > 0) {
-                    const lastDate = played[played.length-1].c[dIdx]?.v;
-                    played.filter(g => g.c[dIdx]?.v === lastDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
+                    const lastDate = getSafe(played[played.length-1].c[dIdx]);
+                    played.filter(g => getSafe(g.c[dIdx]) === lastDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
                 }
                 if (upcoming.length > 0) {
-                    const nextDate = upcoming[0].c[dIdx]?.v;
-                    upcoming.filter(g => g.c[dIdx]?.v === nextDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
+                    const nextDate = getSafe(upcoming[0].c[dIdx]);
+                    upcoming.filter(g => getSafe(g.c[dIdx]) === nextDate).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
                 }
-            });
+            }).catch(e => console.log("Schedule error:", e));
+
+        // 리더 보드 따로 실행 (일정표 에러 나도 실행되게)
         loadStats();
     }
 
     function renderSchedRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
         const c = row.c;
         const tr = document.createElement('tr');
-        const dateStr = (c[dIdx]?.f || '') + " " + (c[tIdx]?.f || '');
-        tr.innerHTML = `<td>${dateStr}</td><td>${c[fIdx]?.v || ''}</td>
-                        <td style="font-weight:bold;">${c[vIdx]?.v || ''} <span style="font-weight:normal; color:#888;">vs</span> ${c[hIdx]?.v || ''}</td>
-                        <td class="val-highlight">${c[sIdx]?.v || '-'}</td>`;
+        const dt = (getSafe(c[dIdx]) + " " + getSafe(c[tIdx])).trim();
+        tr.innerHTML = `<td>${dt}</td><td>${getSafe(c[fIdx])}</td>
+                        <td style="font-weight:bold;">${getSafe(c[vIdx])} vs ${getSafe(c[hIdx])}</td>
+                        <td class="val-highlight">${getSafe(c[sIdx]) || '-'}</td>`;
         tbody.appendChild(tr);
     }
 
     function loadStats() {
-        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerHTML = '';
+        });
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']), fnIdx = getIdx(headers, ['FIRST NAME']), teamIdx = getIdx(headers, ['TEAM']);
-                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']), hrIdx = getIdx(headers, ['HOME RUNS', 'HR']), rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']), opsIdx = getIdx(headers, ['OPS']);
+                const lnIdx = headers.findIndex(h => ['LAST NAME', 'PLAYER', 'NAME'].includes(h));
+                const fnIdx = headers.findIndex(h => h === 'FIRST NAME');
+                const teamIdx = headers.findIndex(h => h === 'TEAM');
+                const avgIdx = headers.findIndex(h => ['BATTING AVERAGE', 'AVG'].includes(h));
+                const hrIdx = headers.findIndex(h => ['HOME RUNS', 'HR'].includes(h));
+                const rbiIdx = headers.findIndex(h => ['RUNS BATTED IN', 'RBI'].includes(h));
+                const opsIdx = headers.findIndex(h => h.includes('OPS'));
+
                 if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
                 if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
                 if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
                 if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
-            });
+            }).catch(e => console.log("Stats error:", e));
     }
 
     function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
         const tbody = document.getElementById(id);
+        if(!tbody) return;
         data.forEach((r, i) => {
             const tr = document.createElement('tr');
-            let name = r.c[lnIdx]?.v || '';
+            let name = getSafe(r.c[lnIdx]);
             if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
-            const team = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : '';
+            const team = (teamIdx > -1) ? getSafe(r.c[teamIdx]) : '';
             let val = r.c[valIdx]?.v || 0;
             if (isFixed3) val = parseFloat(val).toFixed(3);
             tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${team}</span></div></td><td class="val-highlight">${val}</td>`;
