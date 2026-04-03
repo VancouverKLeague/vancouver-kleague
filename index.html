@@ -3,105 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancouver K-League | Baseball</title>
+    <title>Vancouver K-League | Home</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
         .lang-switch a { color: white; text-decoration: none; font-size: 0.8rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
-        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; text-decoration: none; }
+        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; }
         table { width:100%; border-collapse: collapse; text-align: center; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: bold; }
+        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 10px; background: #eee; color: #333; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        .btn-more:hover { background: #ddd; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .loading { text-align: center; color: #888; padding: 20px; }
     </style>
 </head>
 <body>
-
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Vancouver's First Korean-Canadian Amateur Baseball League</p>
+    <p>Vancouver's Premier Korean Baseball League</p>
 </header>
-
 <nav>
     <a href="index.html">HOME</a>
-    <a href="#standing-section">STANDINGS</a>
-    <a href="#schedule-section">SCHEDULE</a>
+    <a href="schedule.html">FULL SCHEDULE</a>
 </nav>
-
 <div class="container">
-    <div id="standing-section" class="card">
-        <h3>🏆 2026 Season Standings</h3>
-        <div id="loading-standing" class="loading">Loading Standings...</div>
-        <table id="standing-table" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th>
-                </tr>
-            </thead>
+    <div class="card">
+        <h3>🏆 League Standings</h3>
+        <table>
+            <thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead>
             <tbody id="standing-body"></tbody>
         </table>
     </div>
 
-    <div id="schedule-section" class="card">
-        <h3>⚾ Schedule & Results</h3>
-        <div id="loading-schedule" class="loading">Loading Schedule...</div>
-        <table id="schedule-table" style="display:none;">
-            <thead>
-                <tr><th>Date</th><th>Field</th><th>Away vs Home</th><th>Score</th></tr>
-            </thead>
-            <tbody id="schedule-body"></tbody>
+    <div class="card">
+        <h3>⚾ Last Game Results</h3>
+        <table id="recent-results-table">
+            <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
+            <tbody id="recent-results-body"></tbody>
         </table>
     </div>
-</div>
 
+    <div class="card" style="border-top: 5px solid #28a745;">
+        <h3>📅 Upcoming Games</h3>
+        <table>
+            <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
+            <tbody id="upcoming-body"></tbody>
+        </table>
+        <a href="schedule.html" class="btn-more">View Full 40-Game Schedule →</a>
+    </div>
+</div>
 <footer><p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     
-    function loadData(tabName, bodyId, loadId, tableId) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
-        fetch(url).then(r => r.text()).then(d => {
-            const json = JSON.parse(d.substr(47).slice(0, -2));
-            const rows = json.table.rows;
-            const tbody = document.getElementById(bodyId);
-            
-            rows.forEach(row => {
-                const tr = document.createElement('tr');
-                const c = row.c;
-                if(tabName.includes('Standings')) {
-                    // Rank, Team, GP, W, L, T, PCT (7 columns)
-                    c.forEach(cell => {
+    function loadData() {
+        // Standings
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
+            .then(r => r.text()).then(d => {
+                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+                const tbody = document.getElementById('standing-body');
+                rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    row.c.forEach(cell => {
                         const td = document.createElement('td');
-                        // .f (구글 시트에서 보이는 모양)를 먼저 쓰고, 없으면 .v (날것의 값)를 쓰라는 명령입니다.
                         td.textContent = cell ? (cell.f || cell.v || '0') : '0';
                         tr.appendChild(td);
                     });
-                } else {
-                    // Schedule: Date, Time, Field, Away, Home, Score
-                    tr.innerHTML = `
-                        <td>${c[0]?c[0].v:''} ${c[1]?c[1].v:''}</td>
-                        <td>${c[2]?c[2].v:''}</td>
-                        <td><strong>${c[3]?c[3].v:''}</strong> vs <strong>${c[4]?c[4].v:''}</strong></td>
-                        <td style="color:red; font-weight:bold;">${c[5]?c[5].v:'-'}</td>
-                    `;
-                }
-                tbody.appendChild(tr);
+                    tbody.appendChild(tr);
+                });
             });
-            document.getElementById(loadId).style.display = 'none';
-            document.getElementById(tableId).style.display = 'table';
-        });
+
+        // Schedule Logic
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
+            .then(r => r.text()).then(d => {
+                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+                const resultsTbody = document.getElementById('recent-results-body');
+                const upcomingTbody = document.getElementById('upcoming-body');
+
+                const playedGames = rows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== '');
+                const upcomingGames = rows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === '');
+
+                if (playedGames.length > 0) {
+                    const lastDate = playedGames[playedGames.length - 1].c[0].v;
+                    playedGames.filter(g => g.c[0].v === lastDate).forEach(g => renderRow(g, resultsTbody));
+                }
+                if (upcomingGames.length > 0) {
+                    const nextDate = upcomingGames[0].c[0].v;
+                    upcomingGames.filter(g => g.c[0].v === nextDate).forEach(g => renderRow(g, upcomingTbody));
+                }
+            });
     }
 
-    loadData('Standings(순위)', 'standing-body', 'loading-standing', 'standing-table');
-    loadData('Schedule(일정)', 'schedule-body', 'loading-schedule', 'schedule-table');
+    function renderRow(row, tbody) {
+        const c = row.c;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
+            <td>${c[2]?(c[2].f||c[2].v):''}</td>
+            <td><strong>${c[3]?(c[3].f||c[3].v):''}</strong> vs <strong>${c[4]?(c[4].f||c[4].v):''}</strong></td>
+            <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+    loadData();
 </script>
 </body>
 </html>
