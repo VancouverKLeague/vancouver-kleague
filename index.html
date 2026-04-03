@@ -51,6 +51,14 @@
     <a href="stats.html">Player Stats</a>
 </nav>
 
+<div style="background: #eee; padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+    <label for="season-select" style="font-weight: bold; margin-right: 10px;">Season:</label>
+    <select id="season-select" onchange="changeYear(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold;">
+        <option value="2026" selected>2026 Season</option>
+        <option value="2025">2025 Season</option>
+    </select>
+</div>
+
 <div class="container">
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 Notice</h3>
