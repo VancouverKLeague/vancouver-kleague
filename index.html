@@ -265,87 +265,76 @@
         const data = JSON.parse(t.substr(47).slice(0, -2)).table;
         const rows = data.rows; 
         const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-        const ipI = cols.findIndex(c => c === 'IP' || c === 'INN' || c.includes('INNINGS PITCHED'));
 
-        const fi = (arr, isPit = false) => {
-            let start = (isPit && ipI !== -1) ? ipI : 0;
-            let slice = cols.slice(start);
-            let idx = slice.findIndex(c => arr.some(n => c === n || c.includes(n)));
-            return idx !== -1 ? start + idx : -1;
-        };
+        const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
 
-        const playerI = fi(['PLAYER']); const lnI = fi(['LAST NAME']); const fnI = fi(['FIRST NAME']); const nameI = fi(['NAME']); const tmI = fi(['TEAM']);
+        // 이름 및 팀 컬럼 인덱스
+        const fNameI = fi(['FIRST NAME']);
+        const lNameI = fi(['LAST NAME']);
+        const playerI = fi(['PLAYER', 'FULL NAME']); 
+        const tmI = fi(['TEAM']);
 
         const metrics = [
-            {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
-            {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false},
-            {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false},
-            {id: 'ops-leaders', n: ['OPS', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'], d: 3, asc: false, pit: false},
-            {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
-            {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true},
-            {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true},
-            {id: 'whip-leaders', n: ['WHIP', 'WALKS HITS INNINGS PITCHED'], d: 2, asc: true, pit: true}
+            {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
+            {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
+            {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
+            {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+            {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
+            {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+            {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
+            {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
         ];
 
         metrics.forEach(m => {
-            let vI = fi(m.n, m.pit);
-            
-            // [핵심] 게임체인저의 순위(Rank) 컬럼을 찾습니다. 
-            // 예: Earned Run Average (rank)
-            const rankColName = m.n[0] + " (RANK)";
-            const rankI = cols.findIndex(c => c === rankColName);
-
+            const vI = cols.findIndex(c => c === m.n);
+            const rankI = cols.findIndex(c => c === m.n + " (RANK)"); // 게임체인저의 (rank) 컬럼 찾기
             const target = document.getElementById(m.id);
-            if (vI === -1) { 
-                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; 
-                return; 
+
+            if (vI === -1) {
+                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`;
+                return;
             }
 
-            const getVal = (r) => (parseFloat(gv(r, vI)) || 0);
+            const getVal = (r) => parseFloat(gv(r, vI)) || 0;
 
-            // [강력한 필터 로직 적용]
+            // [핵심 로직] 게임체인저가 순위(rank)를 매긴 선수만 필터링
             let validRows = rows.filter(r => {
-                const val = getVal(r);
+                const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
+                const dataValue = getVal(r);
                 
-                // 투수 항목(ERA, WHIP)은 시트의 Rank 칸에 숫자가 있는 사람만 필터링
-                if (m.pit && rankI !== -1) {
-                    const rankValue = gv(r, rankI).trim();
-                    // Rank 칸이 비어있지 않고, 이닝이 0보다 큰 경우만 포함
+                // (rank) 컬럼에 숫자가 써있는 선수만 통과 (규정 이닝/타석 자동 필터)
+                // 만약 (rank) 컬럼이 없는 2026년 데이터라면 데이터가 0보다 큰 경우만 표시
+                if (rankI !== -1) {
                     return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
                 }
-                
-                // 타자 항목은 스탯이 0보다 큰 경우만
-                return val > 0;
+                return dataValue > 0;
             });
 
-            // 정렬 (ERA 등은 낮은 순, 홈런 등은 높은 순)
+            // 정렬
             const sorted = [...validRows].sort((a,b) => {
-                const vA = getVal(a); const vB = getVal(b);
-                return m.asc ? vA - vB : vB - vA;
+                const valA = getVal(a); const valB = getVal(b);
+                return m.asc ? valA - valB : valB - valA;
             }).slice(0, 5);
 
-            if(sorted.length === 0) { 
-                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; 
-                return; 
+            if(sorted.length === 0) {
+                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`;
+                return;
             }
 
             sorted.forEach((r, i) => {
-                let name = "";
-                if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
-                else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = (gv(r, fnI) + " " + gv(r, lnI)).trim();
-                else name = gv(r, lnI) || "Unknown";
+                let name = gv(r, playerI) || (gv(r, fNameI) + " " + gv(r, lNameI)).trim();
+                if (!name || name === "null null") name = gv(r, lNameI) || "Unknown";
 
-                let val = getVal(r);
                 target.innerHTML += `
                     <tr>
                         <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
                         <td style="text-align: left; padding-left: 4px;">
                             <div class="player-info">
-                                <span class="player-name" title="${name.trim()}">${name.trim()}</span>
+                                <span class="player-name" title="${name}">${name}</span>
                                 <span class="player-team">${gv(r, tmI)}</span>
                             </div>
                         </td>
-                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${val.toFixed(m.d)}</td>
+                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td>
                     </tr>`;
             });
         });
