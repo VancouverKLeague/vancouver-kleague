@@ -304,18 +304,22 @@
 
             const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
             
-            // Strong Filtering Logic
+            // [Filtering & Minimum Innings Logic]
             let validRows = rows.filter(r => {
                 const val = getVal(r);
-                // 1. For Pitchers: IP must be > 0
+                const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
+
+                // 1. For Pitching Metrics (ERA, WHIP, etc.)
                 if (m.pit) {
-                    const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
-                    return ipValue > 0;
+                    // [IMPORTANT] Set Minimum Innings to match GameChanger report
+                    // For 2025 season, only players with 5+ IP are ranked.
+                    const minIP = (currentYear === '2025') ? 5 : 1; 
+                    return ipValue >= minIP;
                 }
-                // 2. For Batters: Value must be > 0
+                
+                // 2. For Batting Metrics
                 return val > 0;
             });
-
             const sorted = [...validRows].sort((a,b) => {
                 const vA = getVal(a); const vB = getVal(b);
                 if(m.asc) { 
