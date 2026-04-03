@@ -36,7 +36,7 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Official Website of the Korean Baseball League in Vancouver</p>
+    <p>Vancouver's Premier Korean Amateur Baseball League</p>
 </header>
 
 <nav>
@@ -154,11 +154,12 @@
     function loadStats() {
         ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders', 'so-leaders', 'whip-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
 
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting_'+currentSeason)}`)
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
+
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
@@ -168,30 +169,22 @@
                 const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']);
                 const opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
 
-                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
-                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
-                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
-                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx);
-            });
-
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Pitching_'+currentSeason)}`)
-            .then(r => r.text()).then(d => {
-                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
-                const rows = data.rows;
-                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
-                const fnIdx = getIdx(headers, ['FIRST NAME']);
-                const teamIdx = getIdx(headers, ['TEAM']);
-
                 const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
                 const winIdx = getIdx(headers, ['WINS', 'W']);
                 const soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']);
                 const whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']);
+                const ipIdx = getIdx(headers, ['INNINGS PITCHED', 'IP']);
 
-                if(eraIdx > -1) renderStats([...rows].filter(r=>(r.c[eraIdx]?.v||0)>0).sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
-                if(winIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
-                if(soIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
-                if(whipIdx > -1) renderStats([...rows].filter(r=>(r.c[whipIdx]?.v||0)>0).sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
+                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
+                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
+                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
+                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx);
+
+                const pitcherRows = rows.filter(r => (r.c[ipIdx]?.v || 0) > 0);
+                if(eraIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
+                if(winIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
+                if(soIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
+                if(whipIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
             });
     }
 
