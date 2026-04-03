@@ -140,8 +140,8 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    let currentYear = '2026'; // 기본 연도
-    let currentSeason = 'Reg'; // 기본 타입
+    let currentYear = '2026'; 
+    let currentSeason = 'Reg'; 
 
     const teamLogos = {
         "Van Avengers": "logos/Van Avengers.png",
@@ -154,10 +154,12 @@
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // [핵심] 연도 변경 함수
     function changeYear(year) {
         currentYear = year;
-        loadAll();
+        loadNotice();
+        loadStandings();
+        loadSchedule();
+        loadStats();
     }
 
     function switchSeason(s) {
@@ -167,14 +169,6 @@
         loadStats();
     }
 
-    function loadAll() {
-        loadNotice();
-        loadStandings();
-        loadSchedule();
-        loadStats();
-    }
-
-    // 공지사항
     function loadNotice() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
@@ -182,20 +176,14 @@
             if(data && data.c[0] && gv(data, 0).trim() !== '') { 
                 noticeCard.style.display = 'block'; 
                 document.getElementById('notice-content').innerText = gv(data, 0);
-                if(gv(data, 2)) { 
-                    const rb = document.getElementById('rulebook-link');
-                    rb.href = gv(data, 2); rb.style.display = 'inline-block'; 
-                } 
             } else { noticeCard.style.display = 'none'; }
         }).catch(e=>{});
     }
 
-    // 순위표 (연도 연동)
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Standings(순위)' : `Standings_${currentYear}`;
         const tb = document.getElementById('standing-body');
         tb.innerHTML = '';
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
             const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; 
             rows.forEach(r => { 
@@ -214,17 +202,14 @@
         }).catch(e=>{});
     }
 
-    // 일정 (연도 연동)
     function loadSchedule() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         const tb = document.getElementById('schedule-body');
         tb.innerHTML = '';
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
             const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); 
             const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
-            
             const render = (r) => { 
                 const away = gv(r, 3); const home = gv(r, 4);
                 tb.innerHTML += `<tr>
@@ -245,7 +230,7 @@
         }).catch(e=>{});
     }
 
-    // 기록 (연도 연동)
+    // [기록 로딩 함수 - GameChanger 2025 리포트 완벽 호환 버전]
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -255,55 +240,80 @@
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; 
-            const cols = data.cols.map(c => (c.label || '').toUpperCase());
-            const ipI = cols.findIndex(c => c.trim() === 'IP' || c.includes('INNINGS PITCHED'));
+            const cols = data.cols.map(c => (c.label || '').trim()); // 대소문자 구분을 위해 원본 유지 후 비교 시 변환
 
-            const fi = (arr, isPit = false) => {
-                let start = (isPit && ipI !== -1) ? ipI : 0;
-                let slice = cols.slice(start);
-                let idx = slice.findIndex(c => arr.some(n => c.trim() === n));
-                if (idx === -1) idx = slice.findIndex(c => arr.some(n => c.includes(n)));
-                return idx !== -1 ? start + idx : -1;
+            // 인덱스 찾기 보조 함수 (문장 포함 여부로 더 똑똑하게 찾음)
+            const findCol = (keywords) => {
+                return cols.findIndex(c => {
+                    const upperC = c.toUpperCase();
+                    return keywords.some(k => upperC === k || upperC.includes(k));
+                });
             };
 
-            const playerI = fi(['PLAYER']); const tmI = fi(['TEAM']);
+            // 주요 컬럼 인덱스 (사용자 파일 기반)
+            const ipI = findCol(['INN', 'IP', 'INNINGS PITCHED']);
+            const teamI = findCol(['TEAM']);
+            
+            // 이름 찾기 (Last Name에 풀네임이 있는 경우 대응)
+            let nameI = findCol(['PLAYER', 'FULL NAME']);
+            if (nameI === -1) nameI = findCol(['LAST NAME']); 
+
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
-                {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false, countStat: true},
-                {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
-                {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
-                {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
+                {id: 'avg-leaders', n: ['BATTING AVERAGE', 'AVG', 'BA'], d: 3, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HOME RUNS', 'HR'], d: 0, asc: false, pit: false},
+                {id: 'rbi-leaders', n: ['RUNS BATTED IN', 'RBI'], d: 0, asc: false, pit: false},
+                {id: 'ops-leaders', n: ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS'], d: 3, asc: false, pit: false},
+                {id: 'era-leaders', n: ['EARNED RUN AVERAGE', 'ERA'], d: 2, asc: true, pit: true},
+                {id: 'win-leaders', n: ['WINS', 'W'], d: 0, asc: false, pit: true},
+                {id: 'so-leaders', n: ['STRIKEOUTS', 'SO', 'K'], d: 0, asc: false, pit: true},
+                {id: 'whip-leaders', n: ['WALKS HITS INNINGS PITCHED', 'WHIP'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
-                let vI = fi(m.n, m.pit);
+                let vI = findCol(m.n);
                 const target = document.getElementById(m.id);
+                
+                if (vI === -1) {
+                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999;">데이터 없음</td></tr>';
+                    return;
+                }
+
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-                let validRows = rows.filter(r => getVal(r) > 0 || (m.pit && (parseFloat(gv(r, ipI)) || 0) > 0));
-                const sorted = [...validRows].sort((a,b) => m.asc ? getVal(a) - getVal(b) : getVal(b) - getVal(a)).slice(0, 5);
+
+                // 투수는 이닝(IP)이 있는 사람만, 타자는 해당 수치가 0보다 큰 사람만
+                let validRows = rows.filter(r => {
+                    if (m.pit) return (parseFloat(gv(r, ipI)) || 0) > 0;
+                    return getVal(r) > 0;
+                });
+
+                const sorted = [...validRows].sort((a,b) => {
+                    const valA = getVal(a); const valB = getVal(b);
+                    return m.asc ? valA - valB : valB - valA;
+                }).slice(0, 5);
 
                 if(sorted.length === 0) {
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:10px; color:#999;">기록 없음</td></tr>`;
+                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999;">기록 없음</td></tr>';
                     return;
                 }
 
                 sorted.forEach((r, i) => {
-                    let name = gv(r, playerI) || "알 수 없음";
+                    let name = gv(r, nameI) || "Unknown";
                     target.innerHTML += `<tr>
-                        <td style="width:30px;">${i+1}</td>
-                        <td style="text-align:left;"><div style="display:flex; flex-direction:column;"><span style="font-weight:bold; font-size:0.8rem;">${name}</span><span style="font-size:0.65rem; color:#888;">${gv(r, tmI)}</span></div></td>
-                        <td class="val-highlight">${getVal(r).toFixed(m.d)}</td>
+                        <td style="width:30px; font-weight:bold;">${i+1}</td>
+                        <td style="text-align:left;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span style="font-weight:bold; font-size:0.85rem;">${name}</span>
+                                <span style="font-size:0.65rem; color:#888;">${gv(r, teamI)}</span>
+                            </div>
+                        </td>
+                        <td class="val-highlight" style="font-size:0.9rem;">${getVal(r).toFixed(m.d)}</td>
                     </tr>`;
                 });
             });
-        }).catch(e=>{});
+        }).catch(e=>{ console.error("데이터 로드 에러:", e); });
     }
 
-    // 초기 실행
-    loadAll();
+    changeYear('2026');
 </script>
 </body>
 </html>
