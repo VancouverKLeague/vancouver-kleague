@@ -20,7 +20,7 @@
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+        .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
@@ -31,6 +31,12 @@
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+
+        /* 시즌 토글 버튼 */
+        .toggle-container { text-align: right; margin-bottom: 10px; }
+        .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .active { background: #003366; color: white; }
+        .inactive { background: #eee; color: #333; }
     </style>
 </head>
 <body>
@@ -47,16 +53,13 @@
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 공지사항</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집(Rule Book) 보기</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
     </div>
 
     <div class="card">
         <h3>🏆 리그 순위 (Standings)</h3>
         <div class="table-wrapper">
-            <table>
-                <thead><tr><th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead>
-                <tbody id="standing-body"></tbody>
-            </table>
+            <table><thead><tr><th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead><tbody id="standing-body"></tbody></table>
         </div>
     </div>
 
@@ -78,21 +81,34 @@
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
         <div class="table-wrapper">
-            <table>
-                <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
-                <tbody id="schedule-body"></tbody>
-            </table>
+            <table><thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
-        <h3>🔥 리그 리더 (TOP 5)</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>🔥 리그 리더 (TOP 5)</h3>
+            <div class="toggle-container">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트</button>
+            </div>
+        </div>
+        
+        <h4 style="color: #0288d1; margin-top: 0;">타자 부문 (Batting)</h4>
         <div class="stats-grid">
             <div class="stats-col"><h4>타율 (AVG)</h4><table><tbody id="avg-leaders"></tbody></table></div>
             <div class="stats-col"><h4>홈런 (HR)</h4><table><tbody id="hr-leaders"></tbody></table></div>
             <div class="stats-col"><h4>타점 (RBI)</h4><table><tbody id="rbi-leaders"></tbody></table></div>
             <div class="stats-col"><h4>OPS</h4><table><tbody id="ops-leaders"></tbody></table></div>
+        </div>
+
+        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching)</h4>
+        <div class="stats-grid">
+            <div class="stats-col"><h4>방어율 (ERA)</h4><table><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>다승 (W)</h4><table><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>탈삼진 (SO)</h4><table><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>WHIP</h4><table><tbody id="whip-leaders"></tbody></table></div>
         </div>
         <a href="stats_ko.html" class="btn-more" style="background: #444;">전체 선수 기록 보기 →</a>
     </div>
@@ -102,93 +118,92 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentSeason = 'Reg';
+
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : 'inactive');
+        document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : 'inactive');
+        loadStats();
+    }
+
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 1. 공지사항
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
-        .then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-            if(data && data.c[0]) {
-                document.getElementById('notice-card').style.display = 'block';
-                document.getElementById('notice-content').innerText = gv(data, 0);
-                if(gv(data, 1)) {
-                    const link = document.getElementById('rulebook-link');
-                    link.href = gv(data, 1);
-                    link.style.display = 'inline-block';
-                }
-            }
-        });
+    // 공지사항, 순위표, 일정표 로딩
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
+        const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
+        if(data && data.c[0]) { document.getElementById('notice-card').style.display = 'block'; document.getElementById('notice-content').innerText = gv(data, 0); if(gv(data, 1)) { document.getElementById('rulebook-link').href = gv(data, 1); document.getElementById('rulebook-link').style.display = 'inline-block'; } }
+    }).catch(e=>{});
 
-    // 2. 순위표
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
-        .then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-            const tb = document.getElementById('standing-body');
-            rows.forEach(r => {
-                if(gv(r, 1) && !gv(r, 1).includes('Team')) {
-                    let tr = '<tr>';
-                    for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`;
-                    tb.innerHTML += tr + '</tr>';
-                }
-            });
-        });
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
+        rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
+    }).catch(e=>{});
 
-    // 3. 일정표 (가장 가까운 날짜군 추출 로직)
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
-        .then(res => res.text()).then(t => {
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
+        const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
+        const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
+        const render = (r) => { tb.innerHTML += `<tr><td>${gv(r, 0)} ${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="font-weight:bold;">${gv(r, 4)} vs ${gv(r, 3)}</td><td class="val-highlight">${gv(r, 5) || '-'}</td></tr>`; };
+        if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
+        if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
+    }).catch(e=>{});
+
+    // 기록실 로딩 (투/타 및 시즌 토글 분리)
+    function loadStats() {
+        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
+        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_${currentSeason}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows.filter(r => gv(r, 3));
-            const tb = document.getElementById('schedule-body');
-            
-            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
-            const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
-
-            const render = (r) => {
-                tb.innerHTML += `<tr><td>${gv(r, 0)} ${gv(r, 1)}</td><td>${gv(r, 2)}</td>
-                    <td style="font-weight:bold;">${gv(r, 4)} vs ${gv(r, 3)}</td>
-                    <td class="val-highlight">${gv(r, 5) || '-'}</td></tr>`;
-            };
-
-            if (played.length > 0) {
-                const lastDate = gv(played[played.length - 1], 0);
-                played.filter(r => gv(r, 0) === lastDate).forEach(render);
-            }
-            if (upcoming.length > 0) {
-                const nextDate = gv(upcoming[0], 0);
-                upcoming.filter(r => gv(r, 0) === nextDate).forEach(render);
-            }
-        });
-
-    // 4. 기록 리더
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
-        .then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows;
-            const cols = data.cols.map(c => (c.label || '').toUpperCase());
+            const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
             const fi = (arr) => cols.findIndex(c => arr.some(n => c.includes(n)));
-            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']);
+            
+            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']), ipI = fi(['INNINGS PITCHED', 'IP']);
 
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3},
-                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0},
-                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0},
-                {id: 'ops-leaders', n: ['OPS'], d: 3}
+                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0, asc: false, pit: false},
+                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0, asc: false, pit: false},
+                {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
+                {id: 'era-leaders', n: ['EARNED RUN AVERAGE','ERA'], d: 2, asc: true, pit: true},
+                {id: 'win-leaders', n: ['WINS','W'], d: 0, asc: false, pit: true},
+                {id: 'so-leaders', n: ['STRIKEOUTS','SO','K'], d: 0, asc: false, pit: true},
+                {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
                 const vI = fi(m.n);
                 if(vI === -1) return;
-                const sorted = [...rows].sort((a,b) => (parseFloat(gv(b,vI))||0) - (parseFloat(gv(a,vI))||0)).slice(0, 5);
+                
+                // 투수 기록은 이닝(IP)이 있는 선수만 (타자가 방어율 0으로 1등하는 것 방지)
+                let validRows = rows;
+                if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
+
+                const sorted = [...validRows].sort((a,b) => {
+                    const vA = parseFloat(gv(a,vI)) || 0; const vB = parseFloat(gv(b,vI)) || 0;
+                    if(m.asc) { 
+                        // 방어율, WHIP은 낮을수록 좋음 (단, 기록 없는 사람은 뒤로)
+                        const realA = (gv(a,vI)==='' || gv(a,vI)==='-') ? 999 : vA;
+                        const realB = (gv(b,vI)==='' || gv(b,vI)==='-') ? 999 : vB;
+                        return realA - realB; 
+                    }
+                    return vB - vA;
+                }).slice(0, 5);
+
                 const target = document.getElementById(m.id);
                 sorted.forEach((r, i) => {
-                    let name = gv(r, lnI);
-                    if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
-                    let val = parseFloat(gv(r, vI)) || 0;
-                    if(m.d > 0) val = val.toFixed(m.d);
+                    let name = gv(r, lnI); if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
+                    let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
+                    if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
                     target.innerHTML += `<tr><td style="width:30px;">${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px;">${val}</td></tr>`;
                 });
             });
-        });
+        }).catch(e=>{});
+    }
+    
+    // 페이지 로딩 시 기록실 최초 1회 로딩
+    loadStats();
 </script>
 </body>
 </html>
