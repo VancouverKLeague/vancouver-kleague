@@ -8,7 +8,7 @@
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem; }
+        .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
         nav { background: #333; color: #fff; padding: 10px; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
@@ -16,20 +16,18 @@
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         h4 { text-align: center; color: #555; margin: 15px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.95rem; }
         
-        /* 공지사항 스타일 */
-        #notice-card { border-top: 5px solid #ff5722; background-color: #fff9f7; }
-        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; font-size: 0.95rem; }
+        #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
+        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
-        /* 테이블 모바일 최적화 */
-        .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
         
+        .val-highlight { color: #d32f2f; font-weight: bold; }
         .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
         .stats-col { flex: 1; min-width: 250px; }
-        .val-highlight { color: #d32f2f; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
@@ -49,7 +47,7 @@
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 공지사항</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집(Rule Book) 보기</a>
     </div>
 
     <div class="card">
@@ -70,9 +68,9 @@
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="flex: 1; min-width: 240px;">
-                <a href="https://maps.app.goo.gl/wS7KkX49pXy8MvYPA" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://maps.app.goo.gl/k9e7R5jR9y4Xm8Vp8" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
-                <a href="https://maps.app.goo.gl/rY1Xk8pY9z2Xm7Vr9" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
+                <a href="https://maps.app.goo.gl/9" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
+                <a href="https://maps.app.goo.gl/10" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
+                <a href="https://maps.app.goo.gl/11" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
     </div>
@@ -82,7 +80,7 @@
         <div class="table-wrapper">
             <table>
                 <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
-                <tbody id="main-sched-body"></tbody>
+                <tbody id="schedule-body"></tbody>
             </table>
         </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
@@ -104,92 +102,93 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 안전한 데이터 추출 도구
-    function getVal(row, i) {
-        if (!row || !row.c || !row.c[i]) return '';
-        return row.c[i].f || row.c[i].v || '';
-    }
-
-    // 1. 공지사항 로딩 (완전 독립형)
+    // 1. 공지사항
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
-        .then(res => res.text()).then(txt => {
-            const data = JSON.parse(txt.substr(47).slice(0, -2)).table.rows[0];
-            if (data && data.c[0]) {
+        .then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
+            if(data && data.c[0]) {
                 document.getElementById('notice-card').style.display = 'block';
-                document.getElementById('notice-content').innerText = getVal(data, 0);
-                if (getVal(data, 1)) {
-                    document.getElementById('rulebook-link').href = getVal(data, 1);
-                    document.getElementById('rulebook-link').style.display = 'inline-block';
+                document.getElementById('notice-content').innerText = gv(data, 0);
+                if(gv(data, 1)) {
+                    const link = document.getElementById('rulebook-link');
+                    link.href = gv(data, 1);
+                    link.style.display = 'inline-block';
                 }
             }
-        }).catch(e => console.log("Notice empty"));
+        });
 
-    // 2. 순위표 로딩
+    // 2. 순위표
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
-        .then(res => res.text()).then(txt => {
-            const rows = JSON.parse(txt.substr(47).slice(0, -2)).table.rows;
-            const tbody = document.getElementById('standing-body');
+        .then(res => res.text()).then(t => {
+            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
+            const tb = document.getElementById('standing-body');
             rows.forEach(r => {
-                if (getVal(r, 1) && !getVal(r, 1).includes('Team')) {
+                if(gv(r, 1) && !gv(r, 1).includes('Team')) {
                     let tr = '<tr>';
-                    for (let i = 0; i < 7; i++) tr += `<td>${getVal(r, i) || '0'}</td>`;
-                    tbody.innerHTML += tr + '</tr>';
+                    for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`;
+                    tb.innerHTML += tr + '</tr>';
                 }
             });
         });
 
-    // 3. 일정표 로딩
+    // 3. 일정표 (가장 가까운 날짜군 추출 로직)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
-        .then(res => res.text()).then(txt => {
-            const data = JSON.parse(txt.substr(47).slice(0, -2)).table;
-            const rows = data.rows.filter(r => getVal(r, 3)); // 홈팀이 있는 줄만
-            const played = rows.filter(r => getVal(r, 5) && getVal(r, 5) !== '-' && getVal(r, 5) !== 'TBA');
-            const upcoming = rows.filter(r => !getVal(r, 5) || getVal(r, 5) === '-' || getVal(r, 5) === 'TBA');
+        .then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const rows = data.rows.filter(r => gv(r, 3));
+            const tb = document.getElementById('schedule-body');
             
-            const tbody = document.getElementById('main-sched-body');
+            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
+            const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
+
             const render = (r) => {
-                tbody.innerHTML += `<tr><td>${getVal(r, 0)} ${getVal(r, 1)}</td><td>${getVal(r, 2)}</td>
-                    <td style="font-weight:bold;">${getVal(r, 4)} vs ${getVal(r, 3)}</td>
-                    <td class="val-highlight">${getVal(r, 5) || '-'}</td></tr>`;
+                tb.innerHTML += `<tr><td>${gv(r, 0)} ${gv(r, 1)}</td><td>${gv(r, 2)}</td>
+                    <td style="font-weight:bold;">${gv(r, 4)} vs ${gv(r, 3)}</td>
+                    <td class="val-highlight">${gv(r, 5) || '-'}</td></tr>`;
             };
 
-            // 지난 경기 마지막 2개, 예정 경기 첫 2개
-            if (played.length) played.slice(-2).forEach(render);
-            if (upcoming.length) upcoming.slice(0, 2).forEach(render);
+            if (played.length > 0) {
+                const lastDate = gv(played[played.length - 1], 0);
+                played.filter(r => gv(r, 0) === lastDate).forEach(render);
+            }
+            if (upcoming.length > 0) {
+                const nextDate = gv(upcoming[0], 0);
+                upcoming.filter(r => gv(r, 0) === nextDate).forEach(render);
+            }
         });
 
-    // 4. 리더보드 로딩
+    // 4. 기록 리더
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
-        .then(res => res.text()).then(txt => {
-            const data = JSON.parse(txt.substr(47).slice(0, -2)).table;
+        .then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows;
             const cols = data.cols.map(c => (c.label || '').toUpperCase());
-
-            const findI = (names) => cols.findIndex(c => names.some(n => c.includes(n)));
-            const lnI = findI(['LAST NAME','PLAYER','NAME']), fnI = findI(['FIRST NAME']), tmI = findI(['TEAM']);
+            const fi = (arr) => cols.findIndex(c => arr.some(n => c.includes(n)));
+            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']);
 
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG','BATTING'], dec: 3},
-                {id: 'hr-leaders', n: ['HR','HOME RUNS'], dec: 0},
-                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], dec: 0},
-                {id: 'ops-leaders', n: ['OPS'], dec: 3}
+                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3},
+                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0},
+                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0},
+                {id: 'ops-leaders', n: ['OPS'], d: 3}
             ];
 
             metrics.forEach(m => {
-                const vI = findI(m.n);
-                if (vI === -1) return;
-                const sorted = [...rows].sort((a,b) => (parseFloat(getVal(b,vI))||0) - (parseFloat(getVal(a,vI))||0)).slice(0, 5);
-                const tb = document.getElementById(m.id);
+                const vI = fi(m.n);
+                if(vI === -1) return;
+                const sorted = [...rows].sort((a,b) => (parseFloat(gv(b,vI))||0) - (parseFloat(gv(a,vI))||0)).slice(0, 5);
+                const target = document.getElementById(m.id);
                 sorted.forEach((r, i) => {
-                    let name = getVal(r, lnI);
-                    if (fnI !== -1 && getVal(r, fnI)) name = getVal(r, fnI) + " " + name;
-                    let val = parseFloat(getVal(r, vI)) || 0;
-                    if (m.dec > 0) val = val.toFixed(m.dec);
-                    tb.innerHTML += `<tr><td style="width:30px;">${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${getVal(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px;">${val}</td></tr>`;
+                    let name = gv(r, lnI);
+                    if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
+                    let val = parseFloat(gv(r, vI)) || 0;
+                    if(m.d > 0) val = val.toFixed(m.d);
+                    target.innerHTML += `<tr><td style="width:30px;">${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px;">${val}</td></tr>`;
                 });
             });
-        }).catch(e => console.log("Stats empty"));
+        });
 </script>
 </body>
 </html>
