@@ -8,7 +8,7 @@
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.8rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
@@ -17,10 +17,11 @@
         table { width:100%; border-collapse: collapse; text-align: center; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: bold; }
-        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; transition: 0.3s; }
-        .btn-more:hover { background: #002244; }
+        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .loading { text-align: center; padding: 20px; color: #888; }
+        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
+        .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
+        .no-data { padding: 20px; color: #888; font-style: italic; }
     </style>
 </head>
 <body>
@@ -49,68 +50,85 @@
 
     <div class="card">
         <h3>⚾ 지난 경기 결과 (Recent Results)</h3>
-        <table>
-            <thead>
-                <tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr>
-            </thead>
+        <table id="recent-table">
+            <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
             <tbody id="recent-results-body-ko"></tbody>
         </table>
+        <div id="no-recent" class="no-data" style="display:none;">아직 진행된 경기가 없습니다.</div>
     </div>
 
     <div class="card" style="border-top: 5px solid #28a745;">
         <h3>📅 예정된 경기 (Upcoming Games)</h3>
-        <table>
-            <thead>
-                <tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr>
-            </thead>
+        <table id="upcoming-table">
+            <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
             <tbody id="upcoming-body-ko"></tbody>
         </table>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 40경기 일정 보기 →</a>
     </div>
 </div>
 
-<footer>
-    <p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p>
-</footer>
+<footer><p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    
+
+    function formatTeamName(name) {
+        if (!name) return '';
+        return name.replace(/\[(.*?)\]/g, (match, p1) => {
+            let color = '#78909c';
+            if (p1.includes('1')) color = '#D4AF37';
+            if (p1.includes('2')) color = '#A9A9A9';
+            if (p1.includes('3')) color = '#CD7F32';
+            return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
+        });
+    }
+
     function loadDataKo() {
-        // 1. 순위표 가져오기
+        // 순위표 로딩 (첫 줄 헤더 제외 로직 추가)
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('standing-body-ko');
-                rows.forEach(row => {
+                // i=1 부터 시작하여 헤더 행 제외
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row.c[1]) continue; // 팀명이 없으면 건너뜀
                     const tr = document.createElement('tr');
-                    row.c.forEach(cell => {
+                    row.c.forEach((cell, idx) => {
+                        if (idx > 6) return; // 7개 컬럼까지만 표시
                         const td = document.createElement('td');
                         td.textContent = cell ? (cell.f || cell.v || '0') : '0';
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
-                });
+                }
             });
 
-        // 2. 일정 데이터 가져와서 필터링 (최근 결과 & 다음 일정)
+        // 일정표 로딩
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const resultsTbody = document.getElementById('recent-results-body-ko');
                 const upcomingTbody = document.getElementById('upcoming-body-ko');
 
-                // 결과가 있는 경기(Played)와 없는 경기(Upcoming) 분류
-                const playedGames = rows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== '');
-                const upcomingGames = rows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === '');
+                // 헤더 제외 (i=1부터)
+                const dataRows = rows.slice(1);
+                
+                // 결과 있음: Score(index 5)가 '-'가 아니고 비어있지 않은 것
+                const playedGames = dataRows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
+                // 결과 없음: Score(index 5)가 '-'이거나 'TBA'인 것
+                const upcomingGames = dataRows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
 
-                // 최근 경기일의 모든 경기 보여주기
+                // 최근 경기 표시
                 if (playedGames.length > 0) {
                     const lastDate = playedGames[playedGames.length - 1].c[0].v;
                     playedGames.filter(g => g.c[0].v === lastDate).forEach(g => renderRowKo(g, resultsTbody));
+                } else {
+                    document.getElementById('recent-table').style.display = 'none';
+                    document.getElementById('no-recent').style.display = 'block';
                 }
 
-                // 다음 경기일의 모든 경기 보여주기
+                // 다음 경기 표시 (가장 가까운 날짜의 경기들)
                 if (upcomingGames.length > 0) {
                     const nextDate = upcomingGames[0].c[0].v;
                     upcomingGames.filter(g => g.c[0].v === nextDate).forEach(g => renderRowKo(g, upcomingTbody));
@@ -118,33 +136,26 @@
             });
     }
 
-    function renderRow(row, tbody) { // ko.html은 renderRowKo
-    const c = row.c;
-    const tr = document.createElement('tr');
-    
-    // G열(c[6]) 데이터 확인
-    const note = c[6] ? (c[6].f || c[6].v || '') : '';
-    const isPO = note.toLowerCase().includes('po') || note.toLowerCase().includes('final');
+    function renderRowKo(row, tbody) {
+        const c = row.c;
+        const tr = document.createElement('tr');
+        const note = c[6] ? (c[6].f || c[6].v || '') : '';
+        if (note) tr.style.backgroundColor = '#fffdec';
 
-    // 포스트시즌 경기는 배경색을 연한 노란색으로 변경
-    if (isPO) {
-        tr.style.backgroundColor = '#fff9c4'; 
+        tr.innerHTML = `
+            <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
+            <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
+            <td style="text-align:left; padding-left:15px;">
+                ${note ? `<span class="po-badge">${note}</span>` : ''}
+                <strong>${formatTeamName(c[3] ? (c[3].f || c[3].v) : '')}</strong> vs 
+                <strong>${formatTeamName(c[4] ? (c[4].f || c[4].v) : '')}</strong>
+            </td>
+            <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
+        `;
+        tbody.appendChild(tr);
     }
-
-    tr.innerHTML = `
-        <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-        <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-        <td>
-            ${isPO ? `<span style="background:#d32f2f; color:white; padding:2px 6px; border-radius:3px; font-size:0.75rem; margin-right:5px; vertical-align:middle;">${note.toUpperCase()}</span>` : ''}
-            <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
-        </td>
-        <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
-    `;
-    tbody.appendChild(tr);
-}
 
     loadDataKo();
 </script>
-
 </body>
 </html>
