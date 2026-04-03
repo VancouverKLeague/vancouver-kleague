@@ -156,31 +156,40 @@
 
                 // ⭐ 강화된 이름 결합 로직 (Same as Korean version)
                 allData = rows.map(r => {
-                    const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? r.c[idx].v : '';
+                    // 데이터 추출 보조 함수 (문자열로 안전하게 변환)
+                    const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
                     
-                    // 1. 원본 데이터 가져오기
-                    let first = gv(fnIdx).toString().trim();
-                    let last = gv(lnIdx).toString().trim();
+                    let first = gv(fnIdx);
+                    let last = gv(lnIdx);
+                    
+                    // [핵심 수정] 만약 인덱스로 찾은 값이 둘 다 비어있다면, 
+                    // 엑셀의 0번 또는 1번 칸에서 수동으로 이름을 추출 시도
+                    if (!first && !last) {
+                        first = gv(0); // A열 시도
+                        last = gv(1);  // B열 시도
+                    }
                     
                     let finalName = "";
 
-                    // 2. 이름 판별 로직 (2025년식 vs 2026년식 통합)
+                    // 이름 결합 및 중복 제거 로직
                     if (first && last) {
-                        // 성과 이름이 둘 다 있고 서로 다를 때만 합침 (2026년식)
-                        if (last.includes(first)) {
-                            finalName = last; // Last Name에 이미 First Name이 포함되어 있으면 Last Name만 사용
+                        if (first === last || last.includes(first)) {
+                            finalName = last; // 성에 이름이 포함된 경우 (2025년식)
+                        } else if (first.includes(last)) {
+                            finalName = first; // 이름에 성이 포함된 경우
                         } else {
-                            finalName = first + " " + last;
+                            finalName = first + " " + last; // 둘이 다른 경우 합침
                         }
                     } else {
-                        // 둘 중 하나만 있으면 있는 것을 사용 (2025년식: Last Name에만 풀네임이 있음)
-                        finalName = first || last || "Unknown";
+                        finalName = first || last || "Unknown Player";
                     }
 
-                    // 3. 혹시 모를 "null" 문자열 정제
+                    // 불필요한 'null'이나 공백 정리
                     finalName = finalName.replace(/null/g, '').trim();
 
-                    // OPS 계산 로직 (기존과 동일)
+                    // 팀 정보가 없을 경우를 위한 대비
+                    let teamName = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League';
+
                     const calculateOps = () => {
                         const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
                         if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
@@ -191,7 +200,7 @@
 
                     return {
                         name: finalName,
-                        team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
+                        team: teamName,
                         isPitcher: (ipIdx > -1 && parseFloat(gv(ipIdx))) > 0,
                         hitterStats: hCols.map(c => {
                             let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
