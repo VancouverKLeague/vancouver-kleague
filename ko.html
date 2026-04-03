@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (이름 중복 해결 및 레이아웃 최적화)
+    // 기록실 로딩 (이름 정리, 투/타 중복 컬럼 완벽 분리, OPS/WHIP 정상 출력)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -189,37 +189,42 @@
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
             
-            // 정확하게 일치하는 컬럼을 먼저 찾도록 함수 개선
-            const fi = (arr) => {
-                let idx = cols.findIndex(c => arr.includes(c));
-                if (idx === -1) idx = cols.findIndex(c => arr.some(n => c.includes(n)));
-                return idx;
+            // 1. IP(투수 이닝) 컬럼 인덱스를 먼저 찾음
+            const ipI = cols.findIndex(c => c.trim() === 'IP' || c.trim() === 'INNINGS PITCHED');
+
+            // 2. 정확히 일치(Exact match)하는 컬럼만 찾기 (POPS 등 오작동 방지)
+            const fi = (arr, isPit = false) => {
+                // 투수 기록일 경우 타자 기록(SO, HR 등)과 겹치지 않게 IP 컬럼 이후에서만 검색
+                let start = (isPit && ipI !== -1) ? ipI : 0;
+                let idx = cols.slice(start).findIndex(c => arr.some(n => c.trim() === n));
+                return idx !== -1 ? start + idx : -1;
             };
 
-            // Player(전체이름) 열을 최우선으로 찾기
             const playerI = fi(['PLAYER']);
             const lnI = fi(['LAST NAME']);
             const fnI = fi(['FIRST NAME']);
             const nameI = fi(['NAME']);
             const tmI = fi(['TEAM']);
-            const ipI = fi(['INNINGS PITCHED', 'IP']);
 
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3, asc: false, pit: false},
-                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0, asc: false, pit: false},
-                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0, asc: false, pit: false},
+                {id: 'avg-leaders', n: ['AVG'], d: 3, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HR'], d: 0, asc: false, pit: false},
+                {id: 'rbi-leaders', n: ['RBI'], d: 0, asc: false, pit: false},
                 {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
-                {id: 'era-leaders', n: ['EARNED RUN AVERAGE','ERA'], d: 2, asc: true, pit: true},
-                {id: 'win-leaders', n: ['WINS','W'], d: 0, asc: false, pit: true},
-                {id: 'so-leaders', n: ['STRIKEOUTS','SO','K'], d: 0, asc: false, pit: true},
+                {id: 'era-leaders', n: ['ERA'], d: 2, asc: true, pit: true},
+                {id: 'win-leaders', n: ['W'], d: 0, asc: false, pit: true},
+                {id: 'so-leaders', n: ['SO', 'K'], d: 0, asc: false, pit: true},
                 {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
-                const vI = fi(m.n);
+                const vI = fi(m.n, m.pit); // 해당 스탯의 컬럼 위치 찾기 (투수 여부 전달)
                 if(vI === -1) return;
+                
                 let validRows = rows;
+                // 투수 순위일 경우 이닝(IP)이 0 이상인 사람만 집계 (타자 제외)
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
+                
                 const sorted = [...validRows].sort((a,b) => {
                     const vA = parseFloat(gv(a,vI)) || 0; const vB = parseFloat(gv(b,vI)) || 0;
                     if(m.asc) { 
@@ -232,17 +237,19 @@
 
                 const target = document.getElementById(m.id);
                 sorted.forEach((r, i) => {
-                    // 이름 중복 방지 로직 (GameChanger의 Player 열 우선 사용)
+                    // 이름 중복 방지 로직 (이전 버전 복구)
                     let name = "";
-                    if (playerI !== -1) name = gv(r, playerI);
-                    else if (fnI !== -1 && lnI !== -1) name = gv(r, fnI) + " " + gv(r, lnI);
-                    else if (nameI !== -1) name = gv(r, nameI);
+                    if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
+                    else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = gv(r, fnI) + " " + gv(r, lnI);
+                    else if (nameI !== -1 && gv(r, nameI)) name = gv(r, nameI);
                     else name = gv(r, lnI) || "Unknown";
+
+                    name = name.trim();
 
                     let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
                     if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
                     
-                    // 이름이 너무 길면 레이아웃이 깨지지 않게 ... 처리 추가 (max-width 적용)
+                    // 이름이 너무 길면 모바일에서 자동으로 ... 처리됨
                     target.innerHTML += `<tr>
                         <td style="width:30px; padding:8px 5px;">${i+1}</td>
                         <td style="text-align:left; padding:8px 10px; width:100%;">
