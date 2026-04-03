@@ -102,14 +102,12 @@
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
 
-    // 데이터 안전하게 가져오기 함수
     function getSafe(row, idx) {
         if (!row || !row.c || idx === undefined || idx < 0) return '';
         const cell = row.c[idx];
         return cell ? (cell.f || cell.v || '') : '';
     }
 
-    // 헤더 인덱스 찾기 (더 유연하게 수정)
     function findIdx(headers, searchList) {
         return headers.findIndex(h => {
             const headStr = String(h || '').toUpperCase().trim();
@@ -117,30 +115,32 @@
         });
     }
 
-    // 공지사항 로딩
+    // 1. 공지사항 로딩 (실패해도 무관하도록 try-catch)
     async function loadNotice() {
         try {
             const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`);
             const d = await r.text();
-            const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
-            if (row && row.c[0]) {
+            const json = JSON.parse(d.substr(47).slice(0, -2));
+            const row = json.table.rows[0];
+            if (row && row.c && row.c[0]) {
                 document.getElementById('notice-card').style.display = 'block';
                 document.getElementById('notice-content').innerText = getSafe(row, 0);
-                if (row.c[1]?.v) {
+                if (row.c[1] && row.c[1].v) {
                     document.getElementById('rulebook-link').href = row.c[1].v;
                     document.getElementById('rulebook-link').style.display = 'inline-block';
                 }
             }
-        } catch(e) { console.error("Notice error:", e); }
+        } catch(e) { console.log("Notice skip"); }
     }
 
-    // 순위표 로딩
+    // 2. 순위표 로딩
     async function loadStandings() {
         try {
             const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`);
             const d = await r.text();
             const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
             const tbody = document.getElementById('standing-body-ko');
+            tbody.innerHTML = '';
             rows.forEach(row => {
                 if (row.c && row.c[1] && row.c[1].v !== 'Team' && row.c[1].v !== '팀명') {
                     const tr = document.createElement('tr');
@@ -152,10 +152,10 @@
                     tbody.appendChild(tr);
                 }
             });
-        } catch(e) { console.error("Standings error:", e); }
+        } catch(e) { console.log("Standings fail"); }
     }
 
-    // 일정표 로딩
+    // 3. 일정표 로딩
     async function loadSchedule() {
         try {
             const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`);
@@ -164,6 +164,7 @@
             const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
             const rows = data.rows;
             const tbody = document.getElementById('main-sched-body');
+            tbody.innerHTML = '';
 
             const dIdx = findIdx(headers, ['DATE', '날짜']), tIdx = findIdx(headers, ['TIME', '시간']);
             const fIdx = findIdx(headers, ['FIELD', '구장']), hIdx = findIdx(headers, ['HOME', '홈']);
@@ -173,30 +174,26 @@
             const upcoming = rows.filter(r => r.c && (!getSafe(r, sIdx) || getSafe(r, sIdx) === '-' || getSafe(r, sIdx) === 'TBA'));
 
             if (played.length > 0) {
-                const lastDate = getSafe(played[played.length - 1], dIdx);
-                played.filter(g => getSafe(g, dIdx) === lastDate).forEach(g => {
-                    renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx);
-                });
+                const lastDate = getSafe(played[played.length-1], dIdx);
+                played.filter(g => getSafe(g, dIdx) === lastDate).forEach(g => renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
             }
             if (upcoming.length > 0) {
                 const nextDate = getSafe(upcoming[0], dIdx);
-                upcoming.filter(g => getSafe(g, dIdx) === nextDate).forEach(g => {
-                    renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx);
-                });
+                upcoming.filter(g => getSafe(g, dIdx) === nextDate).forEach(g => renderRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx));
             }
-        } catch(e) { console.error("Schedule error:", e); }
+        } catch(e) { console.log("Schedule fail"); }
     }
 
     function renderRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
         const tr = document.createElement('tr');
-        const dt = (getSafe(row, dIdx) + " " + getSafe(row, tIdx)).trim();
-        tr.innerHTML = `<td>${dt}</td><td>${getSafe(row, fIdx)}</td>
+        const date = getSafe(row, dIdx), time = getSafe(row, tIdx);
+        tr.innerHTML = `<td>${date} ${time}</td><td>${getSafe(row, fIdx)}</td>
                         <td style="font-weight:bold;">${getSafe(row, vIdx)} vs ${getSafe(row, hIdx)}</td>
                         <td class="val-highlight">${getSafe(row, sIdx) || '-'}</td>`;
         tbody.appendChild(tr);
     }
 
-    // 리그 리더 로딩
+    // 4. 기록실 로딩
     async function loadStats() {
         try {
             const r = await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`);
@@ -208,33 +205,31 @@
             const lnIdx = findIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
             const fnIdx = findIdx(headers, ['FIRST NAME']);
             const teamIdx = findIdx(headers, ['TEAM']);
-            const avgIdx = findIdx(headers, ['BATTING AVERAGE', 'AVG']);
-            const hrIdx = findIdx(headers, ['HOME RUNS', 'HR']);
-            const rbiIdx = findIdx(headers, ['RUNS BATTED IN', 'RBI']);
-            const opsIdx = findIdx(headers, ['OPS']);
+            const avgIdx = findIdx(headers, ['AVG']), hrIdx = findIdx(headers, ['HR']), rbiIdx = findIdx(headers, ['RBI']), opsIdx = findIdx(headers, ['OPS']);
 
-            if (avgIdx > -1) renderLeader(rows, 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true, 'desc');
-            if (hrIdx > -1) renderLeader(rows, 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx, false, 'desc');
-            if (rbiIdx > -1) renderLeader(rows, 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx, false, 'desc');
-            if (opsIdx > -1) renderLeader(rows, 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true, 'desc');
-        } catch(e) { console.error("Stats error:", e); }
+            if (avgIdx > -1) renderL(rows, 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
+            if (hrIdx > -1) renderL(rows, 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx, false);
+            if (rbiIdx > -1) renderL(rows, 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx, false);
+            if (opsIdx > -1) renderL(rows, 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
+        } catch(e) { console.log("Stats fail"); }
     }
 
-    function renderLeader(rows, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3, order) {
+    function renderL(rows, id, lnIdx, fnIdx, vIdx, tIdx, isF3) {
         const tbody = document.getElementById(id);
-        const sorted = [...rows].sort((a, b) => (parseFloat(getSafe(b, valIdx)) || 0) - (parseFloat(getSafe(a, valIdx)) || 0)).slice(0, 5);
+        tbody.innerHTML = '';
+        const sorted = [...rows].sort((a,b) => (parseFloat(getSafe(b, vIdx)) || 0) - (parseFloat(getSafe(a, vIdx)) || 0)).slice(0, 5);
         sorted.forEach((row, i) => {
             const tr = document.createElement('tr');
             let name = getSafe(row, lnIdx);
             if (fnIdx > -1 && getSafe(row, fnIdx)) name = getSafe(row, fnIdx) + " " + name;
-            let val = parseFloat(getSafe(row, valIdx)) || 0;
-            if (isFixed3) val = val.toFixed(3);
-            tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${getSafe(row, teamIdx)}</span></div></td><td class="val-highlight">${val}</td>`;
+            let val = parseFloat(getSafe(row, vIdx)) || 0;
+            if (isF3) val = val.toFixed(3);
+            tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${getSafe(row, tIdx)}</span></div></td><td class="val-highlight">${val}</td>`;
             tbody.appendChild(tr);
         });
     }
 
-    // 모든 함수 독립 실행
+    // 각각 독립적으로 실행
     loadNotice();
     loadStandings();
     loadSchedule();
