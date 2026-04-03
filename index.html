@@ -151,7 +151,7 @@
     }
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // Notice Loading
+    // 공지사항 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
         if(data && data.c[0]) { 
@@ -164,13 +164,13 @@
         }
     }).catch(e=>{});
 
-    // Standings Loading
+    // 순위표 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
         rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
     }).catch(e=>{});
 
-    // Schedule Loading
+    // 일정표 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
         const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // Stats Loading
+    // 기록실 로딩 (이름 중복 해결 및 레이아웃 최적화)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -188,8 +188,21 @@
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_${currentSeason}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
-            const fi = (arr) => cols.findIndex(c => arr.some(n => c.includes(n)));
-            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']), ipI = fi(['INNINGS PITCHED', 'IP']);
+            
+            // 정확하게 일치하는 컬럼을 먼저 찾도록 함수 개선
+            const fi = (arr) => {
+                let idx = cols.findIndex(c => arr.includes(c));
+                if (idx === -1) idx = cols.findIndex(c => arr.some(n => c.includes(n)));
+                return idx;
+            };
+
+            // Player(전체이름) 열을 최우선으로 찾기
+            const playerI = fi(['PLAYER']);
+            const lnI = fi(['LAST NAME']);
+            const fnI = fi(['FIRST NAME']);
+            const nameI = fi(['NAME']);
+            const tmI = fi(['TEAM']);
+            const ipI = fi(['INNINGS PITCHED', 'IP']);
 
             const metrics = [
                 {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3, asc: false, pit: false},
@@ -219,10 +232,27 @@
 
                 const target = document.getElementById(m.id);
                 sorted.forEach((r, i) => {
-                    let name = gv(r, lnI); if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
+                    // 이름 중복 방지 로직 (GameChanger의 Player 열 우선 사용)
+                    let name = "";
+                    if (playerI !== -1) name = gv(r, playerI);
+                    else if (fnI !== -1 && lnI !== -1) name = gv(r, fnI) + " " + gv(r, lnI);
+                    else if (nameI !== -1) name = gv(r, nameI);
+                    else name = gv(r, lnI) || "Unknown";
+
                     let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
                     if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
-                    target.innerHTML += `<tr><td style="width:30px; padding:8px 5px;">${i+1}</td><td style="text-align:left; padding:8px 10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px; padding:8px 5px;">${val}</td></tr>`;
+                    
+                    // 이름이 너무 길면 레이아웃이 깨지지 않게 ... 처리 추가 (max-width 적용)
+                    target.innerHTML += `<tr>
+                        <td style="width:30px; padding:8px 5px;">${i+1}</td>
+                        <td style="text-align:left; padding:8px 10px; width:100%;">
+                            <div style="display:flex; flex-direction:column; overflow:hidden;">
+                                <span style="font-weight:bold; font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; max-width:130px;" title="${name}">${name}</span>
+                                <span style="font-size:0.7rem; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${gv(r, tmI)}</span>
+                            </div>
+                        </td>
+                        <td class="val-highlight" style="width:50px; padding:8px 5px;">${val}</td>
+                    </tr>`;
                 });
             });
         }).catch(e=>{});
