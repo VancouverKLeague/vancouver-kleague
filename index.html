@@ -14,20 +14,21 @@
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
-        h4 { text-align: center; color: #555; margin: 15px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.95rem; }
+        
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
+
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
+        
         .val-highlight { color: #d32f2f; font-weight: bold; }
-        .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-        .stats-col { flex: 1; min-width: 250px; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        
         .toggle-container { text-align: right; margin-bottom: 10px; }
         .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
         .active { background: #003366; color: white; }
@@ -59,16 +60,15 @@
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather</h3>
+        <h3>📍 Field & Weather Info</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div>
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
-            
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
                 <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (Richmond)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (Richmond)</a>
                 <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
@@ -85,28 +85,52 @@
     <div class="card" style="border-top: 4px solid #ffc107;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3>🔥 League Leaders (TOP 5)</h3>
-            <div class="toggle-container">
+            <div class="toggle-container" style="margin-bottom: 0;">
                 <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">Regular</button>
                 <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">Post</button>
             </div>
         </div>
         
-        <h4 style="color: #0288d1; margin-top: 0;">Hitting</h4>
-        <div class="stats-grid">
-            <div class="stats-col"><h4>AVG</h4><table><tbody id="avg-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>HR</h4><table><tbody id="hr-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>RBI</h4><table><tbody id="rbi-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>OPS</h4><table><tbody id="ops-leaders"></tbody></table></div>
+        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Hitting</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">AVG</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="avg-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">HR</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="hr-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">RBI</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="rbi-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="ops-leaders"></tbody></table>
+            </div>
         </div>
 
-        <h4 style="color: #2e7d32; margin-top: 30px;">Pitching</h4>
-        <div class="stats-grid">
-            <div class="stats-col"><h4>ERA</h4><table><tbody id="era-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>Wins</h4><table><tbody id="win-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>SO</h4><table><tbody id="so-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>WHIP</h4><table><tbody id="whip-leaders"></tbody></table></div>
+        <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Pitching</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">ERA</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="era-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Wins</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="win-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">SO</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="so-leaders"></tbody></table>
+            </div>
+            <div>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="whip-leaders"></tbody></table>
+            </div>
         </div>
-        <a href="stats.html" class="btn-more" style="background: #444;">View Full Player Stats →</a>
+        <a href="stats.html" class="btn-more" style="background: #444; margin-top: 20px;">View Full Player Stats →</a>
     </div>
 </div>
 
@@ -124,25 +148,26 @@
     }
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 1. 공지사항 (B1: 자동번역된 영문, C1: 링크)
+    // 공지사항 로딩 (B1: 자동번역, C1: 링크)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
         if(data && data.c[0]) { 
             document.getElementById('notice-card').style.display = 'block'; 
-            // 영문 페이지에서는 B1(인덱스 1)을 먼저 찾고, 만약 번역이 안 들어와있으면 A1(인덱스 0) 한글을 띄움
             document.getElementById('notice-content').innerText = gv(data, 1) || gv(data, 0); 
-            if(gv(data, 2)) { // 링크는 C1 (인덱스 2)
+            if(gv(data, 2)) { 
                 document.getElementById('rulebook-link').href = gv(data, 2); 
                 document.getElementById('rulebook-link').style.display = 'inline-block'; 
             } 
         }
     }).catch(e=>{});
 
+    // 순위표 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
         rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
     }).catch(e=>{});
 
+    // 일정표 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
         const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
@@ -152,6 +177,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
+    // 기록실 로딩
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -193,7 +219,7 @@
                     let name = gv(r, lnI); if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
                     let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
                     if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
-                    target.innerHTML += `<tr><td style="width:30px;">${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px;">${val}</td></tr>`;
+                    target.innerHTML += `<tr><td style="width:30px; padding:8px 5px;">${i+1}</td><td style="text-align:left; padding:8px 10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px; padding:8px 5px;">${val}</td></tr>`;
                 });
             });
         }).catch(e=>{});
