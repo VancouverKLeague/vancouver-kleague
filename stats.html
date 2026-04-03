@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancouver K-League | Full League Stats</title>
+    <title>Vancouver K-League | Full Stats</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
@@ -19,21 +19,20 @@
         
         #search-input { padding: 8px; width: 220px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: auto; }
-        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.85rem; }
-        th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; cursor: default; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; }
+        th:hover { background: #e9ecef; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         tr:hover { background-color: #f1f1f1; }
         
-        .player-info { text-align: left; min-width: 150px; }
+        .player-info { text-align: left; width: 180px; }
         .p-name { font-weight: bold; display: block; color: #333; }
         .p-team { font-size: 0.75rem; color: #888; }
-        .val-highlight { font-weight: bold; color: #d32f2f; font-size: 0.9rem; }
+        .val-highlight { font-weight: bold; color: #d32f2f; font-size: 0.9rem; background-color: #fff9f9; }
         
-        @media (max-width: 600px) {
-            .controls { flex-direction: column; align-items: flex-start; }
-            #search-input { width: 100%; }
-        }
+        .sort-icon { font-size: 0.7rem; margin-left: 3px; color: #003366; }
+        @media (max-width: 600px) { .controls { flex-direction: column; align-items: flex-start; } #search-input { width: 100%; } }
     </style>
 </head>
 <body>
@@ -61,7 +60,9 @@
         <input type="text" id="search-input" placeholder="Search player name..." onkeyup="filterTable()">
     </div>
 
-    <div style="overflow-x: auto; max-height: 700px; border: 1px solid #ddd; border-radius: 8px;">
+    <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">* Click on any header (AVG, HR, etc.) to sort the rankings.</p>
+
+    <div style="overflow-x: auto; border: 1px solid #ddd; border-radius: 8px;">
         <table id="stats-table">
             <thead id="table-head"></thead>
             <tbody id="table-body"></tbody>
@@ -74,6 +75,8 @@
     let currentSeason = 'Reg';
     let currentCategory = 'Hitter';
     let allData = [];
+    let sortColIdx = 0; 
+    let sortOrder = -1; 
 
     function switchSeason(s) {
         currentSeason = s;
@@ -84,8 +87,20 @@
 
     function switchCategory(c) {
         currentCategory = c;
+        sortColIdx = 0; 
+        sortOrder = (c === 'Pitcher') ? 1 : -1;
         document.getElementById('btn-Hitter').className = (c === 'Hitter' ? 'active' : 'inactive');
         document.getElementById('btn-Pitcher').className = (c === 'Pitcher' ? 'active' : 'inactive');
+        renderTable();
+    }
+
+    function changeSort(idx) {
+        if (sortColIdx === idx) {
+            sortOrder *= -1; 
+        } else {
+            sortColIdx = idx;
+            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 4)) ? 1 : -1;
+        }
         renderTable();
     }
 
@@ -102,7 +117,6 @@
                 const teamIdx = getIdx(['TEAM']);
                 const ipIdx = getIdx(['INNINGS PITCHED', 'IP']);
 
-                // Hitting Metrics
                 const hCols = [
                     {label: 'AVG', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
                     {label: 'HR', id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
@@ -112,7 +126,6 @@
                     {label: 'OBP', id: 'OBP', idx: getIdx(['ON-BASE PERCENTAGE', 'OBP']), fix: 3}
                 ];
 
-                // Pitching Metrics
                 const pCols = [
                     {label: 'ERA', id: 'ERA', idx: getIdx(['EARNED RUN AVERAGE', 'ERA']), fix: 2},
                     {label: 'W', id: 'W', idx: getIdx(['WINS', 'W'])},
@@ -128,11 +141,10 @@
                         name: name,
                         team: r.c[teamIdx]?.v || 'K-League',
                         isPitcher: (r.c[ipIdx]?.v || 0) > 0,
-                        hitterStats: hCols.map(c => ({val: r.c[c.idx]?.v || 0, label: c.label, fix: c.fix})),
-                        pitcherStats: pCols.map(c => ({val: r.c[c.idx]?.v || 0, label: c.label, fix: c.fix}))
+                        hitterStats: hCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix})),
+                        pitcherStats: pCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix}))
                     };
                 });
-
                 renderTable();
             });
     }
@@ -145,15 +157,21 @@
 
         let displayData = [...allData];
         if (currentCategory === 'Pitcher') {
-            displayData = displayData.filter(d => d.isPitcher).sort((a,b) => (a.pitcherStats[0].val || 99) - (b.pitcherStats[0].val || 99));
+            displayData = displayData.filter(d => d.isPitcher);
+            displayData.sort((a,b) => (a.pitcherStats[sortColIdx].val - b.pitcherStats[sortColIdx].val) * sortOrder);
         } else {
-            displayData = displayData.sort((a,b) => (b.hitterStats[0].val || 0) - (a.hitterStats[0].val || 0));
+            displayData.sort((a,b) => (a.hitterStats[sortColIdx].val - b.hitterStats[sortColIdx].val) * sortOrder);
         }
 
         const hTr = document.createElement('tr');
-        hTr.innerHTML = `<th style="width:50px;">Rank</th><th style="text-align:left; padding-left:10px;">Player</th>`;
+        let headerHtml = `<th style="width:50px;">Rank</th><th style="width:180px;">Player</th>`;
         const activeCols = currentCategory === 'Hitter' ? allData[0].hitterStats : allData[0].pitcherStats;
-        activeCols.forEach(c => hTr.innerHTML += `<th>${c.label}</th>`);
+        
+        activeCols.forEach((c, idx) => {
+            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? '▲' : '▼') : '';
+            headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
+        });
+        hTr.innerHTML = headerHtml;
         head.appendChild(hTr);
 
         displayData.forEach((d, i) => {
@@ -163,8 +181,8 @@
             
             stats.forEach((s, idx) => {
                 let v = s.val;
-                if (s.fix && !isNaN(parseFloat(v))) v = parseFloat(v).toFixed(s.fix);
-                statsHtml += `<td class="${idx === 0 ? 'val-highlight' : ''}">${v}</td>`;
+                if (s.fix) v = v.toFixed(s.fix);
+                statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
             });
 
             tr.innerHTML = `
