@@ -1,39 +1,75 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vancouver K-League | Player Stats</title>
     <style>
+        /* 1. 기본 폰트 및 배경 설정 */
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1200px; margin: auto; background: #fff; min-height: 800px; }
-        
+
+        /* 2. 가로 스크롤 컨테이너 (아이폰 15 프로 맥스 대응) */
+        .stats-scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* 아이폰 부드러운 스크롤 */
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            min-width: 900px; /* 표가 찌그러지지 않게 보호 */
+        }
+
+        /* 3. 이름 열 왼쪽 고정 (Sticky) */
+        .player-info-sticky {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #ffffff !important;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1); 
+            width: 160px !important;
+            min-width: 160px;
+            padding-left: 10px !important;
+        }
+
+        th.player-info-sticky {
+            z-index: 11;
+            background-color: #f8f9fa !important;
+        }
+
+        /* 4. 기타 디자인 요소 */
         .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; gap: 10px; }
         .btn-group { display: flex; border: 1px solid #003366; border-radius: 5px; overflow: hidden; }
         .btn-group button { padding: 8px 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-group button.active { background: #003366; color: white; }
         .btn-group button.inactive { background: white; color: #003366; }
-        
-        /* Season Select Style */
-        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; cursor: pointer; }
+
+        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; }
         #search-input { padding: 8px; width: 220px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        th { background: #f8f9fa; position: sticky; top: 0; z-index: 10; cursor: pointer; user-select: none; }
-        th:hover { background: #e9ecef; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:hover { background-color: #f1f1f1; }
-        
-        .player-info { text-align: left; width: 180px; }
+
+        td, th {
+            white-space: nowrap; /* 줄바꿈 방지 */
+            padding: 12px 8px;
+            border: 1px solid #eee;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .player-info { text-align: left; }
         .p-name { font-weight: bold; display: block; color: #333; }
         .p-team { font-size: 0.75rem; color: #888; }
         .val-highlight { font-weight: bold; color: #d32f2f; font-size: 0.9rem; background-color: #fff9f9; }
-        
         .sort-icon { font-size: 0.7rem; margin-left: 3px; color: #003366; }
+
         @media (max-width: 600px) { .controls { flex-direction: column; align-items: flex-start; } #search-input { width: 100%; } }
     </style>
 </head>
@@ -216,53 +252,64 @@
     }
 
     function renderTable() {
-        const head = document.getElementById('table-head');
-        const body = document.getElementById('table-body');
-        if (!allData.length) return;
-        head.innerHTML = '';
-        body.innerHTML = '';
+    const head = document.getElementById('table-head');
+    const body = document.getElementById('table-body');
+    if (!allData.length) return;
+    head.innerHTML = '';
+    body.innerHTML = '';
 
-        let displayData = [...allData];
-        if (currentCategory === 'Pitcher') {
-            displayData = displayData.filter(d => d.isPitcher);
-            displayData.sort((a,b) => (a.pitcherStats[sortColIdx].val - b.pitcherStats[sortColIdx].val) * sortOrder);
-        } else {
-            displayData.sort((a,b) => (a.hitterStats[sortColIdx].val - b.hitterStats[sortColIdx].val) * sortOrder);
-        }
+    // 표를 감싸는 부모 요소에 스크롤 클래스 부여
+    const tableWrapper = document.getElementById('stats-table').parentElement;
+    tableWrapper.className = 'stats-scroll-container';
 
-        const hTr = document.createElement('tr');
-        let headerHtml = `<th style="width:50px;">Rank</th><th style="width:180px;">Player Info</th>`;
-        const activeCols = currentCategory === 'Hitter' ? displayData[0].hitterStats : displayData[0].pitcherStats;
-        
-        activeCols.forEach((c, idx) => {
-            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
-            headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
-        });
-        hTr.innerHTML = headerHtml;
-        head.appendChild(hTr);
-
-        displayData.forEach((d, i) => {
-            const tr = document.createElement('tr');
-            let statsHtml = '';
-            const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
-            
-            stats.forEach((s, idx) => {
-                let v = s.val;
-                if (s.fix !== undefined) v = v.toFixed(s.fix);
-                statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
-            });
-
-            tr.innerHTML = `
-                <td>${i + 1}</td>
-                <td class="player-info">
-                    <span class="p-name">${d.name}</span>
-                    <span class="p-team">${d.team}</span>
-                </td>
-                ${statsHtml}
-            `;
-            body.appendChild(tr);
-        });
+    let displayData = [...allData];
+    if (currentCategory === 'Pitcher') {
+        displayData = displayData.filter(d => d.isPitcher);
+        displayData.sort((a,b) => (a.pitcherStats[sortColIdx].val - b.pitcherStats[sortColIdx].val) * sortOrder);
+    } else {
+        displayData.sort((a,b) => (a.hitterStats[sortColIdx].val - b.hitterStats[sortColIdx].val) * sortOrder);
     }
+
+    // 헤더 생성 (이름 열에 sticky 클래스 적용)
+    const hTr = document.createElement('tr');
+    let headerHtml = `<th class="player-info-sticky">Rank / Player</th>`;
+    const activeCols = currentCategory === 'Hitter' ? displayData[0].hitterStats : displayData[0].pitcherStats;
+    
+    activeCols.forEach((c, idx) => {
+        const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
+        headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
+    });
+    hTr.innerHTML = headerHtml;
+    head.appendChild(hTr);
+
+    // 데이터 행 생성
+    displayData.forEach((d, i) => {
+        const tr = document.createElement('tr');
+        let statsHtml = '';
+        const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
+        
+        stats.forEach((s, idx) => {
+            let v = s.val;
+            if (s.fix !== undefined) v = v.toFixed(s.fix);
+            statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
+        });
+
+        // 순위와 이름을 하나의 고정 열로 합쳐서 출력
+        tr.innerHTML = `
+            <td class="player-info-sticky">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:0.75rem; color:#999; font-weight:bold; min-width:15px;">${i+1}</span>
+                    <div class="player-info">
+                        <span class="p-name">${d.name}</span>
+                        <span class="p-team">${d.team}</span>
+                    </div>
+                </div>
+            </td>
+            ${statsHtml}
+        `;
+        body.appendChild(tr);
+    });
+}
 
     function filterTable() {
         const input = document.getElementById('search-input').value.toUpperCase();
