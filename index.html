@@ -13,14 +13,17 @@
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
+        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        /* Adjusted CSS: Unbound table min-width, applied strictly to the wrapper's main tables */
+        table { width: 100%; border-collapse: collapse; }
+        .table-wrapper table { min-width: 500px; }
+        
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
         
@@ -40,27 +43,27 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Official Amateur Baseball League in Vancouver</p>
+    <p>Vancouver's First Korean-Canadian Amateur Baseball League</p>
 </header>
 
-<nav><a href="index.html">HOME</a> <a href="schedule.html">SCHEDULE</a></nav>
+<nav><a href="index.html">Home</a> <a href="schedule_en.html">Full Schedule</a></nav>
 
 <div class="container">
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 Notice</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 View 2026 Rule Book</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 View 2026 League Rule Book</a>
     </div>
 
     <div class="card">
-        <h3>🏆 League Standings</h3>
+        <h3>🏆 Standings</h3>
         <div class="table-wrapper">
-            <table><thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead><tbody id="standing-body"></tbody></table>
+            <table><thead><tr><th>Rank</th><th>Team</th><th>G</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead><tbody id="standing-body"></tbody></table>
         </div>
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather Info</h3>
+        <h3>📍 Field & Weather</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div>
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
@@ -75,11 +78,11 @@
     </div>
 
     <div class="card">
-        <h3>⚾ Recent & Upcoming Games</h3>
+        <h3>⚾ Recent Results & Upcoming Games</h3>
         <div class="table-wrapper">
-            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead><tbody id="schedule-body"></tbody></table>
+            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
-        <a href="schedule.html" class="btn-more">View Full Schedule →</a>
+        <a href="schedule_en.html" class="btn-more">View Full Season Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
@@ -91,23 +94,23 @@
             </div>
         </div>
         
-        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Hitting</h4>
+        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Batting</h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">AVG</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="avg-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="avg-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">HR</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="hr-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="hr-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">RBI</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="rbi-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="rbi-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="ops-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="ops-leaders"></tbody></table>
             </div>
         </div>
 
@@ -115,22 +118,22 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">ERA</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="era-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="era-leaders"></tbody></table>
             </div>
             <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Wins</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="win-leaders"></tbody></table>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Wins (W)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="win-leaders"></tbody></table>
             </div>
             <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">SO</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="so-leaders"></tbody></table>
+                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Strikeouts (SO)</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="so-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="whip-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="whip-leaders"></tbody></table>
             </div>
         </div>
-        <a href="stats.html" class="btn-more" style="background: #444; margin-top: 20px;">View Full Player Stats →</a>
+        <a href="stats_en.html" class="btn-more" style="background: #444; margin-top: 20px;">View Full Player Stats →</a>
     </div>
 </div>
 
@@ -148,12 +151,12 @@
     }
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 공지사항 로딩 (B1: 자동번역, C1: 링크)
+    // Notice Loading
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
         if(data && data.c[0]) { 
             document.getElementById('notice-card').style.display = 'block'; 
-            document.getElementById('notice-content').innerText = gv(data, 1) || gv(data, 0); 
+            document.getElementById('notice-content').innerText = gv(data, 0);
             if(gv(data, 2)) { 
                 document.getElementById('rulebook-link').href = gv(data, 2); 
                 document.getElementById('rulebook-link').style.display = 'inline-block'; 
@@ -161,13 +164,13 @@
         }
     }).catch(e=>{});
 
-    // 순위표 로딩
+    // Standings Loading
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
         rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
     }).catch(e=>{});
 
-    // 일정표 로딩
+    // Schedule Loading
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
         const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
@@ -177,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩
+    // Stats Loading
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
