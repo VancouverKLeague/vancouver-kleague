@@ -151,12 +151,13 @@
     }
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 공지사항 로딩
+    // Notice Loading (index.html용 - B1열 영문 읽기)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-        if(data && data.c[0]) { 
+        // B1(data.c[1])에 내용이 있을 때만 공지사항 카드 표시
+        if(data && data.c[1] && gv(data, 1).trim() !== '') { 
             document.getElementById('notice-card').style.display = 'block'; 
-            document.getElementById('notice-content').innerText = gv(data, 0);
+            document.getElementById('notice-content').innerText = gv(data, 1); // B1 가져오기
             if(gv(data, 2)) { 
                 document.getElementById('rulebook-link').href = gv(data, 2); 
                 document.getElementById('rulebook-link').style.display = 'inline-block'; 
