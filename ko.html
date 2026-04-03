@@ -11,22 +11,35 @@
         .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
-        .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
+        .container { padding: 20px; max-width: 1100px; margin: auto; background: #fff; min-height: 800px; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; }
         h4 { text-align: center; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        table { width:100%; border-collapse: collapse; text-align: center; }
-        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; }
-        th { background: #f8f9fa; font-weight: bold; }
-        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 10px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        
+        /* 테이블 정렬 및 고정 레이아웃 */
+        table { width:100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 8px 4px; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        th { background: #f8f9fa; font-weight: bold; text-align: center; }
+        
+        /* 리더보드 컬럼 너비 지정 */
+        .col-rank { width: 35px; text-align: center; }
+        .col-record { width: 65px; text-align: center; }
+        .col-name { text-align: left; padding-left: 10px; }
+        
+        /* 선수 정보 스타일 (이름/팀 세로 배치) */
+        .player-info { display: flex; flex-direction: column; line-height: 1.3; }
+        .p-name { font-weight: bold; color: #333; font-size: 0.85rem; }
+        .p-team { font-size: 0.7rem; color: #888; }
+        .val-highlight { color: #d32f2f; font-weight: bold; font-size: 0.9rem; }
+        
+        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .stats-grid { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
-        .stats-col { flex: 1; min-width: 220px; }
-        .val-highlight { color: #d32f2f; font-weight: bold; }
-        .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
-        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
+        
+        /* 그리드 시스템 */
+        .stats-grid { display: flex; gap: 15px; flex-wrap: wrap; }
+        .stats-col { flex: 1; min-width: 240px; margin-bottom: 10px; }
         .toggle-container { text-align: right; margin-bottom: 10px; }
-        .toggle-btn { padding: 5px 15px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .toggle-btn { padding: 6px 16px; cursor: pointer; border: none; font-weight: bold; font-size: 0.85rem; }
         .active { background: #003366; color: white; }
         .inactive { background: #eee; color: #333; }
     </style>
@@ -47,7 +60,7 @@
 <div class="container">
     <div class="card">
         <h3>🏆 리그 순위 (Standings)</h3>
-        <table>
+        <table style="table-layout: auto;">
             <thead><tr><th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead>
             <tbody id="standing-body-ko"></tbody>
         </table>
@@ -55,7 +68,7 @@
 
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
-        <table>
+        <table style="table-layout: auto;">
             <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
             <tbody id="main-sched-body"></tbody>
         </table>
@@ -71,20 +84,20 @@
             </div>
         </div>
 
-        <h4 style="color: #0288d1;">타자 부문 (Batting TOP 5)</h4>
+        <h4 style="color: #0288d1;">타자 부문 (Batting)</h4>
         <div class="stats-grid">
-            <div class="stats-col"><h4>타율 (AVG)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>홈런 (HR)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>타점 (RBI)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>타율 (AVG)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>홈런 (HR)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>타점 (RBI)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
-        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching TOP 5)</h4>
+        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching)</h4>
         <div class="stats-grid">
-            <div class="stats-col"><h4>방어율 (ERA)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>다승 (WINS)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>탈삼진 (SO)</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>WHIP</h4><table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>방어율 (ERA)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>다승 (W)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>탈삼진 (SO)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>WHIP</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
         </div>
     </div>
 </div>
@@ -94,17 +107,6 @@
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     let currentSeason = 'Reg';
-
-    function formatTeamName(name) {
-        if (!name) return '';
-        return name.replace(/\[(.*?)\]/g, (match, p1) => {
-            let color = '#78909c';
-            if (p1.includes('1')) color = '#D4AF37';
-            if (p1.includes('2')) color = '#A9A9A9';
-            if (p1.includes('3')) color = '#CD7F32';
-            return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
-        });
-    }
 
     function getIdx(headers, searchNames) {
         return headers.findIndex(h => searchNames.includes(h.toUpperCase().trim()));
@@ -118,7 +120,7 @@
     }
 
     function loadInitialData() {
-        // Standings
+        // 순위표
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -134,7 +136,7 @@
                 }});
             });
 
-        // Schedule Summary
+        // 일정 요약
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -166,43 +168,27 @@
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
 
-                // Hitting Headers
                 const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']);
                 const hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
                 const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']);
                 const opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-
-                // Pitching Headers
                 const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
                 const winIdx = getIdx(headers, ['WINS', 'W']);
                 const soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']);
                 const whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']);
-                const ipIdx = getIdx(headers, ['INNINGS PITCHED', 'IP']); // 투수 필터링용
+                const ipIdx = getIdx(headers, ['INNINGS PITCHED', 'IP']);
 
-                // Render Hitters
                 if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
                 if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
                 if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
                 if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx);
 
-                // Render Pitchers (IP가 있는 선수만 투수로 간주)
-                const pitcherRows = rows.filter(r => (r.c[ipIdx]?.v || 0) > 0);
-                if(eraIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
-                if(winIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
-                if(soIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
-                if(whipIdx > -1) renderStats([...pitcherRows].sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
+                const pitchers = rows.filter(r => (r.c[ipIdx]?.v || 0) > 0);
+                if(eraIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
+                if(winIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
+                if(soIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
+                if(whipIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
             });
-    }
-
-    function renderSchedRow(row, tbody) {
-        const c = row.c;
-        const tr = document.createElement('tr');
-        const note = c[6] ? (c[6].f || c[6].v || '') : '';
-        if(note) tr.style.backgroundColor = '#fffdec';
-        tr.innerHTML = `<td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td><td>${c[2]?(c[2].f||c[2].v):''}</td>
-                        <td style="text-align:center;">${note ? `<span class="po-badge">${note}</span>` : ''}<strong>${formatTeamName(c[3]?.v)}</strong> vs <strong>${formatTeamName(c[4]?.v)}</strong></td>
-                        <td class="val-highlight">${c[5]?(c[5].f||c[5].v):'-'}</td>`;
-        tbody.appendChild(tr);
     }
 
     function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx) {
@@ -212,14 +198,35 @@
             let name = r.c[lnIdx]?.v || '-';
             let fName = (fnIdx > -1) ? (r.c[fnIdx]?.v || '') : '';
             if(fName) name = fName + " " + name;
-            const team = (teamIdx > -1 && r.c[teamIdx]) ? ` (${r.c[teamIdx].v})` : '';
-            tr.innerHTML = `<td>${i+1}</td><td>${name}<span style="font-size:0.7rem; color:#888;">${team}</span></td>
-                            <td class="val-highlight">${r.c[valIdx]?.f || r.c[valIdx]?.v || '0'}</td>`;
+            const team = (teamIdx > -1 && r.c[teamIdx]) ? r.c[teamIdx].v : 'K-League';
+            
+            tr.innerHTML = `
+                <td class="col-rank">${i+1}</td>
+                <td class="col-name">
+                    <div class="player-info">
+                        <span class="p-name">${name}</span>
+                        <span class="p-team">${team}</span>
+                    </div>
+                </td>
+                <td class="col-record val-highlight">${r.c[valIdx]?.f || r.c[valIdx]?.v || '0'}</td>
+            `;
             tbody.appendChild(tr);
         });
     }
 
+    function renderSchedRow(row, tbody) {
+        const c = row.c;
+        const tr = document.createElement('tr');
+        const note = c[6] ? (c[6].f || c[6].v || '') : '';
+        if(note) tr.style.backgroundColor = '#fffdec';
+        tr.innerHTML = `<td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td><td>${c[2]?(c[2].f||c[2].v):''}</td>
+                        <td style="text-align:center;"><strong>${c[3]?.v}</strong> vs <strong>${c[4]?.v}</strong></td>
+                        <td class="val-highlight">${c[5]?(c[5].f||c[5].v):'-'}</td>`;
+        tbody.appendChild(tr);
+    }
+
     loadInitialData();
 </script>
+
 </body>
 </html>
