@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-League | Full Schedule</title>
+    <title>Vancouver K-League | Schedule</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
@@ -13,24 +13,55 @@
         table { width:100%; border-collapse: collapse; text-align: center; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
         th { background: #f8f9fa; }
-        .loading { text-align: center; padding: 20px; color: #888; }
+        
+        /* Playoff Step Badges */
+        .po-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 8px; vertical-align: middle; text-transform: uppercase; }
+        .badge-wc { background-color: #0288d1; } /* Wild Card: Blue */
+        .badge-sf { background-color: #ef6c00; } /* Semi-Final: Orange */
+        .badge-final { background-color: #d32f2f; } /* Final: Red */
+        .badge-3rd { background-color: #607d8b; } /* 3rd Place: Steel Gray */
+        .badge-default { background-color: #555; }
+
+        /* Seed Rank Badges */
+        .seed-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; color: white; margin-right: 5px; font-weight: bold; }
+        
+        footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
     </style>
 </head>
 <body>
-<header><h1>Vancouver K-League</h1><p>Full Season Schedule</p></header>
-<nav><a href="index.html">← BACK TO HOME</a></nav>
+
+<header>
+    <h1>Vancouver K-League</h1>
+    <p>2026 Season Schedule & Playoffs</p>
+</header>
+
+<nav><a href="index.html">← HOME</a></nav>
+
 <div class="container">
-    <h3>⚾ Full Match Schedule (40 Games)</h3>
-    <div id="loading-msg" class="loading">Loading schedule data...</div>
-    <table id="full-table" style="display:none;">
-        <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
+    <h3>⚾ Full Schedule & Playoff Tree</h3>
+    <table>
+        <thead>
+            <tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr>
+        </thead>
         <tbody id="full-schedule-body"></tbody>
     </table>
 </div>
+
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const tabName = 'Schedule(일정)'; // 사용자님이 시트 탭 이름을 이걸로 바꾸셨다고 가정합니다!
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`;
+
+    function formatTeamName(name) {
+        if (!name) return '';
+        // [#1], [#2] 등 대괄호 안의 숫자에 따라 금/은/동 배지 부여
+        return name.replace(/\[(.*?)\]/g, (match, p1) => {
+            let color = '#78909c'; // Default: Gray
+            if (p1.includes('1')) color = '#D4AF37'; // Gold
+            if (p1.includes('2')) color = '#A9A9A9'; // Silver
+            if (p1.includes('3')) color = '#CD7F32'; // Bronze
+            return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
+        });
+    }
 
     fetch(url).then(r => r.text()).then(d => {
         const json = JSON.parse(d.substr(47).slice(0, -2));
@@ -38,33 +69,35 @@
         const tbody = document.getElementById('full-schedule-body');
         
         rows.forEach(row => {
-    const c = row.c;
-    const tr = document.createElement('tr');
-    
-    // G열(c[6]) 데이터 확인 및 PO 여부 체크
-    const note = c[6] ? (c[6].f || c[6].v || '') : '';
-    const isPO = note.toLowerCase().includes('po') || note.toLowerCase().includes('final');
+            const c = row.c;
+            const tr = document.createElement('tr');
+            const note = c[6] ? (c[6].f || c[6].v || '') : '';
+            const noteUpper = note.toUpperCase();
 
-    if (isPO) {
-        tr.style.backgroundColor = '#fff9c4'; // PO 경기 배경색
-    }
+            // Highlight special games
+            if (note.trim().length > 0) tr.style.backgroundColor = '#fffdec';
 
-    tr.innerHTML = `
-        <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-        <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-        <td style="text-align:left; padding-left:20px;">
-            ${isPO ? `<span style="background:#d32f2f; color:white; padding:2px 6px; border-radius:3px; font-size:0.75rem; margin-right:5px; vertical-align:middle;">${note.toUpperCase()}</span>` : ''}
-            <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
-        </td>
-        <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
-    `;
-    tbody.appendChild(tr);
-});
-        document.getElementById('loading-msg').style.display = 'none';
-        document.getElementById('full-table').style.display = 'table';
-    }).catch(err => {
-        document.getElementById('loading-msg').textContent = 'Error: Cannot load data. Please check tab name.';
+            // Determine Note Badge Color by Step
+            let badgeClass = 'badge-default';
+            if (noteUpper.includes('WILD') || noteUpper.includes('WC')) badgeClass = 'badge-wc';
+            else if (noteUpper.includes('SF') || noteUpper.includes('SEMI')) badgeClass = 'badge-sf';
+            else if (noteUpper.includes('FINAL')) badgeClass = 'badge-final';
+            else if (noteUpper.includes('3RD') || noteUpper.includes('4TH')) badgeClass = 'badge-3rd';
+
+            tr.innerHTML = `
+                <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
+                <td>${c[2]?(c[2].f||c[2].v):''}</td>
+                <td style="text-align:left; padding-left:15px;">
+                    ${note ? `<span class="po-badge ${badgeClass}">${note}</span>` : ''}
+                    <strong>${formatTeamName(c[3]?(c[3].f||c[3].v):'')}</strong> vs 
+                    <strong>${formatTeamName(c[4]?(c[4].f||c[4].v):'')}</strong>
+                </td>
+                <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     });
 </script>
+
 </body>
 </html>
