@@ -240,26 +240,20 @@
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; 
-            const cols = data.cols.map(c => (c.label || '').trim()); // 대소문자 구분을 위해 원본 유지 후 비교 시 변환
+            const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
 
-            // 인덱스 찾기 보조 함수 (문장 포함 여부로 더 똑똑하게 찾음)
-            const findCol = (keywords) => {
-                return cols.findIndex(c => {
-                    const upperC = c.toUpperCase();
-                    return keywords.some(k => upperC === k || upperC.includes(k));
-                });
-            };
+            // 인덱스 찾기 함수
+            const findCol = (keywords) => cols.findIndex(c => keywords.some(k => c === k || c.includes(k)));
 
-            // 주요 컬럼 인덱스 (사용자 파일 기반)
-            const ipI = findCol(['INN', 'IP', 'INNINGS PITCHED']);
+            // [핵심] 이름 관련 컬럼 인덱스들
+            const fNameI = findCol(['FIRST NAME']);
+            const lNameI = findCol(['LAST NAME']);
+            const playerI = findCol(['PLAYER', 'FULL NAME']); // 2026년용
             const teamI = findCol(['TEAM']);
-            
-            // 이름 찾기 (Last Name에 풀네임이 있는 경우 대응)
-            let nameI = findCol(['PLAYER', 'FULL NAME']);
-            if (nameI === -1) nameI = findCol(['LAST NAME']); 
+            const ipI = findCol(['INN', 'IP', 'INNINGS PITCHED']);
 
             const metrics = [
-                {id: 'avg-leaders', n: ['BATTING AVERAGE', 'AVG', 'BA'], d: 3, asc: false, pit: false},
+                {id: 'avg-leaders', n: ['BATTING AVERAGE', 'AVG'], d: 3, asc: false, pit: false},
                 {id: 'hr-leaders', n: ['HOME RUNS', 'HR'], d: 0, asc: false, pit: false},
                 {id: 'rbi-leaders', n: ['RUNS BATTED IN', 'RBI'], d: 0, asc: false, pit: false},
                 {id: 'ops-leaders', n: ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS'], d: 3, asc: false, pit: false},
@@ -272,47 +266,35 @@
             metrics.forEach(m => {
                 let vI = findCol(m.n);
                 const target = document.getElementById(m.id);
-                
-                if (vI === -1) {
-                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999;">데이터 없음</td></tr>';
-                    return;
-                }
+                if (vI === -1) { target.innerHTML = '<tr><td colspan="3" style="padding:10px; color:#999;">-</td></tr>'; return; }
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-
-                // 투수는 이닝(IP)이 있는 사람만, 타자는 해당 수치가 0보다 큰 사람만
-                let validRows = rows.filter(r => {
-                    if (m.pit) return (parseFloat(gv(r, ipI)) || 0) > 0;
-                    return getVal(r) > 0;
-                });
-
-                const sorted = [...validRows].sort((a,b) => {
-                    const valA = getVal(a); const valB = getVal(b);
-                    return m.asc ? valA - valB : valB - valA;
-                }).slice(0, 5);
-
-                if(sorted.length === 0) {
-                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999;">기록 없음</td></tr>';
-                    return;
-                }
+                let validRows = rows.filter(r => m.pit ? (parseFloat(gv(r, ipI)) || 0) > 0 : getVal(r) > 0);
+                const sorted = [...validRows].sort((a,b) => m.asc ? getVal(a) - getVal(b) : getVal(b) - getVal(a)).slice(0, 5);
 
                 sorted.forEach((r, i) => {
-                    let name = gv(r, nameI) || "Unknown";
+                    // [핵심] 이름 결합 로직: First + Last를 합치되, 둘 중 하나만 있어도 OK
+                    let firstName = gv(r, fNameI).trim();
+                    let lastName = gv(r, lNameI).trim();
+                    let fullName = gv(r, playerI).trim(); // 2026년용 컬럼 확인
+                    
+                    let displayName = fullName || (firstName + " " + lastName).trim();
+                    if (!displayName) displayName = "알 수 없음";
+
                     target.innerHTML += `<tr>
                         <td style="width:30px; font-weight:bold;">${i+1}</td>
                         <td style="text-align:left;">
                             <div style="display:flex; flex-direction:column;">
-                                <span style="font-weight:bold; font-size:0.85rem;">${name}</span>
+                                <span style="font-weight:bold; font-size:0.85rem;">${displayName}</span>
                                 <span style="font-size:0.65rem; color:#888;">${gv(r, teamI)}</span>
                             </div>
                         </td>
-                        <td class="val-highlight" style="font-size:0.9rem;">${getVal(r).toFixed(m.d)}</td>
+                        <td class="val-highlight">${getVal(r).toFixed(m.d)}</td>
                     </tr>`;
                 });
             });
-        }).catch(e=>{ console.error("데이터 로드 에러:", e); });
+        }).catch(e=>{});
     }
-
     changeYear('2026');
 </script>
 </body>
