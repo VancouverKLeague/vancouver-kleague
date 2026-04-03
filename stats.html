@@ -156,59 +156,61 @@
 
                 // ⭐ 강화된 이름 결합 로직 (Same as Korean version)
                 allData = rows.map(r => {
-                    // 데이터 추출 보조 함수 (문자열로 안전하게 변환)
-                    const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? String(r.c[idx].v).trim() : '';
-                    
-                    let first = gv(fnIdx);
-                    let last = gv(lnIdx);
-                    
-                    // [핵심 수정] 만약 인덱스로 찾은 값이 둘 다 비어있다면, 
-                    // 엑셀의 0번 또는 1번 칸에서 수동으로 이름을 추출 시도
-                    if (!first && !last) {
-                        first = gv(0); // A열 시도
-                        last = gv(1);  // B열 시도
-                    }
-                    
-                    let finalName = "";
+    // 값을 가져오는 함수: 숫자인지 문자인지 상관없이 안전하게 문자열로 변환
+    const gv = (idx) => {
+        if (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) {
+            return String(r.c[idx].v).trim();
+        }
+        return '';
+    };
 
-                    // 이름 결합 및 중복 제거 로직
-                    if (first && last) {
-                        if (first === last || last.includes(first)) {
-                            finalName = last; // 성에 이름이 포함된 경우 (2025년식)
-                        } else if (first.includes(last)) {
-                            finalName = first; // 이름에 성이 포함된 경우
-                        } else {
-                            finalName = first + " " + last; // 둘이 다른 경우 합침
-                        }
-                    } else {
-                        finalName = first || last || "Unknown Player";
-                    }
+    // [핵심] 컬럼 이름과 상관없이 데이터가 들어있을 법한 모든 곳을 뒤집니다.
+    let first = gv(fnIdx); // First Name 컬럼
+    let last = gv(lnIdx);  // Last Name 컬럼
+    let fallback1 = gv(0); // 엑셀 A열 (실제 이름이 여기 있을 확률이 높음)
+    let fallback2 = gv(1); // 엑셀 B열
 
-                    // 불필요한 'null'이나 공백 정리
-                    finalName = finalName.replace(/null/g, '').trim();
+    let finalName = "";
 
-                    // 팀 정보가 없을 경우를 위한 대비
-                    let teamName = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League';
+    // 1. 성과 이름이 따로 잘 들어있는 경우 (2026년식)
+    if (first && last && first !== last) {
+        finalName = (last.includes(first)) ? last : first + " " + last;
+    } 
+    // 2. 한쪽 컬럼에만 이름이 있는 경우 (2025년식)
+    else if (first || last) {
+        finalName = first || last;
+    } 
+    // 3. 인덱스로 못 찾았을 때 A열이나 B열에서 강제로 가져오기 (Unknown 방지)
+    else {
+        finalName = fallback2 || fallback1 || "Unknown Player";
+    }
 
-                    const calculateOps = () => {
-                        const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-                        if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
-                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP']))) || 0;
-                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG']))) || 0;
-                        return obp + slg;
-                    };
+    // "null" 글자 제거 및 정리
+    finalName = finalName.replace(/null/g, '').trim();
 
-                    return {
-                        name: finalName,
-                        team: teamName,
-                        isPitcher: (ipIdx > -1 && parseFloat(gv(ipIdx))) > 0,
-                        hitterStats: hCols.map(c => {
-                            let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
-                            return {val: val || 0, label: c.label, fix: c.fix};
-                        }),
-                        pitcherStats: pCols.map(c => ({val: parseFloat(gv(c.idx)) || 0, label: c.label, fix: c.fix}))
-                    };
-                });
+    // 팀 정보 가져오기
+    let teamName = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League';
+
+    // OPS 계산 로직
+    const calculateOps = () => {
+        const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
+        if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
+        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP']))) || 0;
+        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG']))) || 0;
+        return obp + slg;
+    };
+
+    return {
+        name: finalName,
+        team: teamName,
+        isPitcher: (ipIdx > -1 && parseFloat(gv(ipIdx))) > 0,
+        hitterStats: hCols.map(c => {
+            let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
+            return {val: val || 0, label: c.label, fix: c.fix};
+        }),
+        pitcherStats: pCols.map(c => ({val: parseFloat(gv(c.idx)) || 0, label: c.label, fix: c.fix}))
+    };
+});
                 renderTable();
             }).catch(e => console.error("Data loading error:", e));
     }
