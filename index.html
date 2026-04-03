@@ -80,7 +80,8 @@
                     // Rank, Team, GP, W, L, T, PCT (7 columns)
                     c.forEach(cell => {
                         const td = document.createElement('td');
-                        td.textContent = cell ? (cell.v || '0') : '0';
+                        // .f (구글 시트에서 보이는 모양)를 먼저 쓰고, 없으면 .v (날것의 값)를 쓰라는 명령입니다.
+                        td.textContent = cell ? (cell.f || cell.v || '0') : '0';
                         tr.appendChild(td);
                     });
                 } else {
