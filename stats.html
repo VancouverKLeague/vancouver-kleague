@@ -17,7 +17,8 @@
         .btn-group button.active { background: #003366; color: white; }
         .btn-group button.inactive { background: white; color: #003366; }
         
-        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; }
+        /* Season Select Style */
+        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; cursor: pointer; }
         #search-input { padding: 8px; width: 220px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
@@ -118,6 +119,7 @@
     }
 
     function loadData() {
+        // Year-dependent Sheet Name
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
