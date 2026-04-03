@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancouver K-League | Home</title>
+    <title>Vancouver K-League | Official Home</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
@@ -14,24 +14,32 @@
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; }
+        h4 { text-align: center; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         table { width:100%; border-collapse: collapse; text-align: center; }
-        th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
+        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; }
         th { background: #f8f9fa; font-weight: bold; }
-        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 10px; background: #eee; color: #333; text-decoration: none; font-weight: bold; border-radius: 5px; }
-        .btn-more:hover { background: #ddd; }
+        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 10px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        .stats-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+        .stats-col { flex: 1; min-width: 200px; }
+        .val-highlight { color: #d32f2f; font-weight: bold; }
+        .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
+        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
     </style>
 </head>
 <body>
+
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Vancouver's First Korean-Canadian Amateur Baseball League</p>
+    <p>Vancouver's Premier Korean Amateur Baseball League</p>
 </header>
+
 <nav>
     <a href="index.html">HOME</a>
-    <a href="schedule.html">FULL SCHEDULE</a>
+    <a href="schedule.html">SCHEDULE</a>
 </nav>
+
 <div class="container">
     <div class="card">
         <h3>🏆 League Standings</h3>
@@ -42,90 +50,167 @@
     </div>
 
     <div class="card">
-        <h3>⚾ Last Game Results</h3>
-        <table id="recent-results-table">
+        <h3>⚾ Recent & Upcoming Games</h3>
+        <table id="main-sched-table">
             <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
-            <tbody id="recent-results-body"></tbody>
-        </table>
-    </div>
-
-    <div class="card" style="border-top: 5px solid #28a745;">
-        <h3>📅 Upcoming Games</h3>
-        <table>
-            <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
-            <tbody id="upcoming-body"></tbody>
+            <tbody id="main-sched-body"></tbody>
         </table>
         <a href="schedule.html" class="btn-more">View Full 40-Game Schedule →</a>
     </div>
+
+    <div class="card" style="border-top: 5px solid #0288d1;">
+        <h3>🔥 Batting Leaders (TOP 5)</h3>
+        <div class="stats-grid">
+            <div class="stats-col">
+                <h4>Average (AVG)</h4>
+                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="avg-leaders"></tbody></table>
+            </div>
+            <div class="stats-col">
+                <h4>Home Runs (HR)</h4>
+                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="hr-leaders"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-top: 5px solid #2e7d32;">
+        <h3>Pitching Leaders (TOP 5)</h3>
+        <div class="stats-grid">
+            <div class="stats-col">
+                <h4>ERA</h4>
+                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="era-leaders"></tbody></table>
+            </div>
+            <div class="stats-col">
+                <h4>Wins (W)</h4>
+                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="win-leaders"></tbody></table>
+            </div>
+        </div>
+    </div>
 </div>
+
 <footer><p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    
-    function loadData() {
-        // Standings
+
+    function formatTeamName(name) {
+        if (!name) return '';
+        return name.replace(/\[(.*?)\]/g, (match, p1) => {
+            let color = '#78909c';
+            if (p1.includes('1')) color = '#D4AF37';
+            if (p1.includes('2')) color = '#A9A9A9';
+            if (p1.includes('3')) color = '#CD7F32';
+            return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
+        });
+    }
+
+    function getIdx(headers, searchNames) {
+        return headers.findIndex(h => searchNames.includes(h.toUpperCase()));
+    }
+
+    function loadAllData() {
+        // [1] Standings
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('standing-body');
-                rows.forEach(row => {
+                rows.forEach(row => { if(row.c[1]) {
                     const tr = document.createElement('tr');
-                    row.c.forEach(cell => {
+                    row.c.forEach((cell, idx) => { if(idx < 7) {
                         const td = document.createElement('td');
                         td.textContent = cell ? (cell.f || cell.v || '0') : '0';
                         tr.appendChild(td);
-                    });
+                    }});
                     tbody.appendChild(tr);
-                });
+                }});
             });
 
-        // Schedule Logic
+        // [2] Schedule Summary
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-                const resultsTbody = document.getElementById('recent-results-body');
-                const upcomingTbody = document.getElementById('upcoming-body');
-
-                const playedGames = rows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== '');
-                const upcomingGames = rows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === '');
-
-                if (playedGames.length > 0) {
-                    const lastDate = playedGames[playedGames.length - 1].c[0].v;
-                    playedGames.filter(g => g.c[0].v === lastDate).forEach(g => renderRow(g, resultsTbody));
+                const tbody = document.getElementById('main-sched-body');
+                const played = rows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
+                const upcoming = rows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
+                if (played.length > 0) {
+                    const lastDate = played[played.length-1].c[0].v;
+                    played.filter(g => g.c[0].v === lastDate).forEach(g => renderRow(g, tbody));
                 }
-                if (upcomingGames.length > 0) {
-                    const nextDate = upcomingGames[0].c[0].v;
-                    upcomingGames.filter(g => g.c[0].v === nextDate).forEach(g => renderRow(g, upcomingTbody));
+                if (upcoming.length > 0) {
+                    const nextDate = upcoming[0].c[0].v;
+                    upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderRow(g, tbody));
+                }
+            });
+
+        // [3] Batting Stats
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting(타자)')}`)
+            .then(r => r.text()).then(d => {
+                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+                const headers = data.cols.map(col => (col.label || '').toUpperCase());
+                const rows = data.rows;
+                const nameIdx = getIdx(headers, ['PLAYER', 'NAME']);
+                const avgIdx = getIdx(headers, ['AVG', 'BA']);
+                const hrIdx = getIdx(headers, ['HR', 'HOME RUNS']);
+                const teamIdx = getIdx(headers, ['TEAM']);
+
+                if(avgIdx > -1) {
+                    const sorted = [...rows].sort((a,b) => (b.c[avgIdx]?.v || 0) - (a.c[avgIdx]?.v || 0)).slice(0, 5);
+                    renderStats(sorted, 'avg-leaders', nameIdx, avgIdx, teamIdx);
+                }
+                if(hrIdx > -1) {
+                    const sorted = [...rows].sort((a,b) => (b.c[hrIdx]?.v || 0) - (a.c[hrIdx]?.v || 0)).slice(0, 5);
+                    renderStats(sorted, 'hr-leaders', nameIdx, hrIdx, teamIdx);
+                }
+            });
+
+        // [4] Pitching Stats
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Pitching(투수)')}`)
+            .then(r => r.text()).then(d => {
+                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+                const headers = data.cols.map(col => (col.label || '').toUpperCase());
+                const rows = data.rows;
+                const nameIdx = getIdx(headers, ['PLAYER', 'NAME']);
+                const eraIdx = getIdx(headers, ['ERA']);
+                const winIdx = getIdx(headers, ['W', 'WINS']);
+                const teamIdx = getIdx(headers, ['TEAM']);
+
+                if(eraIdx > -1) {
+                    const sorted = [...rows].filter(r => (r.c[eraIdx]?.v || 0) > 0)
+                                           .sort((a,b) => (a.c[eraIdx]?.v || 0) - (b.c[eraIdx]?.v || 0)).slice(0, 5);
+                    renderStats(sorted, 'era-leaders', nameIdx, eraIdx, teamIdx);
+                }
+                if(winIdx > -1) {
+                    const sorted = [...rows].sort((a,b) => (b.c[winIdx]?.v || 0) - (a.c[winIdx]?.v || 0)).slice(0, 5);
+                    renderStats(sorted, 'win-leaders', nameIdx, winIdx, teamIdx);
                 }
             });
     }
 
-    function renderRow(row, tbody) { // ko.html은 renderRowKo
-    const c = row.c;
-    const tr = document.createElement('tr');
-    
-    // G열(c[6]) 데이터 확인
-    const note = c[6] ? (c[6].f || c[6].v || '') : '';
-    const isPO = note.toLowerCase().includes('po') || note.toLowerCase().includes('final');
-
-    // 포스트시즌 경기는 배경색을 연한 노란색으로 변경
-    if (isPO) {
-        tr.style.backgroundColor = '#fff9c4'; 
+    function renderRow(row, tbody) {
+        const c = row.c;
+        const tr = document.createElement('tr');
+        const note = c[6] ? (c[6].f || c[6].v || '') : '';
+        if(note) tr.style.backgroundColor = '#fffdec';
+        tr.innerHTML = `<td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td><td>${c[2]?(c[2].f||c[2].v):''}</td>
+                        <td style="text-align:center;">
+                            ${note ? `<span class="po-badge">${note}</span>` : ''}
+                            <strong>${formatTeamName(c[3]?.v)}</strong> vs <strong>${formatTeamName(c[4]?.v)}</strong>
+                        </td>
+                        <td class="val-highlight">${c[5]?(c[5].f||c[5].v):'-'}</td>`;
+        tbody.appendChild(tr);
     }
 
-    tr.innerHTML = `
-        <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-        <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-        <td>
-            ${isPO ? `<span style="background:#d32f2f; color:white; padding:2px 6px; border-radius:3px; font-size:0.75rem; margin-right:5px; vertical-align:middle;">${note.toUpperCase()}</span>` : ''}
-            <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
-        </td>
-        <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
-    `;
-    tbody.appendChild(tr);
-}
-    loadData();
+    function renderStats(data, id, nameIdx, valIdx, teamIdx) {
+        const tbody = document.getElementById(id);
+        data.forEach((r, i) => {
+            const tr = document.createElement('tr');
+            const team = (teamIdx > -1 && r.c[teamIdx]) ? ` (${r.c[teamIdx].v})` : '';
+            tr.innerHTML = `<td>${i+1}</td><td>${r.c[nameIdx]?.v || '-'}<span style="font-size:0.7rem; color:#888;">${team}</span></td>
+                            <td class="val-highlight">${r.c[valIdx]?.f || r.c[valIdx]?.v || '0'}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    loadAllData();
 </script>
 </body>
 </html>
