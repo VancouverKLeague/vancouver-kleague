@@ -18,6 +18,7 @@
         table { width:100%; border-collapse: collapse; text-align: center; }
         th, td { border: 1px solid #ddd; padding: 10px; }
         th { background: #eee; }
+        #loading { text-align: center; color: #666; padding: 20px; }
     </style>
 </head>
 <body>
@@ -27,7 +28,7 @@
         <a href="index.html">KO</a> | <a href="en.html">EN</a>
     </div>
     <h1>Vancouver K-League</h1>
-    <p>밴쿠버 최초의 한인 사회인 야구 리그</p>
+    <p>밴쿠버 최초읜 한인 사회인 야구 리그</p>
 </header>
 
 <nav>
@@ -39,23 +40,21 @@
 
 <div class="container">
     <div class="jumbotron">
-        <h2>2026 시즌 진행 중!</h2>
+        <h2>2026 시즌 준비 중!</h2>
         <p>총 6개 팀, 정규시즌 및 플레이오프 40경기의 대장정</p>
     </div>
 
     <div class="card">
-        <h3>⚾ 실시간 스코어보드 (GameChanger)</h3>
-        <p>현재 진행 중인 경기의 실시간 점수를 확인하세요.</p>
-    </div>
-
-    <div class="card">
         <h3>🏆 리그 순위 (Standings)</h3>
-        <table>
-            <tr>
-                <th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>승률</th>
-            </tr>
-            <tr><td>1</td><td>Team A</td><td>0</td><td>0</td><td>0</td><td>.000</td></tr>
-            <tr><td>2</td><td>Team B</td><td>0</td><td>0</td><td>0</td><td>.000</td></tr>
+        <div id="loading">기록을 불러오는 중...</div>
+        <table id="standings-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>승률</th>
+                </tr>
+            </thead>
+            <tbody id="standings-body">
+                </tbody>
         </table>
     </div>
 </div>
@@ -63,6 +62,38 @@
 <footer>
     <p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p>
 </footer>
+
+<script>
+    // 구글 시트 ID와 탭 이름 설정
+    const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    const sheetName = encodeURIComponent('Standings(순위)');
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+
+    fetch(sheetUrl)
+        .then(res => res.text())
+        .then(data => {
+            const json = JSON.parse(data.substr(47).slice(0, -2));
+            const rows = json.table.rows;
+            const tbody = document.getElementById('standings-body');
+            
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                row.c.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell ? (cell.v || '') : '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('standings-table').style.display = 'table';
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('loading').textContent = '기록을 불러오는데 실패했습니다.';
+        });
+</script>
 
 </body>
 </html>
