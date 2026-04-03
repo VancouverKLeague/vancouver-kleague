@@ -119,7 +119,7 @@
     }
 
     function loadData() {
-        // Year-dependent Sheet Name
+        // 연도에 따른 시트명 동적 생성
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
@@ -135,6 +135,7 @@
                 const teamIdx = getIdx(['TEAM']);
                 const ipIdx = getIdx(['INNINGS PITCHED', 'IP', 'INN']);
 
+                // [English Labels]
                 const hCols = [
                     {label: 'AVG', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
                     {label: 'HR', id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
@@ -153,24 +154,33 @@
                     {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
                 ];
 
+                // ⭐ 강화된 이름 결합 로직 (Same as Korean version)
                 allData = rows.map(r => {
-                    const gv = (idx) => (r.c[idx]?.v !== undefined) ? r.c[idx].v : 0;
+                    const gv = (idx) => (idx > -1 && r.c[idx]?.v !== undefined) ? r.c[idx].v : '';
                     
-                    let lastName = (lnIdx > -1 && r.c[lnIdx]?.v) ? r.c[lnIdx].v : '';
-                    let firstName = (fnIdx > -1 && r.c[fnIdx]?.v) ? r.c[fnIdx].v : '';
-                    let name = (firstName + " " + lastName).trim() || "-";
-                    if (name === "-") name = lastName || firstName || "-";
+                    let first = gv(fnIdx).toString().trim();
+                    let last = gv(lnIdx).toString().trim();
+                    
+                    let finalName = "";
+
+                    if (first && last && first !== last) {
+                        finalName = first + " " + last;
+                    } else {
+                        finalName = first || last || "-";
+                    }
+
+                    finalName = finalName.replace(/null/g, '').trim();
 
                     const calculateOps = () => {
                         const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-                        if (opsIdx > -1) return parseFloat(gv(opsIdx));
-                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP'])));
-                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG'])));
+                        if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
+                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP']))) || 0;
+                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG']))) || 0;
                         return obp + slg;
                     };
 
                     return {
-                        name: name,
+                        name: finalName,
                         team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
                         isPitcher: parseFloat(gv(ipIdx)) > 0,
                         hitterStats: hCols.map(c => {
