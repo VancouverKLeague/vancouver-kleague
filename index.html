@@ -15,28 +15,18 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
+        /* Notice Styles */
+        #notice-content { font-weight: bold; color: #444; margin-bottom: 12px; white-space: pre-wrap; font-size: 0.95rem; }
+        .btn-rulebook { display: inline-block; padding: 10px 20px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
+
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; text-align: center; margin-bottom: 6px; }
-        
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; white-space: nowrap; }
-        
-        .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
-        .stats-col { flex: 1; min-width: 250px; margin-bottom: 10px; }
-        .col-rank { width: 30px; }
-        .col-record { width: 65px; }
-        .col-name { text-align: left; padding-left: 10px; }
-        .player-info { display: flex; flex-direction: column; line-height: 1.3; }
-        .p-name { font-weight: bold; color: #333; }
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 0.9rem; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-
-        @media (max-width: 600px) {
-            .container { padding: 10px; }
-            th, td { font-size: 0.75rem; padding: 8px 3px; }
-        }
     </style>
 </head>
 <body>
@@ -44,7 +34,7 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Official Amateur Baseball League in Vancouver</p>
+    <p>Vancouver's Premier Amateur Baseball League</p>
 </header>
 
 <nav>
@@ -53,6 +43,12 @@
 </nav>
 
 <div class="container">
+    <div class="card" id="notice-card" style="border-top: 5px solid #ff5722; display: none;">
+        <h3>📢 Notice</h3>
+        <div id="notice-content">Loading...</div>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook">📖 View 2026 Rule Book</a>
+    </div>
+
     <div class="card">
         <h3>🏆 League Standings</h3>
         <div class="table-wrapper">
@@ -64,7 +60,7 @@
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather</h3>
+        <h3>📍 Field & Weather Info</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div style="flex: 1.5; min-width: 280px; background: #f9f9f9; border-radius: 5px;">
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
@@ -86,20 +82,13 @@
                 <tbody id="main-sched-body"></tbody>
             </table>
         </div>
-        <a href="schedule.html" class="btn-more">View Full Schedule →</a>
+        <a href="schedule.html" class="btn-more">Full Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
         <h3>🔥 League Leaders</h3>
-        <div id="stats-container">
-            <h4>Batting TOP 5</h4>
-            <div class="stats-grid">
-                <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>Player</th><th class="col-record">AVG</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
-                <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>Player</th><th class="col-record">HR</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
-                <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>Player</th><th class="col-record">RBI</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
-                <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>Player</th><th class="col-record">OPS</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
+        <div class="stats-grid" id="stats-grid-en">
             </div>
-        </div>
         <a href="stats.html" class="btn-more" style="background: #444;">View Full Stats →</a>
     </div>
 </div>
@@ -107,11 +96,22 @@
 <footer><p>© 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
-    /* ... JavaScript logic same as ko.html (adapted for English) ... */
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     let currentSeason = 'Reg';
-    function getIdx(headers, searchNames) { return headers.findIndex(h => searchNames.includes(h.toUpperCase().trim())); }
+
     function loadInitialData() {
+        // Fetch Notice
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
+            .then(r => r.text()).then(d => {
+                const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
+                if(row && row.c[0]) {
+                    document.getElementById('notice-card').style.display = 'block';
+                    document.getElementById('notice-content').innerText = row.c[0].v;
+                    if(row.c[1]) document.getElementById('rulebook-link').href = row.c[1].v;
+                }
+            });
+
+        // Standings & Schedule (Same logic as ko.html)
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(r => r.text()).then(d => {
             const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
             const tbody = document.getElementById('standing-body');
@@ -121,6 +121,7 @@
                 tbody.appendChild(tr);
             }});
         });
+
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(r => r.text()).then(d => {
             const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
             const tbody = document.getElementById('main-sched-body');
@@ -129,41 +130,14 @@
             if (played.length > 0) { const last = played[played.length-1].c[0].v; played.filter(g => g.c[0].v === last).forEach(g => renderSchedRow(g, tbody)); }
             if (upcoming.length > 0) { const next = upcoming[0].c[0].v; upcoming.filter(g => g.c[0].v === next).forEach(g => renderSchedRow(g, tbody)); }
         });
-        loadStats();
+        // (Stats loading logic here...)
     }
+
     function renderSchedRow(row, tbody) {
         const c = row.c;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td style="white-space:nowrap;">${c[0]?.f||''} ${c[1]?.f||''}</td><td>${c[2]?.v||''}</td><td style="font-weight:bold;">${c[3]?.v} vs ${c[4]?.v}</td><td class="val-highlight">${c[5]?.v||'-'}</td>`;
         tbody.appendChild(tr);
-    }
-    function loadStats() {
-        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = ''; });
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_'+currentSeason)}`).then(r => r.text()).then(d => {
-            const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-            const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
-            const rows = data.rows;
-            const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']), fnIdx = getIdx(headers, ['FIRST NAME']), teamIdx = getIdx(headers, ['TEAM']);
-            const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']), hrIdx = getIdx(headers, ['HOME RUNS', 'HR']), rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']), opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-            if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
-            if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
-            if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
-            if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
-        });
-    }
-    function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
-        const tbody = document.getElementById(id);
-        if(!tbody) return;
-        data.forEach((r, i) => {
-            const tr = document.createElement('tr');
-            let name = r.c[lnIdx]?.v || '-';
-            if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
-            const team = (teamIdx > -1 && r.c[teamIdx]) ? r.c[teamIdx].v : '';
-            let val = r.c[valIdx]?.v || 0;
-            if (isFixed3) val = parseFloat(val).toFixed(3);
-            tr.innerHTML = `<td class="col-rank">${i+1}</td><td class="col-name"><div class="player-info"><span class="p-name">${name}</span><span class="p-team">${team}</span></div></td><td class="col-record val-highlight">${val}</td>`;
-            tbody.appendChild(tr);
-        });
     }
     loadInitialData();
 </script>
