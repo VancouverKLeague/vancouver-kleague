@@ -11,28 +11,44 @@
         .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
-        .container { padding: 20px; max-width: 1100px; margin: auto; background: #fff; min-height: 800px; }
-        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; }
-        h4 { text-align: center; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 800px; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
+        h4 { text-align: center; color: #555; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.95rem; }
         
-        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; text-align: center; transition: 0.3s; margin-bottom: 6px; }
-        .btn-field:hover { background: #e9ecef; border-color: #003366; color: #003366; }
-
-        table { width:100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #ddd; padding: 8px 4px; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        th { background: #f8f9fa; font-weight: bold; text-align: center; }
-        .col-rank { width: 35px; text-align: center; }
-        .col-record { width: 75px; text-align: center; }
+        /* 구장 버튼 */
+        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.85rem; font-weight: bold; text-align: center; margin-bottom: 6px; }
+        
+        /* 일정표 모바일 최적화 */
+        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; } /* 최소 너비 확보로 깨짐 방지 */
+        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
+        th { background: #f8f9fa; white-space: nowrap; }
+        
+        /* 리더보드 전용 */
+        .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+        .stats-col { flex: 1; min-width: 250px; margin-bottom: 10px; }
+        .col-rank { width: 30px; }
+        .col-record { width: 65px; }
         .col-name { text-align: left; padding-left: 10px; }
         .player-info { display: flex; flex-direction: column; line-height: 1.3; }
-        .p-name { font-weight: bold; color: #333; font-size: 0.85rem; }
+        .p-name { font-weight: bold; color: #333; }
         .p-team { font-size: 0.7rem; color: #888; }
-        .val-highlight { color: #d32f2f; font-weight: bold; font-size: 0.9rem; }
-        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        .val-highlight { color: #d32f2f; font-weight: bold; }
+
+        .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 0.9rem; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .stats-grid { display: flex; gap: 15px; flex-wrap: wrap; }
-        .stats-col { flex: 1; min-width: 240px; margin-bottom: 10px; }
+        
+        .toggle-container { text-align: right; margin-bottom: 10px; }
+        .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .active { background: #003366; color: white; }
+        .inactive { background: #eee; color: #333; }
+
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            th, td { font-size: 0.75rem; padding: 8px 3px; }
+            .btn-field { font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body>
@@ -40,7 +56,7 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>캐나다 밴쿠버 최초의 한인 사회인 야구 리그</p>
+    <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
 </header>
 
 <nav>
@@ -51,56 +67,62 @@
 <div class="container">
     <div class="card">
         <h3>🏆 리그 순위 (Standings)</h3>
-        <table style="table-layout: auto;">
-            <thead><tr><th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead>
-            <tbody id="standing-body-ko"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead>
+                <tbody id="standing-body-ko"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card" style="border-top: 5px solid #17a2b8;">
-        <h3>📍 구장 정보 및 날씨 (Field & Weather)</h3>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch;">
-            <div style="flex: 1.5; min-width: 300px; background: #f9f9f9; padding: 10px; border-radius: 5px; min-height: 150px;">
-                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure" >VANCOUVER WEATHER</a>
-                <script>
-                !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
-                </script>
+    <div class="card" style="border-top: 4px solid #17a2b8;">
+        <h3>📍 구장 및 날씨</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 280px; background: #f9f9f9; border-radius: 5px;">
+                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
-            <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: center;">
+            <div style="flex: 1; min-width: 240px;">
                 <a href="https://www.google.com/maps/search/?api=1&query=Queens+Park+Stadium+New+Westminster" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+Richmond+BC" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Burnaby+Baseball" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
-                <p style="font-size: 0.75rem; color: #d32f2f; margin-top: 5px; text-align:center;">※ 우천 취소 여부는 팀 단톡방 공지를 확인하세요.</p>
+                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+Baseball+Diamond+Richmond" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Diamond+Burnaby" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
     </div>
 
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
-        <table style="table-layout: auto;">
-            <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
-            <tbody id="main-sched-body"></tbody>
-        </table>
+        <div class="table-wrapper">
+            <table style="min-width: 550px;"> <thead><tr><th style="width:110px;">날짜 & 시간</th><th style="width:90px;">구장</th><th>대진 (Matchup)</th><th style="width:60px;">결과</th></tr></thead>
+                <tbody id="main-sched-body"></tbody>
+            </table>
+        </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
     </div>
 
-    <div class="card" style="border-top: 5px solid #ffc107;">
-        <h3>🔥 리그 리더 (League Leaders)</h3>
-        <h4 style="color: #0288d1;">타자 부문 (Batting TOP 5)</h4>
-        <div class="stats-grid">
-            <div class="stats-col"><h4>타율 (AVG)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>홈런 (HR)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>타점 (RBI)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
+    <div class="card" style="border-top: 4px solid #ffc107;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>🔥 리그 리더</h3>
+            <div class="toggle-container">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트</button>
+            </div>
         </div>
-        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching TOP 5)</h4>
+        <h4>타자 부문 (Batting TOP 5)</h4>
         <div class="stats-grid">
-            <div class="stats-col"><h4>방어율 (ERA)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>다승 (W)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>탈삼진 (SO)</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
-            <div class="stats-col"><h4>WHIP</h4><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">기록</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">AVG</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">HR</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">RBI</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">OPS</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
         </div>
-        <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 10px;">시즌 전체 선수 순위 보기 (Full Stats) →</a>
+        <h4 style="margin-top:20px;">투수 부문 (Pitching TOP 5)</h4>
+        <div class="stats-grid">
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">ERA</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">W</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">SO</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><table><thead><tr><th class="col-rank">#</th><th>이름</th><th class="col-record">WHIP</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
+        </div>
+        <a href="stats_ko.html" class="btn-more" style="background: #444;">전체 선수 순위 보기 →</a>
     </div>
 </div>
 
@@ -110,66 +132,68 @@
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     let currentSeason = 'Reg';
 
-    function getIdx(headers, searchNames) {
-        return headers.findIndex(h => searchNames.includes(h.toUpperCase().trim()));
+    function getIdx(headers, searchNames) { return headers.findIndex(h => searchNames.includes(h.toUpperCase().trim())); }
+    
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s==='Reg'?'active':'inactive');
+        document.getElementById('btn-Post').className = 'toggle-btn ' + (s==='Post'?'active':'inactive');
+        loadStats();
     }
 
     function loadInitialData() {
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
-            .then(r => r.text()).then(d => {
-                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-                const tbody = document.getElementById('standing-body-ko');
-                rows.forEach(row => { if(row.c && row.c[1]) {
-                    const tr = document.createElement('tr');
-                    row.c.forEach((cell, idx) => { if(idx < 7) {
-                        const td = document.createElement('td');
-                        td.textContent = cell ? (cell.f || cell.v || '0') : '0';
-                        tr.appendChild(td);
-                    }});
-                    tbody.appendChild(tr);
-                }});
-            });
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(r => r.text()).then(d => {
+            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+            const tbody = document.getElementById('standing-body-ko');
+            rows.forEach(row => { if(row.c && row.c[1]) {
+                const tr = document.createElement('tr');
+                row.c.forEach((cell, idx) => { if(idx < 7) { const td = document.createElement('td'); td.textContent = cell ? (cell.f || cell.v || '0') : '0'; tr.appendChild(td); }});
+                tbody.appendChild(tr);
+            }});
+        });
 
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
-            .then(r => r.text()).then(d => {
-                const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-                const tbody = document.getElementById('main-sched-body');
-                const played = rows.filter(r => r.c && r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
-                const upcoming = rows.filter(r => r.c && (!r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA'));
-                if (played.length > 0) {
-                    const lastDate = played[played.length-1].c[0].v;
-                    played.filter(g => g.c[0].v === lastDate).forEach(g => renderSchedRow(g, tbody));
-                }
-                if (upcoming.length > 0) {
-                    const nextDate = upcoming[0].c[0].v;
-                    upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderSchedRow(g, tbody));
-                }
-            });
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(r => r.text()).then(d => {
+            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
+            const tbody = document.getElementById('main-sched-body');
+            const played = rows.filter(r => r.c && r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
+            const upcoming = rows.filter(r => r.c && (!r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA'));
+            if (played.length > 0) { const last = played[played.length-1].c[0].v; played.filter(g => g.c[0].v === last).forEach(g => renderSchedRow(g, tbody)); }
+            if (upcoming.length > 0) { const next = upcoming[0].c[0].v; upcoming.filter(g => g.c[0].v === next).forEach(g => renderSchedRow(g, tbody)); }
+        });
         loadStats();
+    }
+
+    function renderSchedRow(row, tbody) {
+        const c = row.c;
+        const tr = document.createElement('tr');
+        if(c[6]?.v) tr.style.backgroundColor = '#fffdec';
+        tr.innerHTML = `<td style="white-space:nowrap;">${c[0]?.f||''} ${c[1]?.f||''}</td>
+                        <td>${c[2]?.v||''}</td>
+                        <td style="font-weight:bold;">${c[3]?.v} <span style="font-weight:normal; font-size:0.7rem; color:#888;">vs</span> ${c[4]?.v}</td>
+                        <td class="val-highlight">${c[5]?.v||'-'}</td>`;
+        tbody.appendChild(tr);
     }
 
     function loadStats() {
         ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders', 'so-leaders', 'whip-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_'+currentSeason)}`)
-            .then(r => r.text()).then(d => {
-                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
-                const rows = data.rows;
-                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']), fnIdx = getIdx(headers, ['FIRST NAME']), teamIdx = getIdx(headers, ['TEAM']);
-                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']), hrIdx = getIdx(headers, ['HOME RUNS', 'HR']), rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']), opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']), winIdx = getIdx(headers, ['WINS', 'W']), soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']), whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']), ipIdx = getIdx(headers, ['INNINGS PITCHED', 'IP']);
-                
-                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
-                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
-                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
-                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
-
-                const pitchers = rows.filter(r => (r.c[ipIdx]?.v || 0) > 0);
-                if(eraIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
-                if(winIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
-                if(soIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
-                if(whipIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx, true);
-            });
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_'+currentSeason)}`).then(r => r.text()).then(d => {
+            const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+            const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+            const rows = data.rows;
+            const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']), fnIdx = getIdx(headers, ['FIRST NAME']), teamIdx = getIdx(headers, ['TEAM']);
+            const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']), hrIdx = getIdx(headers, ['HOME RUNS', 'HR']), rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']), opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
+            const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']), winIdx = getIdx(headers, ['WINS', 'W']), soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']), whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']), ipIdx = getIdx(headers, ['INNINGS PITCHED', 'IP']);
+            
+            if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
+            if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
+            if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
+            if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
+            const pitchers = rows.filter(r => (r.c[ipIdx]?.v || 0) > 0);
+            if(eraIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
+            if(winIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
+            if(soIdx > -1) renderStats([...pitchers].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
+            if(whipIdx > -1) renderStats([...pitchers].sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx, true);
+        });
     }
 
     function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
@@ -177,25 +201,14 @@
         data.forEach((r, i) => {
             const tr = document.createElement('tr');
             let name = r.c[lnIdx]?.v || '-';
-            let fName = (fnIdx > -1) ? (r.c[fnIdx]?.v || '') : '';
-            if(fName) name = fName + " " + name;
-            const team = (teamIdx > -1 && r.c[teamIdx]) ? r.c[teamIdx].v : 'K-League';
-            let displayVal = r.c[valIdx]?.f || r.c[valIdx]?.v || '0';
-            if (isFixed3 && !isNaN(parseFloat(r.c[valIdx]?.v))) displayVal = parseFloat(r.c[valIdx].v).toFixed(3);
-            tr.innerHTML = `<td class="col-rank">${i+1}</td><td class="col-name"><div class="player-info"><span class="p-name">${name}</span><span class="p-team">${team}</span></div></td><td class="col-record val-highlight">${displayVal}</td>`;
+            if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
+            const team = (teamIdx > -1 && r.c[teamIdx]) ? r.c[teamIdx].v : '';
+            let val = r.c[valIdx]?.v || 0;
+            if (isFixed3) val = parseFloat(val).toFixed(3);
+            tr.innerHTML = `<td class="col-rank">${i+1}</td><td class="col-name"><div class="player-info"><span class="p-name">${name}</span><span class="p-team">${team}</span></div></td><td class="col-record val-highlight">${val}</td>`;
             tbody.appendChild(tr);
         });
     }
-
-    function renderSchedRow(row, tbody) {
-        const c = row.c;
-        const tr = document.createElement('tr');
-        const note = c[6] ? (c[6].f || c[6].v || '') : '';
-        if(note) tr.style.backgroundColor = '#fffdec';
-        tr.innerHTML = `<td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td><td>${c[2]?(c[2].f||c[2].v):''}</td><td style="text-align:center;"><strong>${c[3]?.v}</strong> vs <strong>${c[4]?.v}</strong></td><td class="val-highlight">${c[5]?(c[5].f||c[5].v):'-'}</td>`;
-        tbody.appendChild(tr);
-    }
-
     loadInitialData();
 </script>
 </body>
