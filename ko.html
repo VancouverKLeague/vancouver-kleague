@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>밴쿠버 K-League | 홈</title>
+    <title>밴쿠버 K-리그 | 홈</title>
     <style>
-        body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
         .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
@@ -41,21 +41,29 @@
 
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
-    <h1>Vancouver K-League</h1>
-    <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
+    <h1>밴쿠버 K-리그 (Vancouver K-League)</h1>
+    <p>캐나다 밴쿠버 한인 야구 리그</p>
 </header>
 
 <nav>
     <a href="ko.html">홈</a> 
     <a href="schedule_ko.html">전체 일정</a> 
-    <a href="stats_ko.html">선수 기록실</a>
+    <a href="stats_ko.html">기록실</a>
 </nav>
+
+<div style="background: #eee; padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+    <label for="season-select" style="font-weight: bold; margin-right: 10px;">시즌 선택 (Season):</label>
+    <select id="season-select" onchange="changeYear(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer;">
+        <option value="2026" selected>2026 시즌</option>
+        <option value="2025">2025 시즌</option>
+    </select>
+</div>
 
 <div class="container">
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 공지사항</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집(Rule Book) 보기</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
     </div>
 
     <div class="card">
@@ -66,81 +74,57 @@
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 구장 및 날씨 (Field & Weather)</h3>
+        <h3>📍 구장 정보 및 날씨</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div>
-                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
+                <a class="weatherwidget-io" href="https://forecast7.com/ko/49d28n123d12/vancouver/" data-label_1="밴쿠버" data-label_2="날씨" data-theme="pure">VANCOUVER WEATHER</a>
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (Richmond)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (Burnaby)</a>
+                <a href="https://maps.google.com/?q=Queen's+Park+Stadium+New+Westminster" target="_blank" class="btn-field">🏟️ Queen's Stadium (뉴웨스트)</a>
+                <a href="https://maps.google.com/?q=Blundell+Park+Richmond" target="_blank" class="btn-field">🏟️ Blundell South (리치먼드)</a>
+                <a href="https://maps.google.com/?q=Central+Park+Burnaby" target="_blank" class="btn-field">🌳 Central Park (버나비)</a>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <h3>⚾ 최근 결과 및 예정 경기</h3>
+        <h3>⚾ 최근 경기 결과 및 예정 경기</h3>
         <div class="table-wrapper">
-            <table><thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead><tbody id="schedule-body"></tbody></table>
+            <table><thead><tr><th>날짜 및 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3>🔥 리그 리더 (TOP 5)</h3>
+            <h3>🔥 부문별 리더 (TOP 5)</h3>
             <div class="toggle-container" style="margin-bottom: 0;">
-                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규</button>
-                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트</button>
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규시즌</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트시즌</button>
             </div>
         </div>
         
-        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">타자 부문 (Batting)</h4>
+        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">타자 부문</h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타율 (AVG)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="avg-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">홈런 (HR)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="hr-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타점 (RBI)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="rbi-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="ops-leaders"></tbody></table>
-            </div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타율 (AVG)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">홈런 (HR)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타점 (RBI)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
-        <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">투수 부문 (Pitching)</h4>
+        <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">투수 부문</h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">방어율 (ERA)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="era-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">다승 (W)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="win-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">탈삼진 (SO)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="so-leaders"></tbody></table>
-            </div>
-            <div>
-                <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="whip-leaders"></tbody></table>
-            </div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">평균자책점 (ERA)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">다승 (W)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">탈삼진 (SO)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="whip-leaders"></tbody></table></div>
         </div>
-        <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 20px;">전체 선수 기록 보기 →</a>
+        <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 20px;">선수 전체 기록 보기 →</a>
     </div>
-</div>
-<div class="card" style="border-top: 4px solid #333; text-align: center;">
-        <h3 style="border-left: none; padding-left: 0; color: #333;">⚾ 2026 시즌 참가 팀</h3>
+
+    <div class="card" style="border-top: 4px solid #333; text-align: center;">
+        <h3>⚾ 참가 팀</h3>
         <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; padding: 15px 0;">
             <img src="logos/Arirang Rays.png" alt="Arirang Rays" style="width: 60px; height: 60px; object-fit: contain;">
             <img src="logos/Van Avengers.png" alt="Van Avengers" style="width: 60px; height: 60px; object-fit: contain;">
@@ -148,9 +132,10 @@
             <img src="logos/Karis Cubs.png" alt="Karis Cubs" style="width: 60px; height: 60px; object-fit: contain;">
             <img src="logos/Van Dragons.png" alt="Van Dragons" style="width: 60px; height: 60px; object-fit: contain;">
             <img src="logos/Fire Bats.png" alt="Fire Bats" style="width: 60px; height: 60px; object-fit: contain;">
-            </div>
+        </div>
     </div>
-    </div>
+</div>
+
 <footer><p>© 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
