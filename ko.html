@@ -308,15 +308,20 @@
 
             const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
             
-            // [강력 필터링 로직]
+            // [강력 필터링 및 규정 이닝 로직]
             let validRows = rows.filter(r => {
                 const val = getVal(r);
-                // 1. 투수 지표인 경우: 이닝(IP)이 반드시 0보다 커야 함
+                const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
+
+                // 1. 투수 지표(ERA, WHIP)인 경우
                 if (m.pit) {
-                    const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
-                    return ipValue > 0;
+                    // [핵심] 규정 이닝 설정: 2025년 데이터는 최소 5이닝 이상 던진 선수만 순위에 표시
+                    // (규정 이닝이 없으면 1이닝이라도 던지고 ERA 0인 선수가 무조건 1위가 됩니다)
+                    const minIP = (currentYear === '2025') ? 5 : 1; 
+                    return ipValue >= minIP;
                 }
-                // 2. 타자 지표인 경우: 해당 스탯이 0보다 커야 함 (AVG 0, HR 0 등 제외)
+                
+                // 2. 타자 지표인 경우: 해당 스탯이 0보다 커야 함
                 return val > 0;
             });
 
