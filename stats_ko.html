@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밴쿠버 K-League | 전체 기록실</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background: #003366; color: #ffffff; padding: 1rem; text-align: center; }
+        nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
+        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        .container { padding: 20px; max-width: 1200px; margin: auto; background: #fff; min-height: 800px; }
+        
+        .controls { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; gap: 10px; }
+        .btn-group { display: flex; border: 1px solid #003366; border-radius: 5px; overflow: hidden; }
+        .btn-group button { padding: 8px 20px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-group button.active { background: #003366; color: white; }
+        .btn-group button.inactive { background: white; color: #003366; }
+        
+        #search-input { padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 5px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: auto; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
+        th { background: #f8f9fa; position: sticky; top: 0; cursor: pointer; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .player-info { text-align: left; }
+        .p-name { font-weight: bold; display: block; }
+        .p-team { font-size: 0.75rem; color: #888; }
+        .val-highlight { font-weight: bold; color: #d32f2f; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Vancouver K-League Stats</h1>
+    <p>리그 전체 선수 기록실</p>
+</header>
+
+<nav>
+    <a href="ko.html">홈으로</a>
+    <a href="schedule_ko.html">전체 일정</a>
+</nav>
+
+<div class="container">
+    <div class="controls">
+        <div class="btn-group">
+            <button id="btn-Reg" class="active" onclick="switchSeason('Reg')">정규 시즌</button>
+            <button id="btn-Post" class="inactive" onclick="switchSeason('Post')">포스트 시즌</button>
+        </div>
+        <div class="btn-group">
+            <button id="btn-Hitter" class="active" onclick="switchCategory('Hitter')">타자 기록</button>
+            <button id="btn-Pitcher" class="inactive" onclick="switchCategory('Pitcher')">투수 기록</button>
+        </div>
+        <input type="text" id="search-input" placeholder="선수 이름 검색..." onkeyup="filterTable()">
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table id="stats-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentSeason = 'Reg';
+    let currentCategory = 'Hitter';
+    let allData = [];
+
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = (s === 'Reg' ? 'active' : 'inactive');
+        document.getElementById('btn-Post').className = (s === 'Post' ? 'active' : 'inactive');
+        loadData();
+    }
+
+    function switchCategory(c) {
+        currentCategory = c;
+        document.getElementById('btn-Hitter').className = (c === 'Hitter' ? 'active' : 'inactive');
+        document.getElementById('btn-Pitcher').className = (c === 'Pitcher' ? 'active' : 'inactive');
+        renderTable();
+    }
+
+    function loadData() {
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_' + currentSeason)}`)
+            .then(r => r.text()).then(d => {
+                const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+                const rows = data.rows;
+
+                // 인덱스 찾기
+                const getIdx = (names) => headers.findIndex(h => names.includes(h));
+                const lnIdx = getIdx(['LAST NAME', 'PLAYER', 'NAME']);
+                const fnIdx = getIdx(['FIRST NAME']);
+                const teamIdx = getIdx(['TEAM']);
+                const ipIdx = getIdx(['INNINGS PITCHED', 'IP']);
+
+                // 타자 지표
+                const hCols = [
+                    {label: '타율', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG']), fix: 3},
+                    {label: '홈런', id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
+                    {label: '타점', id: 'RBI', idx: getIdx(['RUNS BATTED IN', 'RBI'])},
+                    {label: 'OPS', id: 'OPS', idx: getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']), fix: 3},
+                    {label: '안타', id: 'H', idx: getIdx(['HITS', 'H'])},
+                    {label: '출루율', id: 'OBP', idx: getIdx(['ON-BASE PERCENTAGE', 'OBP']), fix: 3}
+                ];
+
+                // 투수 지표
+                const pCols = [
+                    {label: '방어율', id: 'ERA', idx: getIdx(['EARNED RUN AVERAGE', 'ERA']), fix: 2},
+                    {label: '승', id: 'W', idx: getIdx(['WINS', 'W'])},
+                    {label: '이닝', id: 'IP', idx: ipIdx},
+                    {label: '탈삼진', id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
+                    {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
+                ];
+
+                allData = rows.map(r => {
+                    let name = r.c[lnIdx]?.v || '-';
+                    if (fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
+                    return {
+                        name: name,
+                        team: r.c[teamIdx]?.v || '',
+                        isPitcher: (r.c[ipIdx]?.v || 0) > 0,
+                        hitterStats: hCols.map(c => ({val: r.c[c.idx]?.v || 0, label: c.label, fix: c.fix})),
+                        pitcherStats: pCols.map(c => ({val: r.c[c.idx]?.v || 0, label: c.label, fix: c.fix}))
+                    };
+                });
+
+                renderTable();
+            });
+    }
+
+    function renderTable() {
+        const head = document.getElementById('table-head');
+        const body = document.getElementById('table-body');
+        head.innerHTML = '';
+        body.innerHTML = '';
+
+        let displayData = allData;
+        if (currentCategory === 'Pitcher') {
+            displayData = allData.filter(d => d.isPitcher).sort((a,b) => a.pitcherStats[0].val - b.pitcherStats[0].val); // ERA 순
+        } else {
+            displayData = allData.sort((a,b) => b.hitterStats[0].val - a.hitterStats[0].val); // 타율 순
+        }
+
+        // 헤더 생성
+        const hTr = document.createElement('tr');
+        hTr.innerHTML = `<th>순위</th><th>선수 정보</th>`;
+        const activeCols = currentCategory === 'Hitter' ? allData[0].hitterStats : allData[0].pitcherStats;
+        activeCols.forEach(c => hTr.innerHTML += `<th>${c.label}</th>`);
+        head.appendChild(hTr);
+
+        // 데이터 생성
+        displayData.forEach((d, i) => {
+            const tr = document.createElement('tr');
+            let statsHtml = '';
+            const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
+            
+            stats.forEach((s, idx) => {
+                let v = s.val;
+                if (s.fix) v = parseFloat(v).toFixed(s.fix);
+                statsHtml += `<td class="${idx === 0 ? 'val-highlight' : ''}">${v}</td>`;
+            });
+
+            tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td class="player-info">
+                    <span class="p-name">${d.name}</span>
+                    <span class="p-team">${d.team}</span>
+                </td>
+                ${statsHtml}
+            `;
+            body.appendChild(tr);
+        });
+    }
+
+    function filterTable() {
+        const input = document.getElementById('search-input').value.toUpperCase();
+        const rows = document.getElementById('table-body').getElementsByTagName('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const nameCell = rows[i].getElementsByClassName('p-name')[0];
+            if (nameCell) {
+                const txtValue = nameCell.textContent || nameCell.innerText;
+                rows[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+    }
+
+    loadData();
+</script>
+</body>
+</html>
