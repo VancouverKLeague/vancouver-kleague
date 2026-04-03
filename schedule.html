@@ -6,76 +6,53 @@
     <title>K-League | Full Schedule</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
-        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
-        .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
-        .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; }
-        table { width:100%; border-collapse: collapse; text-align: center; }
+        table { width:100%; border-collapse: collapse; text-align: center; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
-        th { background: #f8f9fa; font-weight: bold; }
-        footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        th { background: #f8f9fa; }
+        .loading { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
 <body>
-
-<header>
-    <div class="lang-switch"><a href="schedule_ko.html">KO</a> | <a href="schedule.html">EN</a></div>
-    <h1>Vancouver K-League</h1>
-    <p>2026 Full Season Schedule & Results</p>
-</header>
-
-<nav>
-    <a href="index.html">← BACK TO HOME</a>
-</nav>
-
+<header><h1>Vancouver K-League</h1><p>Full Season Schedule</p></header>
+<nav><a href="index.html">← BACK TO HOME</a></nav>
 <div class="container">
-    <div class="card">
-        <h3>⚾ Full Match Schedule (40 Games)</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date & Time</th>
-                    <th>Field</th>
-                    <th>Matchup</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            <tbody id="full-schedule-body"></tbody>
-        </table>
-    </div>
+    <h3>⚾ Full Match Schedule (40 Games)</h3>
+    <div id="loading-msg" class="loading">Loading schedule data...</div>
+    <table id="full-table" style="display:none;">
+        <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
+        <tbody id="full-schedule-body"></tbody>
+    </table>
 </div>
-
-<footer>
-    <p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p>
-</footer>
-
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const sheetName = encodeURIComponent('Schedule(일정)');
-    
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`)
-        .then(r => r.text()).then(d => {
-            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-            const tbody = document.getElementById('full-schedule-body');
-            
-            rows.forEach(row => {
-                const c = row.c;
-                const tr = document.createElement('tr');
-                // Use .f (Formatted value) to keep correct time/date format
-                tr.innerHTML = `
-                    <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-                    <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-                    <td><strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong></td>
-                    <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        });
-</script>
+    const tabName = 'Schedule(일정)'; // 사용자님이 시트 탭 이름을 이걸로 바꾸셨다고 가정합니다!
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 
+    fetch(url).then(r => r.text()).then(d => {
+        const json = JSON.parse(d.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+        const tbody = document.getElementById('full-schedule-body');
+        
+        rows.forEach(row => {
+            const c = row.c;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
+                <td>${c[2]?(c[2].f||c[2].v):''}</td>
+                <td><strong>${c[3]?(c[3].f||c[3].v):''}</strong> vs <strong>${c[4]?(c[4].f||c[4].v):''}</strong></td>
+                <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('loading-msg').style.display = 'none';
+        document.getElementById('full-table').style.display = 'table';
+    }).catch(err => {
+        document.getElementById('loading-msg').textContent = 'Error: Cannot load data. Please check tab name.';
+    });
+</script>
 </body>
 </html>
