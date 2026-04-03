@@ -242,13 +242,11 @@
             const rows = data.rows; 
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
 
-            // 인덱스 찾기 함수
             const findCol = (keywords) => cols.findIndex(c => keywords.some(k => c === k || c.includes(k)));
 
-            // [핵심] 이름 관련 컬럼 인덱스들
             const fNameI = findCol(['FIRST NAME']);
             const lNameI = findCol(['LAST NAME']);
-            const playerI = findCol(['PLAYER', 'FULL NAME']); // 2026년용
+            const playerI = findCol(['PLAYER', 'FULL NAME', 'NAME']); 
             const teamI = findCol(['TEAM']);
             const ipI = findCol(['INN', 'IP', 'INNINGS PITCHED']);
 
@@ -266,20 +264,37 @@
             metrics.forEach(m => {
                 let vI = findCol(m.n);
                 const target = document.getElementById(m.id);
-                if (vI === -1) { target.innerHTML = '<tr><td colspan="3" style="padding:10px; color:#999;">-</td></tr>'; return; }
+                
+                // 해당 항목의 컬럼이 아예 없거나 데이터가 없는 경우 처리
+                if (vI === -1) {
+                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999; font-size:0.8rem;">아직 기록이 없습니다.</td></tr>';
+                    return;
+                }
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-                let validRows = rows.filter(r => m.pit ? (parseFloat(gv(r, ipI)) || 0) > 0 : getVal(r) > 0);
+                
+                // 필터링: 투수는 이닝이 있는 사람, 타자는 해당 수치가 0보다 큰 사람
+                let validRows = rows.filter(r => {
+                    if (m.pit) return (parseFloat(gv(r, ipI)) || 0) > 0;
+                    return getVal(r) > 0;
+                });
+
+                // 데이터가 하나도 없을 때 문구 표시
+                if (validRows.length === 0) {
+                    target.innerHTML = '<tr><td colspan="3" style="padding:15px; color:#999; font-size:0.8rem;">아직 기록이 없습니다.</td></tr>';
+                    return;
+                }
+
                 const sorted = [...validRows].sort((a,b) => m.asc ? getVal(a) - getVal(b) : getVal(b) - getVal(a)).slice(0, 5);
 
                 sorted.forEach((r, i) => {
-                    // [핵심] 이름 결합 로직: First + Last를 합치되, 둘 중 하나만 있어도 OK
                     let firstName = gv(r, fNameI).trim();
                     let lastName = gv(r, lNameI).trim();
-                    let fullName = gv(r, playerI).trim(); // 2026년용 컬럼 확인
+                    let fullName = gv(r, playerI).trim();
                     
+                    // 이름 결합 로직: 2025/2026 파일 형식 모두 대응
                     let displayName = fullName || (firstName + " " + lastName).trim();
-                    if (!displayName) displayName = "알 수 없음";
+                    if (!displayName || displayName === "0") displayName = "알 수 없음";
 
                     target.innerHTML += `<tr>
                         <td style="width:30px; font-weight:bold;">${i+1}</td>
@@ -293,7 +308,9 @@
                     </tr>`;
                 });
             });
-        }).catch(e=>{});
+        }).catch(e=>{
+            console.error("데이터 로드 중 에러:", e);
+        });
     }
     changeYear('2026');
 </script>
