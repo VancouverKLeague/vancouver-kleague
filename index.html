@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (이름 정리, 투/타 중복 분리, POPS 방지, 0개 기록 처리 완벽 적용)
+    // 기록실 로딩 (GameChanger 완벽 호환 + OPS, WHIP 자동 계산기 탑재)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -189,22 +189,16 @@
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
             
-            // 1. 투수 이닝(IP) 컬럼 위치를 찾아 투/타 지표 기준점 마련
             const ipI = cols.findIndex(c => c.trim() === 'IP' || c.includes('INNINGS PITCHED'));
 
-            // 2. 컬럼 찾기 (유연성 복구 + 예외 처리)
             const fi = (arr, isPit = false) => {
                 let start = (isPit && ipI !== -1) ? ipI : 0;
                 let slice = cols.slice(start);
-                
-                // 1순위: 정확히 일치하는지 먼저 탐색
                 let idx = slice.findIndex(c => arr.some(n => c.trim() === n));
-                
-                // 2순위: 못 찾으면 기존처럼 '포함(includes)' 방식으로 유연하게 탐색
                 if (idx === -1) {
                     idx = slice.findIndex(c => arr.some(n => {
-                        // 🔥 핵심 방어 로직: OPS를 찾을 때 POPS는 무시하도록 설정
                         if (n === 'OPS' && c.includes('POPS')) return false;
+                        if (n === 'WHIP' && c.includes('WHIP')) return true;
                         return c.includes(n);
                     }));
                 }
@@ -217,7 +211,6 @@
             const nameI = fi(['NAME']);
             const tmI = fi(['TEAM']);
 
-            // 예전의 넓은 검색어 배열을 복구하여 인식률을 높임
             const metrics = [
                 {id: 'avg-leaders', n: ['AVG', 'BATTING'], d: 3, asc: false, pit: false},
                 {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
@@ -230,32 +223,69 @@
             ];
 
             metrics.forEach(m => {
-                const vI = fi(m.n, m.pit);
-                if(vI === -1) return; // 컬럼을 아예 못 찾으면 스킵
-                
-                let validRows = rows;
-                
-                // 투수 순위일 경우 이닝(IP)을 1아웃이라도 잡은 사람만 집계
-                if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
+                let vI = fi(m.n, m.pit);
+                let isCalc = false;
+                let calcFn = null;
 
-                // 누적 스탯(HR, RBI, W, SO)은 기록이 0인 선수 아예 제외
-                if(m.countStat) {
-                    validRows = validRows.filter(r => (parseFloat(gv(r, vI)) || 0) > 0);
+                // 🔥 [핵심 로직] CSV에 OPS나 WHIP 컬럼이 없을 경우 자동 계산 실행
+                if (vI === -1) {
+                    if (m.id === 'ops-leaders') {
+                        const obpI = fi(['OBP', 'ON BASE'], false);
+                        const slgI = fi(['SLG', 'SLUGGING'], false);
+                        if (obpI !== -1 && slgI !== -1) {
+                            isCalc = true;
+                            calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0);
+                        }
+                    } else if (m.id === 'whip-leaders') {
+                        const bbI = fi(['BB', 'WALKS'], true);
+                        const hI = fi(['H', 'HITS'], true);
+                        if (bbI !== -1 && hI !== -1 && ipI !== -1) {
+                            isCalc = true;
+                            calcFn = (r) => {
+                                let ipRaw = parseFloat(gv(r, ipI)) || 0;
+                                let ipInt = Math.floor(ipRaw);
+                                let ipDec = Math.round((ipRaw - ipInt) * 10);
+                                // GameChanger의 1.1이닝, 1.2이닝을 실제 수학적 분수(1/3, 2/3)로 변환
+                                let realIp = ipInt + (ipDec === 1 ? 0.3333 : (ipDec === 2 ? 0.6667 : 0));
+                                if (realIp <= 0) return 999; // 0으로 나누기 방지
+                                
+                                const bb = parseFloat(gv(r, bbI)) || 0;
+                                const h = parseFloat(gv(r, hI)) || 0;
+                                return (bb + h) / realIp;
+                            };
+                        }
+                    }
                 }
+
+                const target = document.getElementById(m.id);
+
+                // 계산조차 불가능할 정도로 데이터가 부족할 경우 안내 문구 출력
+                if (vI === -1 && !isCalc) {
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No data.</td></tr>`;
+                    return;
+                }
+
+                const getVal = (r) => {
+                    if (isCalc) return calcFn(r);
+                    return parseFloat(gv(r, vI)) || 0;
+                };
+
+                let validRows = rows;
+                // 투수 기록은 이닝을 소화한 사람만
+                if(m.pit && ipI !== -1) validRows = rows.filter(r => (parseFloat(gv(r, ipI)) || 0) > 0);
+                // 누적 스탯(HR, RBI, 승리, 삼진)은 0개인 사람 제외
+                if(m.countStat) validRows = validRows.filter(r => getVal(r) > 0);
                 
                 const sorted = [...validRows].sort((a,b) => {
-                    const vA = parseFloat(gv(a,vI)) || 0; const vB = parseFloat(gv(b,vI)) || 0;
+                    const vA = getVal(a); const vB = getVal(b);
                     if(m.asc) { 
-                        const realA = (gv(a,vI)==='' || gv(a,vI)==='-') ? 999 : vA;
-                        const realB = (gv(b,vI)==='' || gv(b,vI)==='-') ? 999 : vB;
+                        const realA = (vA === 0 && !isCalc && (gv(a,vI)==='' || gv(a,vI)==='-')) ? 999 : vA;
+                        const realB = (vB === 0 && !isCalc && (gv(b,vI)==='' || gv(b,vI)==='-')) ? 999 : vB;
                         return realA - realB; 
                     }
                     return vB - vA;
                 }).slice(0, 5);
 
-                const target = document.getElementById(m.id);
-
-                // 1개 이상 기록한 선수가 없으면 안내 문구 표시 (영문 기준 적용)
                 if(sorted.length === 0) {
                     target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No records yet.</td></tr>`;
                     return;
@@ -270,8 +300,9 @@
 
                     name = name.trim();
 
-                    let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
-                    if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
+                    let val = getVal(r);
+                    let valStr = val.toFixed(m.d);
+                    if(m.asc && val === 999) valStr = '-';
                     
                     target.innerHTML += `<tr>
                         <td style="width:30px; padding:8px 5px;">${i+1}</td>
@@ -281,11 +312,11 @@
                                 <span style="font-size:0.7rem; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${gv(r, tmI)}</span>
                             </div>
                         </td>
-                        <td class="val-highlight" style="width:50px; padding:8px 5px;">${val}</td>
+                        <td class="val-highlight" style="width:50px; padding:8px 5px;">${valStr}</td>
                     </tr>`;
                 });
             });
-        }).catch(e=>{ console.error("Stats fetching error: ", e); });
+        }).catch(e=>{ console.error(e); });
     }
     loadStats();
 </script>
