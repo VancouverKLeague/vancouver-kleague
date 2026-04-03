@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancouver K-League | Full Stats</title>
+    <title>Vancouver K-League | Player Stats</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
@@ -17,6 +17,7 @@
         .btn-group button.active { background: #003366; color: white; }
         .btn-group button.inactive { background: white; color: #003366; }
         
+        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; }
         #search-input { padding: 8px; width: 220px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
@@ -39,28 +40,33 @@
 
 <header>
     <h1>Vancouver K-League Stats</h1>
-    <p>Comprehensive Player Performance Records</p>
+    <p>Complete Player Performance Database</p>
 </header>
 
 <nav>
-    <a href="index.html">HOME</a>
-    <a href="schedule.html">SCHEDULE</a>
+    <a href="index.html">Home</a>
+    <a href="schedule.html">Full Schedule</a>
 </nav>
 
 <div class="container">
     <div class="controls">
+        <select id="year-select" onchange="changeYear(this.value)">
+            <option value="2026" selected>2026 Season</option>
+            <option value="2025">2025 Season</option>
+        </select>
+
         <div class="btn-group">
             <button id="btn-Reg" class="active" onclick="switchSeason('Reg')">Regular Season</button>
             <button id="btn-Post" class="inactive" onclick="switchSeason('Post')">Post Season</button>
         </div>
         <div class="btn-group">
-            <button id="btn-Hitter" class="active" onclick="switchCategory('Hitter')">Hitter Stats</button>
-            <button id="btn-Pitcher" class="inactive" onclick="switchCategory('Pitcher')">Pitcher Stats</button>
+            <button id="btn-Hitter" class="active" onclick="switchCategory('Hitter')">Batting</button>
+            <button id="btn-Pitcher" class="inactive" onclick="switchCategory('Pitcher')">Pitching</button>
         </div>
         <input type="text" id="search-input" placeholder="Search player name..." onkeyup="filterTable()">
     </div>
 
-    <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">* Click on any header (AVG, HR, etc.) to sort the rankings.</p>
+    <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">* Click on headers (AVG, HR, etc.) to sort the rankings.</p>
 
     <div style="overflow-x: auto; border: 1px solid #ddd; border-radius: 8px;">
         <table id="stats-table">
@@ -72,11 +78,17 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentYear = '2026';
     let currentSeason = 'Reg';
     let currentCategory = 'Hitter';
     let allData = [];
     let sortColIdx = 0; 
     let sortOrder = -1; 
+
+    function changeYear(y) {
+        currentYear = y;
+        loadData();
+    }
 
     function switchSeason(s) {
         currentSeason = s;
@@ -99,23 +111,27 @@
             sortOrder *= -1; 
         } else {
             sortColIdx = idx;
-            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 4)) ? 1 : -1;
+            // Lower is better for ERA(0) and WHIP(5)
+            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 5)) ? 1 : -1;
         }
         renderTable();
     }
 
     function loadData() {
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_' + currentSeason)}`)
+        const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                const getIdx = (names) => headers.findIndex(h => names.includes(h));
+                const getIdx = (names) => headers.findIndex(h => names.some(n => h === n || h.includes(n)));
+                
                 const lnIdx = getIdx(['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(['FIRST NAME']);
                 const teamIdx = getIdx(['TEAM']);
-                const ipIdx = getIdx(['INNINGS PITCHED', 'IP']);
+                const ipIdx = getIdx(['INNINGS PITCHED', 'IP', 'INN']);
 
                 const hCols = [
                     {label: 'AVG', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
@@ -131,27 +147,45 @@
                     {label: 'W', id: 'W', idx: getIdx(['WINS', 'W'])},
                     {label: 'IP', id: 'IP', idx: ipIdx, fix: 1},
                     {label: 'SO', id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
+                    {label: 'R', id: 'R', idx: getIdx(['RUNS ALLOWED', 'R'])},
                     {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
                 ];
 
                 allData = rows.map(r => {
-                    let name = r.c[lnIdx]?.v || '-';
-                    if (fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
+                    const gv = (idx) => (r.c[idx]?.v !== undefined) ? r.c[idx].v : 0;
+                    
+                    let lastName = (lnIdx > -1 && r.c[lnIdx]?.v) ? r.c[lnIdx].v : '';
+                    let firstName = (fnIdx > -1 && r.c[fnIdx]?.v) ? r.c[fnIdx].v : '';
+                    let name = (firstName + " " + lastName).trim() || "-";
+                    if (name === "-") name = lastName || firstName || "-";
+
+                    const calculateOps = () => {
+                        const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
+                        if (opsIdx > -1) return parseFloat(gv(opsIdx));
+                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP'])));
+                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG'])));
+                        return obp + slg;
+                    };
+
                     return {
                         name: name,
-                        team: r.c[teamIdx]?.v || 'K-League',
-                        isPitcher: (r.c[ipIdx]?.v || 0) > 0,
-                        hitterStats: hCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix})),
-                        pitcherStats: pCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix}))
+                        team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
+                        isPitcher: parseFloat(gv(ipIdx)) > 0,
+                        hitterStats: hCols.map(c => {
+                            let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
+                            return {val: val || 0, label: c.label, fix: c.fix};
+                        }),
+                        pitcherStats: pCols.map(c => ({val: parseFloat(gv(c.idx)) || 0, label: c.label, fix: c.fix}))
                     };
                 });
                 renderTable();
-            });
+            }).catch(e => console.error("Data loading error:", e));
     }
 
     function renderTable() {
         const head = document.getElementById('table-head');
         const body = document.getElementById('table-body');
+        if (!allData.length) return;
         head.innerHTML = '';
         body.innerHTML = '';
 
@@ -164,11 +198,11 @@
         }
 
         const hTr = document.createElement('tr');
-        let headerHtml = `<th style="width:50px;">Rank</th><th style="width:180px;">Player</th>`;
-        const activeCols = currentCategory === 'Hitter' ? allData[0].hitterStats : allData[0].pitcherStats;
+        let headerHtml = `<th style="width:50px;">Rank</th><th style="width:180px;">Player Info</th>`;
+        const activeCols = currentCategory === 'Hitter' ? displayData[0].hitterStats : displayData[0].pitcherStats;
         
         activeCols.forEach((c, idx) => {
-            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? '▲' : '▼') : '';
+            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
             headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
         });
         hTr.innerHTML = headerHtml;
@@ -181,7 +215,7 @@
             
             stats.forEach((s, idx) => {
                 let v = s.val;
-                if (s.fix) v = v.toFixed(s.fix);
+                if (s.fix !== undefined) v = v.toFixed(s.fix);
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
             });
 
