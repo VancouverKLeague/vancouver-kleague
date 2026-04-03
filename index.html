@@ -14,22 +14,24 @@
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
-        
+        h4 { text-align: center; color: #555; margin: 15px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.95rem; }
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
-
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
-        
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .stats-grid { display: flex; gap: 10px; flex-wrap: wrap; }
         .stats-col { flex: 1; min-width: 250px; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        .toggle-container { text-align: right; margin-bottom: 10px; }
+        .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .active { background: #003366; color: white; }
+        .inactive { background: #eee; color: #333; }
     </style>
 </head>
 <body>
@@ -52,15 +54,12 @@
     <div class="card">
         <h3>🏆 League Standings</h3>
         <div class="table-wrapper">
-            <table>
-                <thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead>
-                <tbody id="standing-body"></tbody>
-            </table>
+            <table><thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead><tbody id="standing-body"></tbody></table>
         </div>
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather Info</h3>
+        <h3>📍 Field & Weather</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div style="flex: 1.5; min-width: 280px;">
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
@@ -77,21 +76,34 @@
     <div class="card">
         <h3>⚾ Recent & Upcoming Games</h3>
         <div class="table-wrapper">
-            <table>
-                <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
-                <tbody id="schedule-body"></tbody>
-            </table>
+            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
         <a href="schedule.html" class="btn-more">View Full Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
-        <h3>🔥 League Leaders</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>🔥 League Leaders (TOP 5)</h3>
+            <div class="toggle-container">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">Regular</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">Post</button>
+            </div>
+        </div>
+        
+        <h4 style="color: #0288d1; margin-top: 0;">Hitting</h4>
         <div class="stats-grid">
             <div class="stats-col"><h4>AVG</h4><table><tbody id="avg-leaders"></tbody></table></div>
             <div class="stats-col"><h4>HR</h4><table><tbody id="hr-leaders"></tbody></table></div>
             <div class="stats-col"><h4>RBI</h4><table><tbody id="rbi-leaders"></tbody></table></div>
             <div class="stats-col"><h4>OPS</h4><table><tbody id="ops-leaders"></tbody></table></div>
+        </div>
+
+        <h4 style="color: #2e7d32; margin-top: 30px;">Pitching</h4>
+        <div class="stats-grid">
+            <div class="stats-col"><h4>ERA</h4><table><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>Wins</h4><table><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>SO</h4><table><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>WHIP</h4><table><tbody id="whip-leaders"></tbody></table></div>
         </div>
         <a href="stats.html" class="btn-more" style="background: #444;">View Full Player Stats →</a>
     </div>
@@ -101,85 +113,87 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentSeason = 'Reg';
+
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : 'inactive');
+        document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : 'inactive');
+        loadStats();
+    }
+
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 1. Notice
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`)
-        .then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-            if(data && data.c[0]) {
-                document.getElementById('notice-card').style.display = 'block';
-                document.getElementById('notice-content').innerText = gv(data, 0);
-                if(gv(data, 1)) document.getElementById('rulebook-link').href = gv(data, 1);
-                document.getElementById('rulebook-link').style.display = 'inline-block';
-            }
-        });
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
+        const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
+        if(data && data.c[0]) { document.getElementById('notice-card').style.display = 'block'; document.getElementById('notice-content').innerText = gv(data, 0); if(gv(data, 1)) { document.getElementById('rulebook-link').href = gv(data, 1); document.getElementById('rulebook-link').style.display = 'inline-block'; } }
+    }).catch(e=>{});
 
-    // 2. Standings
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
-        .then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-            const tb = document.getElementById('standing-body');
-            rows.forEach(r => {
-                if(gv(r, 1) && !gv(r, 1).includes('Team')) {
-                    let tr = '<tr>';
-                    for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`;
-                    tb.innerHTML += tr + '</tr>';
-                }
-            });
-        });
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
+        rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
+    }).catch(e=>{});
 
-    // 3. Schedule
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
-        .then(res => res.text()).then(t => {
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
+        const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
+        const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
+        const render = (r) => { tb.innerHTML += `<tr><td>${gv(r, 0)} ${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="font-weight:bold;">${gv(r, 4)} vs ${gv(r, 3)}</td><td class="val-highlight">${gv(r, 5) || '-'}</td></tr>`; };
+        if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
+        if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
+    }).catch(e=>{});
+
+    function loadStats() {
+        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
+        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_${currentSeason}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows.filter(r => gv(r, 3));
-            const tb = document.getElementById('schedule-body');
-            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
-            const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
-            const render = (r) => {
-                tb.innerHTML += `<tr><td>${gv(r, 0)} ${gv(r, 1)}</td><td>${gv(r, 2)}</td>
-                    <td style="font-weight:bold;">${gv(r, 4)} vs ${gv(r, 3)}</td>
-                    <td class="val-highlight">${gv(r, 5) || '-'}</td></tr>`;
-            };
-            if (played.length > 0) {
-                const lastDate = gv(played[played.length - 1], 0);
-                played.filter(r => gv(r, 0) === lastDate).forEach(render);
-            }
-            if (upcoming.length > 0) {
-                const nextDate = gv(upcoming[0], 0);
-                upcoming.filter(r => gv(r, 0) === nextDate).forEach(render);
-            }
-        });
-
-    // 4. Leaders
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`)
-        .then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows;
-            const cols = data.cols.map(c => (c.label || '').toUpperCase());
+            const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
             const fi = (arr) => cols.findIndex(c => arr.some(n => c.includes(n)));
-            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']);
+            
+            const lnI = fi(['LAST NAME','PLAYER','NAME']), fnI = fi(['FIRST NAME']), tmI = fi(['TEAM']), ipI = fi(['INNINGS PITCHED', 'IP']);
+
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3},
-                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0},
-                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0},
-                {id: 'ops-leaders', n: ['OPS'], d: 3}
+                {id: 'avg-leaders', n: ['AVG','BATTING'], d: 3, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HR','HOME RUNS'], d: 0, asc: false, pit: false},
+                {id: 'rbi-leaders', n: ['RBI','RUNS BATTED'], d: 0, asc: false, pit: false},
+                {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
+                {id: 'era-leaders', n: ['EARNED RUN AVERAGE','ERA'], d: 2, asc: true, pit: true},
+                {id: 'win-leaders', n: ['WINS','W'], d: 0, asc: false, pit: true},
+                {id: 'so-leaders', n: ['STRIKEOUTS','SO','K'], d: 0, asc: false, pit: true},
+                {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
             ];
+
             metrics.forEach(m => {
                 const vI = fi(m.n);
                 if(vI === -1) return;
-                const sorted = [...rows].sort((a,b) => (parseFloat(gv(b,vI))||0) - (parseFloat(gv(a,vI))||0)).slice(0, 5);
+                
+                let validRows = rows;
+                if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
+
+                const sorted = [...validRows].sort((a,b) => {
+                    const vA = parseFloat(gv(a,vI)) || 0; const vB = parseFloat(gv(b,vI)) || 0;
+                    if(m.asc) { 
+                        const realA = (gv(a,vI)==='' || gv(a,vI)==='-') ? 999 : vA;
+                        const realB = (gv(b,vI)==='' || gv(b,vI)==='-') ? 999 : vB;
+                        return realA - realB; 
+                    }
+                    return vB - vA;
+                }).slice(0, 5);
+
                 const target = document.getElementById(m.id);
                 sorted.forEach((r, i) => {
-                    let name = gv(r, lnI);
-                    if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
-                    let val = parseFloat(gv(r, vI)) || 0;
-                    if(m.d > 0) val = val.toFixed(m.d);
+                    let name = gv(r, lnI); if(fnI !== -1 && gv(r, fnI)) name = gv(r, fnI) + " " + name;
+                    let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
+                    if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
                     target.innerHTML += `<tr><td style="width:30px;">${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold; font-size:0.85rem;">${name}</span><span style="font-size:0.7rem;color:#888;">${gv(r, tmI)}</span></div></td><td class="val-highlight" style="width:60px;">${val}</td></tr>`;
                 });
             });
-        });
+        }).catch(e=>{});
+    }
+    
+    loadStats();
 </script>
 </body>
 </html>
