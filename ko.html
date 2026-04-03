@@ -24,6 +24,11 @@
         .stats-col { flex: 1; min-width: 200px; }
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
+        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
+        .toggle-container { text-align: right; margin-bottom: 10px; }
+        .toggle-btn { padding: 5px 15px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .active { background: #003366; color: white; }
+        .inactive { background: #eee; color: #333; }
     </style>
 </head>
 <body>
@@ -50,37 +55,43 @@
 
     <div class="card">
         <h3>⚾ 최근 결과 및 예정 경기</h3>
-        <table id="main-sched-table">
+        <table>
             <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
             <tbody id="main-sched-body"></tbody>
         </table>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
     </div>
 
-    <div class="card" style="border-top: 5px solid #0288d1;">
-        <h3>🔥 타자 부문 TOP 5 (Batting Leaders)</h3>
+    <div class="card" style="border-top: 5px solid #ffc107;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+            <h3>🔥 리그 리더 (League Leaders)</h3>
+            <div class="toggle-container">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규 시즌</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트 시즌</button>
+            </div>
+        </div>
+
+        <h4 style="color: #0288d1;">타자 부문 (Batting)</h4>
         <div class="stats-grid">
             <div class="stats-col">
                 <h4>타율 (AVG)</h4>
-                <table><thead><tr><th>순위</th><th>이름</th><th>기록</th></tr></thead><tbody id="avg-leaders"></tbody></table>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="avg-leaders"></tbody></table>
             </div>
             <div class="stats-col">
                 <h4>홈런 (HR)</h4>
-                <table><thead><tr><th>순위</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table>
             </div>
         </div>
-    </div>
 
-    <div class="card" style="border-top: 5px solid #2e7d32;">
-        <h3>Pitching 부문 TOP 5 (Pitching Leaders)</h3>
+        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching)</h4>
         <div class="stats-grid">
             <div class="stats-col">
                 <h4>방어율 (ERA)</h4>
-                <table><thead><tr><th>순위</th><th>이름</th><th>기록</th></tr></thead><tbody id="era-leaders"></tbody></table>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="era-leaders"></tbody></table>
             </div>
             <div class="stats-col">
                 <h4>다승 (WINS)</h4>
-                <table><thead><tr><th>순위</th><th>이름</th><th>기록</th></tr></thead><tbody id="win-leaders"></tbody></table>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="win-leaders"></tbody></table>
             </div>
         </div>
     </div>
@@ -90,6 +101,7 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentSeason = 'Reg';
 
     function formatTeamName(name) {
         if (!name) return '';
@@ -102,13 +114,19 @@
         });
     }
 
-    // 엑셀 헤더에서 이름으로 인덱스를 찾는 함수
     function getIdx(headers, searchNames) {
         return headers.findIndex(h => searchNames.includes(h.toUpperCase()));
     }
 
-    function loadAllData() {
-        // [1] 순위표 로딩
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s==='Reg'?'active':'inactive');
+        document.getElementById('btn-Post').className = 'toggle-btn ' + (s==='Post'?'active':'inactive');
+        loadStats();
+    }
+
+    function loadInitialData() {
+        // Standings
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -124,93 +142,108 @@
                 }});
             });
 
-        // [2] 일정 요약 로딩
+        // Schedule Summary
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('main-sched-body');
-                const played = rows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
-                const upcoming = rows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
+                const dataRows = rows; 
+                const played = dataRows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
+                const upcoming = dataRows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
                 if (played.length > 0) {
                     const lastDate = played[played.length-1].c[0].v;
-                    played.filter(g => g.c[0].v === lastDate).forEach(g => renderRow(g, tbody));
+                    played.filter(g => g.c[0].v === lastDate).forEach(g => renderSchedRow(g, tbody));
                 }
                 if (upcoming.length > 0) {
                     const nextDate = upcoming[0].c[0].v;
-                    upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderRow(g, tbody));
+                    upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderSchedRow(g, tbody));
                 }
             });
+        
+        loadStats();
+    }
 
-        // [3] 타자 기록 (Batting 탭)
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting(타자)')}`)
+    function loadStats() {
+        // Clear previous
+        document.getElementById('avg-leaders').innerHTML = '';
+        document.getElementById('hr-leaders').innerHTML = '';
+        document.getElementById('era-leaders').innerHTML = '';
+        document.getElementById('win-leaders').innerHTML = '';
+
+        // Batting
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => col.label.toUpperCase());
+                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                const nameIdx = getIdx(headers, ['PLAYER', 'NAME', 'PLAYER NAME']);
-                const avgIdx = getIdx(headers, ['AVG', 'BA', 'BATTING AVERAGE']);
-                const hrIdx = getIdx(headers, ['HR', 'HOME RUNS']);
+                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
+                const fnIdx = getIdx(headers, ['FIRST NAME']);
+                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG', 'BA']);
+                const hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
                 const teamIdx = getIdx(headers, ['TEAM']);
 
                 if(avgIdx > -1) {
                     const sorted = [...rows].sort((a,b) => (b.c[avgIdx]?.v || 0) - (a.c[avgIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'avg-leaders', nameIdx, avgIdx, teamIdx);
+                    renderStats(sorted, 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
                 }
                 if(hrIdx > -1) {
                     const sorted = [...rows].sort((a,b) => (b.c[hrIdx]?.v || 0) - (a.c[hrIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'hr-leaders', nameIdx, hrIdx, teamIdx);
+                    renderStats(sorted, 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
                 }
             });
 
-        // [4] 투수 기록 (Pitching 탭)
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Pitching(투수)')}`)
+        // Pitching
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Pitching_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
-                const headers = data.cols.map(col => col.label.toUpperCase());
+                const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                const nameIdx = getIdx(headers, ['PLAYER', 'NAME', 'PLAYER NAME']);
-                const eraIdx = getIdx(headers, ['ERA', 'EARNED RUN AVERAGE']);
-                const winIdx = getIdx(headers, ['W', 'WINS', 'WIN']);
+                const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
+                const fnIdx = getIdx(headers, ['FIRST NAME']);
+                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
+                const winIdx = getIdx(headers, ['WINS', 'W', 'WIN']);
                 const teamIdx = getIdx(headers, ['TEAM']);
 
                 if(eraIdx > -1) {
-                    // ERA는 낮은 순 (0 제외)
                     const sorted = [...rows].filter(r => (r.c[eraIdx]?.v || 0) > 0)
                                            .sort((a,b) => (a.c[eraIdx]?.v || 0) - (b.c[eraIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'era-leaders', nameIdx, eraIdx, teamIdx);
+                    renderStats(sorted, 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
                 }
                 if(winIdx > -1) {
                     const sorted = [...rows].sort((a,b) => (b.c[winIdx]?.v || 0) - (a.c[winIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'win-leaders', nameIdx, winIdx, teamIdx);
+                    renderStats(sorted, 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
                 }
-            });
+            }).catch(e => console.log("Pitching data not ready yet."));
     }
 
-    function renderRow(row, tbody) {
+    function renderSchedRow(row, tbody) {
         const c = row.c;
         const tr = document.createElement('tr');
         const note = c[6] ? (c[6].f || c[6].v || '') : '';
         if(note) tr.style.backgroundColor = '#fffdec';
         tr.innerHTML = `<td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td><td>${c[2]?(c[2].f||c[2].v):''}</td>
-                        <td style="text-align:center;"><strong>${formatTeamName(c[3]?.v)}</strong> vs <strong>${formatTeamName(c[4]?.v)}</strong></td>
+                        <td style="text-align:center;">${note ? `<span class="po-badge">${note}</span>` : ''}<strong>${formatTeamName(c[3]?.v)}</strong> vs <strong>${formatTeamName(c[4]?.v)}</strong></td>
                         <td class="val-highlight">${c[5]?(c[5].f||c[5].v):'-'}</td>`;
         tbody.appendChild(tr);
     }
 
-    function renderStats(data, id, nameIdx, valIdx, teamIdx) {
+    function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx) {
         const tbody = document.getElementById(id);
         data.forEach((r, i) => {
             const tr = document.createElement('tr');
-            const team = teamIdx > -1 ? ` (${r.c[teamIdx]?.v || ''})` : '';
-            tr.innerHTML = `<td>${i+1}</td><td>${r.c[nameIdx]?.v || '-'}<span style="font-size:0.7rem; color:#888;">${team}</span></td>
+            let name = r.c[lnIdx]?.v || '-';
+            let fName = (fnIdx > -1) ? (r.c[fnIdx]?.v || '') : '';
+            if(fName) name = fName + " " + name;
+            const team = (teamIdx > -1 && r.c[teamIdx]) ? ` (${r.c[teamIdx].v})` : '';
+            tr.innerHTML = `<td>${i+1}</td><td>${name}<span style="font-size:0.7rem; color:#888;">${team}</span></td>
                             <td class="val-highlight">${r.c[valIdx]?.f || r.c[valIdx]?.v || '0'}</td>`;
             tbody.appendChild(tr);
         });
     }
 
-    loadAllData();
+    loadInitialData();
 </script>
 </body>
 </html>
