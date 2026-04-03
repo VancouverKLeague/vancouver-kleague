@@ -88,7 +88,7 @@
     }
 
     function loadDataKo() {
-        // 순위표 로딩 (첫 줄부터 읽도록 i=0으로 수정)
+        // 순위표 로딩
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -107,14 +107,14 @@
                 });
             });
 
-        // 일정표 로딩 (첫 줄부터 읽도록 dataRows = rows로 수정)
+        // 일정표 로딩
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const resultsTbody = document.getElementById('recent-results-body-ko');
                 const upcomingTbody = document.getElementById('upcoming-body-ko');
 
-                const dataRows = rows; // slice(1) 제거!
+                const dataRows = rows; 
                 
                 const playedGames = dataRows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
                 const upcomingGames = dataRows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
@@ -145,7 +145,7 @@
         tr.innerHTML = `
             <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
             <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-            <td style="text-align:left; padding-left:15px;">
+            <td style="text-align:center;">
                 ${note ? `<span class="po-badge">${note}</span>` : ''}
                 <strong>${formatTeamName(c[3] ? (c[3].f || c[3].v) : '')}</strong> vs 
                 <strong>${formatTeamName(c[4] ? (c[4].f || c[4].v) : '')}</strong>
