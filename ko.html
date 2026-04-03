@@ -3,86 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>밴쿠버 K-League | 공식 홈페이지</title>
+    <title>밴쿠버 K-League | 야구</title>
     <style>
-        /* 동일한 스타일 적용 */
+        /* 영문과 동일한 스타일 */
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        .lang-switch a { color: white; text-decoration: none; font-size: 0.8rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
-        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
-        .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 600px; }
-        .jumbotron { background: #e2e2e2; padding: 40px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
-        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        footer { text-align: center; padding: 20px; background: #333; color: #fff; margin-top: 20px; }
+        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; text-decoration: none; }
+        .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; }
         table { width:100%; border-collapse: collapse; text-align: center; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background: #eee; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
+        th { background: #f8f9fa; font-weight: bold; }
+        footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        .loading { text-align: center; color: #888; padding: 20px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="lang-switch">
-        <a href="ko.html">KO</a> | <a href="index.html">EN</a>
-    </div>
+    <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>밴쿠버 최초의 한인 사회인 야구 리그</p>
+    <p>캐나다 밴쿠버 최초의 한인 사회인 야구 리그</p>
 </header>
 
 <nav>
     <a href="ko.html">홈</a>
-    <a href="#">경기일정</a>
-    <a href="#">리그순위</a>
-    <a href="#">기록실</a>
+    <a href="#standing-section">리그순위</a>
+    <a href="#schedule-section">경기일정</a>
 </nav>
 
 <div class="container">
-    <div class="jumbotron">
-        <h2>2026 시즌 준비 중!</h2>
-        <p>총 6개 팀, 정규시즌 및 플레이오프 40경기의 대장정</p>
-    </div>
-
-    <div class="card">
-        <h3>🏆 리그 순위 (Standings)</h3>
-        <table id="standings-table-ko">
+    <div id="standing-section" class="card">
+        <h3>🏆 2026 시즌 순위표</h3>
+        <div id="loading-standing-ko" class="loading">데이터를 불러오는 중...</div>
+        <table id="standing-table-ko" style="display:none;">
             <thead>
                 <tr>
-                    <th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>승률</th>
+                    <th>순위</th><th>팀명</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th>
                 </tr>
             </thead>
-            <tbody id="standings-body-ko">
-            </tbody>
+            <tbody id="standing-body-ko"></tbody>
+        </table>
+    </div>
+
+    <div id="schedule-section" class="card">
+        <h3>⚾ 경기 일정 및 결과</h3>
+        <div id="loading-schedule-ko" class="loading">일정을 불러오는 중...</div>
+        <table id="schedule-table-ko" style="display:none;">
+            <thead>
+                <tr><th>날짜</th><th>구장</th><th>대진</th><th>결과</th></tr>
+            </thead>
+            <tbody id="schedule-body-ko"></tbody>
         </table>
     </div>
 </div>
 
-<footer>
-    <p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p>
-</footer>
+<footer><p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const sheetName = encodeURIComponent('Standings(순위)');
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-
-    fetch(sheetUrl)
-        .then(res => res.text())
-        .then(data => {
-            const json = JSON.parse(data.substr(47).slice(0, -2));
+    
+    function loadDataKo(tabName, bodyId, loadId, tableId) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+        fetch(url).then(r => r.text()).then(d => {
+            const json = JSON.parse(d.substr(47).slice(0, -2));
             const rows = json.table.rows;
-            const tbody = document.getElementById('standings-body-ko');
+            const tbody = document.getElementById(bodyId);
+            
             rows.forEach(row => {
                 const tr = document.createElement('tr');
-                row.c.forEach(cell => {
-                    const td = document.createElement('td');
-                    td.textContent = cell ? (cell.v || '') : '';
-                    tr.appendChild(td);
-                });
+                const c = row.c;
+                if(tabName.includes('Standings')) {
+                    c.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell ? (cell.v || '0') : '0';
+                        tr.appendChild(td);
+                    });
+                } else {
+                    tr.innerHTML = `
+                        <td>${c[0]?c[0].v:''} ${c[1]?c[1].v:''}</td>
+                        <td>${c[2]?c[2].v:''}</td>
+                        <td><strong>${c[3]?c[3].v:''}</strong> vs <strong>${c[4]?c[4].v:''}</strong></td>
+                        <td style="color:red; font-weight:bold;">${c[5]?c[5].v:'-'}</td>
+                    `;
+                }
                 tbody.appendChild(tr);
             });
+            document.getElementById(loadId).style.display = 'none';
+            document.getElementById(tableId).style.display = 'table';
         });
+    }
+
+    loadDataKo('Standings(순위)', 'standing-body-ko', 'loading-standing-ko', 'standing-table-ko');
+    loadDataKo('Schedule(일정)', 'schedule-body-ko', 'loading-schedule-ko', 'schedule-table-ko');
 </script>
 </body>
 </html>
