@@ -8,7 +8,7 @@
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        .lang-switch a { color: white; text-decoration: none; font-size: 0.8rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
@@ -21,7 +21,7 @@
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
         .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
         .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
-        .no-data { padding: 20px; color: #888; font-style: italic; }
+        .no-data { padding: 20px; color: #888; font-style: italic; text-align: center; }
     </style>
 </head>
 <body>
@@ -50,19 +50,23 @@
 
     <div class="card">
         <h3>⚾ 지난 경기 결과 (Recent Results)</h3>
-        <table id="recent-table">
-            <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
-            <tbody id="recent-results-body-ko"></tbody>
-        </table>
+        <div id="recent-container">
+            <table id="recent-table">
+                <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
+                <tbody id="recent-results-body-ko"></tbody>
+            </table>
+        </div>
         <div id="no-recent" class="no-data" style="display:none;">아직 진행된 경기가 없습니다.</div>
     </div>
 
     <div class="card" style="border-top: 5px solid #28a745;">
         <h3>📅 예정된 경기 (Upcoming Games)</h3>
-        <table id="upcoming-table">
-            <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
-            <tbody id="upcoming-body-ko"></tbody>
-        </table>
+        <div id="upcoming-container">
+            <table id="upcoming-table">
+                <thead><tr><th>날짜 & 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead>
+                <tbody id="upcoming-body-ko"></tbody>
+            </table>
+        </div>
         <a href="schedule_ko.html" class="btn-more">시즌 전체 40경기 일정 보기 →</a>
     </div>
 </div>
@@ -84,42 +88,38 @@
     }
 
     function loadDataKo() {
-        // 순위표 로딩 (첫 줄 헤더 제외 로직 추가)
+        // 순위표 로딩 (첫 줄부터 읽도록 i=0으로 수정)
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('standing-body-ko');
-                // i=1 부터 시작하여 헤더 행 제외
-                for (let i = 1; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row.c[1]) continue; // 팀명이 없으면 건너뜀
+                
+                rows.forEach(row => {
+                    if (!row.c[1]) return; 
                     const tr = document.createElement('tr');
                     row.c.forEach((cell, idx) => {
-                        if (idx > 6) return; // 7개 컬럼까지만 표시
+                        if (idx > 6) return; 
                         const td = document.createElement('td');
                         td.textContent = cell ? (cell.f || cell.v || '0') : '0';
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
-                }
+                });
             });
 
-        // 일정표 로딩
+        // 일정표 로딩 (첫 줄부터 읽도록 dataRows = rows로 수정)
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const resultsTbody = document.getElementById('recent-results-body-ko');
                 const upcomingTbody = document.getElementById('upcoming-body-ko');
 
-                // 헤더 제외 (i=1부터)
-                const dataRows = rows.slice(1);
+                const dataRows = rows; // slice(1) 제거!
                 
-                // 결과 있음: Score(index 5)가 '-'가 아니고 비어있지 않은 것
                 const playedGames = dataRows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
-                // 결과 없음: Score(index 5)가 '-'이거나 'TBA'인 것
                 const upcomingGames = dataRows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
 
-                // 최근 경기 표시
+                // 최근 결과 처리
                 if (playedGames.length > 0) {
                     const lastDate = playedGames[playedGames.length - 1].c[0].v;
                     playedGames.filter(g => g.c[0].v === lastDate).forEach(g => renderRowKo(g, resultsTbody));
@@ -128,7 +128,7 @@
                     document.getElementById('no-recent').style.display = 'block';
                 }
 
-                // 다음 경기 표시 (가장 가까운 날짜의 경기들)
+                // 예정 경기 처리 (가장 가까운 날짜의 모든 경기)
                 if (upcomingGames.length > 0) {
                     const nextDate = upcomingGames[0].c[0].v;
                     upcomingGames.filter(g => g.c[0].v === nextDate).forEach(g => renderRowKo(g, upcomingTbody));
