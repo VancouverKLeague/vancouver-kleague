@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (이름 정리, 투/타 중복 컬럼 완벽 분리, 0개 기록 처리)
+    // 기록실 로딩 (이름 정리, 투/타 중복 분리, POPS 방지, 0개 기록 처리 완벽 적용)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -189,13 +189,25 @@
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase());
             
-            // 1. IP(투수 이닝) 컬럼 인덱스를 먼저 찾음
-            const ipI = cols.findIndex(c => c.trim() === 'IP' || c.trim() === 'INNINGS PITCHED');
+            // 1. 투수 이닝(IP) 컬럼 위치를 찾아 투/타 지표 기준점 마련
+            const ipI = cols.findIndex(c => c.trim() === 'IP' || c.includes('INNINGS PITCHED'));
 
-            // 2. 정확히 일치(Exact match)하는 컬럼만 찾기
+            // 2. 컬럼 찾기 (유연성 복구 + 예외 처리)
             const fi = (arr, isPit = false) => {
                 let start = (isPit && ipI !== -1) ? ipI : 0;
-                let idx = cols.slice(start).findIndex(c => arr.some(n => c.trim() === n));
+                let slice = cols.slice(start);
+                
+                // 1순위: 정확히 일치하는지 먼저 탐색
+                let idx = slice.findIndex(c => arr.some(n => c.trim() === n));
+                
+                // 2순위: 못 찾으면 기존처럼 '포함(includes)' 방식으로 유연하게 탐색
+                if (idx === -1) {
+                    idx = slice.findIndex(c => arr.some(n => {
+                        // 🔥 핵심 방어 로직: OPS를 찾을 때 POPS는 무시하도록 설정
+                        if (n === 'OPS' && c.includes('POPS')) return false;
+                        return c.includes(n);
+                    }));
+                }
                 return idx !== -1 ? start + idx : -1;
             };
 
@@ -205,27 +217,28 @@
             const nameI = fi(['NAME']);
             const tmI = fi(['TEAM']);
 
+            // 예전의 넓은 검색어 배열을 복구하여 인식률을 높임
             const metrics = [
-                {id: 'avg-leaders', n: ['AVG'], d: 3, asc: false, pit: false},
-                {id: 'hr-leaders', n: ['HR'], d: 0, asc: false, pit: false, countStat: true}, // countStat 추가
-                {id: 'rbi-leaders', n: ['RBI'], d: 0, asc: false, pit: false, countStat: true},
+                {id: 'avg-leaders', n: ['AVG', 'BATTING'], d: 3, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
+                {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED'], d: 0, asc: false, pit: false, countStat: true},
                 {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
-                {id: 'era-leaders', n: ['ERA'], d: 2, asc: true, pit: true},
-                {id: 'win-leaders', n: ['W'], d: 0, asc: false, pit: true, countStat: true},
-                {id: 'so-leaders', n: ['SO', 'K'], d: 0, asc: false, pit: true, countStat: true},
+                {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
+                {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
+                {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
                 {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
                 const vI = fi(m.n, m.pit);
-                if(vI === -1) return;
+                if(vI === -1) return; // 컬럼을 아예 못 찾으면 스킵
                 
                 let validRows = rows;
                 
-                // 투수 순위일 경우 이닝(IP)이 0 초과인 사람만 집계
+                // 투수 순위일 경우 이닝(IP)을 1아웃이라도 잡은 사람만 집계
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
 
-                // 🔥 [추가된 핵심 로직] 누적 스탯(HR, RBI, W, SO)이 0인 선수는 제외
+                // 누적 스탯(HR, RBI, W, SO)은 기록이 0인 선수 아예 제외
                 if(m.countStat) {
                     validRows = validRows.filter(r => (parseFloat(gv(r, vI)) || 0) > 0);
                 }
@@ -242,9 +255,9 @@
 
                 const target = document.getElementById(m.id);
 
-                // 🔥 [추가된 핵심 로직] 1개 이상 기록한 선수가 한 명도 없을 경우
+                // 1개 이상 기록한 선수가 없으면 안내 문구 표시 (영문 기준 적용)
                 if(sorted.length === 0) {
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">아직 기록이 없습니다.</td></tr>`;
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No records yet.</td></tr>`;
                     return;
                 }
 
@@ -272,7 +285,7 @@
                     </tr>`;
                 });
             });
-        }).catch(e=>{});
+        }).catch(e=>{ console.error("Stats fetching error: ", e); });
     }
     loadStats();
 </script>
