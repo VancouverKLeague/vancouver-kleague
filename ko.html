@@ -8,7 +8,7 @@
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.8rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
@@ -20,8 +20,8 @@
         th { background: #f8f9fa; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 10px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .stats-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
-        .stats-col { flex: 1; min-width: 200px; }
+        .stats-grid { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .stats-col { flex: 1; min-width: 220px; }
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .seed-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 0.7rem; color: white; margin-right: 4px; font-weight:bold; }
         .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; margin-right: 5px; font-weight:bold; }
@@ -71,7 +71,7 @@
             </div>
         </div>
 
-        <h4 style="color: #0288d1;">타자 부문 (Batting)</h4>
+        <h4 style="color: #0288d1;">타자 부문 (Batting TOP 5)</h4>
         <div class="stats-grid">
             <div class="stats-col">
                 <h4>타율 (AVG)</h4>
@@ -81,9 +81,17 @@
                 <h4>홈런 (HR)</h4>
                 <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="hr-leaders"></tbody></table>
             </div>
+            <div class="stats-col">
+                <h4>타점 (RBI)</h4>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="rbi-leaders"></tbody></table>
+            </div>
+            <div class="stats-col">
+                <h4>OPS</h4>
+                <table><thead><tr><th>#</th><th>이름</th><th>기록</th></tr></thead><tbody id="ops-leaders"></tbody></table>
+            </div>
         </div>
 
-        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching)</h4>
+        <h4 style="color: #2e7d32; margin-top: 30px;">투수 부문 (Pitching TOP 5)</h4>
         <div class="stats-grid">
             <div class="stats-col">
                 <h4>방어율 (ERA)</h4>
@@ -115,7 +123,7 @@
     }
 
     function getIdx(headers, searchNames) {
-        return headers.findIndex(h => searchNames.includes(h.toUpperCase()));
+        return headers.findIndex(h => searchNames.includes(h.toUpperCase().trim()));
     }
 
     function switchSeason(s) {
@@ -126,12 +134,12 @@
     }
 
     function loadInitialData() {
-        // Standings
+        // Standings - 데이터가 1행부터 바로 시작하므로 i=0부터 읽음
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('standing-body-ko');
-                rows.forEach(row => { if(row.c[1]) {
+                rows.forEach(row => { if(row.c && row.c[1]) {
                     const tr = document.createElement('tr');
                     row.c.forEach((cell, idx) => { if(idx < 7) {
                         const td = document.createElement('td');
@@ -142,14 +150,13 @@
                 }});
             });
 
-        // Schedule Summary
+        // Schedule
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
                 const tbody = document.getElementById('main-sched-body');
-                const dataRows = rows; 
-                const played = dataRows.filter(r => r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
-                const upcoming = dataRows.filter(r => !r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA');
+                const played = rows.filter(r => r.c && r.c[5] && r.c[5].v !== '-' && r.c[5].v !== 'TBA');
+                const upcoming = rows.filter(r => r.c && (!r.c[5] || r.c[5].v === '-' || r.c[5].v === 'TBA'));
                 if (played.length > 0) {
                     const lastDate = played[played.length-1].c[0].v;
                     played.filter(g => g.c[0].v === lastDate).forEach(g => renderSchedRow(g, tbody));
@@ -164,13 +171,12 @@
     }
 
     function loadStats() {
-        // Clear previous
-        document.getElementById('avg-leaders').innerHTML = '';
-        document.getElementById('hr-leaders').innerHTML = '';
-        document.getElementById('era-leaders').innerHTML = '';
-        document.getElementById('win-leaders').innerHTML = '';
+        // 테이블 초기화
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders'].forEach(id => {
+            document.getElementById(id).innerHTML = '';
+        });
 
-        // Batting
+        // Batting Stats
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
@@ -179,21 +185,19 @@
 
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
+                const teamIdx = getIdx(headers, ['TEAM']);
                 const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG', 'BA']);
                 const hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
-                const teamIdx = getIdx(headers, ['TEAM']);
+                const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']);
+                const opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
 
-                if(avgIdx > -1) {
-                    const sorted = [...rows].sort((a,b) => (b.c[avgIdx]?.v || 0) - (a.c[avgIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
-                }
-                if(hrIdx > -1) {
-                    const sorted = [...rows].sort((a,b) => (b.c[hrIdx]?.v || 0) - (a.c[hrIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
-                }
+                if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx);
+                if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
+                if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
+                if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx);
             });
 
-        // Pitching
+        // Pitching Stats
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Pitching_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
@@ -202,9 +206,9 @@
 
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
+                const teamIdx = getIdx(headers, ['TEAM']);
                 const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
                 const winIdx = getIdx(headers, ['WINS', 'W', 'WIN']);
-                const teamIdx = getIdx(headers, ['TEAM']);
 
                 if(eraIdx > -1) {
                     const sorted = [...rows].filter(r => (r.c[eraIdx]?.v || 0) > 0)
@@ -215,7 +219,7 @@
                     const sorted = [...rows].sort((a,b) => (b.c[winIdx]?.v || 0) - (a.c[winIdx]?.v || 0)).slice(0, 5);
                     renderStats(sorted, 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
                 }
-            }).catch(e => console.log("Pitching data not ready yet."));
+            }).catch(e => console.log("Pitching data not ready."));
     }
 
     function renderSchedRow(row, tbody) {
