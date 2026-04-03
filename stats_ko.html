@@ -17,6 +17,9 @@
         .btn-group button.active { background: #003366; color: white; }
         .btn-group button.inactive { background: white; color: #003366; }
         
+        /* 시즌 선택 전용 스타일 */
+        #year-select { padding: 8px; border: 1px solid #003366; border-radius: 5px; font-weight: bold; color: #003366; }
+
         #search-input { padding: 8px; width: 220px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
@@ -49,6 +52,11 @@
 
 <div class="container">
     <div class="controls">
+        <select id="year-select" onchange="changeYear(this.value)">
+            <option value="2026" selected>2026 시즌</option>
+            <option value="2025">2025 시즌</option>
+        </select>
+
         <div class="btn-group">
             <button id="btn-Reg" class="active" onclick="switchSeason('Reg')">정규 시즌</button>
             <button id="btn-Post" class="inactive" onclick="switchSeason('Post')">포스트 시즌</button>
@@ -72,11 +80,18 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
+    let currentYear = '2026'; // 연도 상태 추가
     let currentSeason = 'Reg';
     let currentCategory = 'Hitter';
     let allData = [];
-    let sortColIdx = 0; // 기본 정렬 컬럼 (타율/방어율)
-    let sortOrder = -1; // -1: 내림차순(높은순), 1: 오름차순(낮은순)
+    let sortColIdx = 0; 
+    let sortOrder = -1; 
+
+    // [기능 추가] 연도 변경
+    function changeYear(y) {
+        currentYear = y;
+        loadData();
+    }
 
     function switchSeason(s) {
         currentSeason = s;
@@ -99,24 +114,28 @@
             sortOrder *= -1; 
         } else {
             sortColIdx = idx;
-            // 투수 ERA(0)와 WHIP(4)는 낮은 게 좋으므로 오름차순(1) 기본
-            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 4)) ? 1 : -1;
+            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 5)) ? 1 : -1;
         }
         renderTable();
     }
 
     function loadData() {
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Stats_' + currentSeason)}`)
+        // [연도에 따른 시트명 동적 생성]
+        const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                const getIdx = (names) => headers.findIndex(h => names.includes(h));
+                // [강력한 컬럼 찾기] GameChanger 리포트의 긴 이름들을 포함하여 검색
+                const getIdx = (names) => headers.findIndex(h => names.some(n => h === n || h.includes(n)));
+                
                 const lnIdx = getIdx(['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(['FIRST NAME']);
                 const teamIdx = getIdx(['TEAM']);
-                const ipIdx = getIdx(['INNINGS PITCHED', 'IP']);
+                const ipIdx = getIdx(['INNINGS PITCHED', 'IP', 'INN']);
 
                 const hCols = [
                     {label: '타율', id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
@@ -132,27 +151,47 @@
                     {label: '승', id: 'W', idx: getIdx(['WINS', 'W'])},
                     {label: '이닝', id: 'IP', idx: ipIdx, fix: 1},
                     {label: '탈삼진', id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
+                    {label: '실점', id: 'R', idx: getIdx(['RUNS ALLOWED', 'R'])},
                     {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
                 ];
 
+                // [데이터 전처리] 이름 합치기 및 OPS 자동 계산 로직 유지
                 allData = rows.map(r => {
-                    let name = r.c[lnIdx]?.v || '-';
-                    if (fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name;
+                    const gv = (idx) => (r.c[idx]?.v !== undefined) ? r.c[idx].v : 0;
+                    
+                    let lastName = (lnIdx > -1 && r.c[lnIdx]?.v) ? r.c[lnIdx].v : '';
+                    let firstName = (fnIdx > -1 && r.c[fnIdx]?.v) ? r.c[fnIdx].v : '';
+                    let name = (firstName + " " + lastName).trim() || "-";
+                    if (name === "-") name = lastName || firstName || "-";
+
+                    // OPS가 없는 경우 OBP + SLG 수동 계산 시도
+                    const calculateOps = () => {
+                        const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
+                        if (opsIdx > -1) return parseFloat(gv(opsIdx));
+                        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP'])));
+                        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG'])));
+                        return obp + slg;
+                    };
+
                     return {
                         name: name,
-                        team: r.c[teamIdx]?.v || 'K-League',
-                        isPitcher: (r.c[ipIdx]?.v || 0) > 0,
-                        hitterStats: hCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix})),
-                        pitcherStats: pCols.map(c => ({val: parseFloat(r.c[c.idx]?.v || 0), label: c.label, fix: c.fix}))
+                        team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
+                        isPitcher: parseFloat(gv(ipIdx)) > 0,
+                        hitterStats: hCols.map(c => {
+                            let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
+                            return {val: val || 0, label: c.label, fix: c.fix};
+                        }),
+                        pitcherStats: pCols.map(c => ({val: parseFloat(gv(c.idx)) || 0, label: c.label, fix: c.fix}))
                     };
                 });
                 renderTable();
-            });
+            }).catch(e => console.error("Data loading error:", e));
     }
 
     function renderTable() {
         const head = document.getElementById('table-head');
         const body = document.getElementById('table-body');
+        if (!allData.length) return;
         head.innerHTML = '';
         body.innerHTML = '';
 
@@ -161,15 +200,16 @@
             displayData = displayData.filter(d => d.isPitcher);
             displayData.sort((a,b) => (a.pitcherStats[sortColIdx].val - b.pitcherStats[sortColIdx].val) * sortOrder);
         } else {
+            // 타자는 타석(PA)이나 타율 등 기록이 있는 사람만 표시하는 필터 추가 가능 (현재는 전체)
             displayData.sort((a,b) => (a.hitterStats[sortColIdx].val - b.hitterStats[sortColIdx].val) * sortOrder);
         }
 
         const hTr = document.createElement('tr');
         let headerHtml = `<th style="width:50px;">순위</th><th style="width:180px;">선수 정보</th>`;
-        const activeCols = currentCategory === 'Hitter' ? allData[0].hitterStats : allData[0].pitcherStats;
+        const activeCols = currentCategory === 'Hitter' ? displayData[0].hitterStats : displayData[0].pitcherStats;
         
         activeCols.forEach((c, idx) => {
-            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? '▲' : '▼') : '';
+            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
             headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
         });
         hTr.innerHTML = headerHtml;
@@ -182,7 +222,7 @@
             
             stats.forEach((s, idx) => {
                 let v = s.val;
-                if (s.fix) v = v.toFixed(s.fix);
+                if (s.fix !== undefined) v = v.toFixed(s.fix);
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
             });
 
