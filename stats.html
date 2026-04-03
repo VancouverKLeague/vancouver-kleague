@@ -156,21 +156,31 @@
 
                 // ⭐ 강화된 이름 결합 로직 (Same as Korean version)
                 allData = rows.map(r => {
-                    const gv = (idx) => (idx > -1 && r.c[idx]?.v !== undefined) ? r.c[idx].v : '';
+                    const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? r.c[idx].v : '';
                     
+                    // 1. 원본 데이터 가져오기
                     let first = gv(fnIdx).toString().trim();
                     let last = gv(lnIdx).toString().trim();
                     
                     let finalName = "";
 
-                    if (first && last && first !== last) {
-                        finalName = first + " " + last;
+                    // 2. 이름 판별 로직 (2025년식 vs 2026년식 통합)
+                    if (first && last) {
+                        // 성과 이름이 둘 다 있고 서로 다를 때만 합침 (2026년식)
+                        if (last.includes(first)) {
+                            finalName = last; // Last Name에 이미 First Name이 포함되어 있으면 Last Name만 사용
+                        } else {
+                            finalName = first + " " + last;
+                        }
                     } else {
-                        finalName = first || last || "-";
+                        // 둘 중 하나만 있으면 있는 것을 사용 (2025년식: Last Name에만 풀네임이 있음)
+                        finalName = first || last || "Unknown";
                     }
 
+                    // 3. 혹시 모를 "null" 문자열 정제
                     finalName = finalName.replace(/null/g, '').trim();
 
+                    // OPS 계산 로직 (기존과 동일)
                     const calculateOps = () => {
                         const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
                         if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
@@ -182,7 +192,7 @@
                     return {
                         name: finalName,
                         team: (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League',
-                        isPitcher: parseFloat(gv(ipIdx)) > 0,
+                        isPitcher: (ipIdx > -1 && parseFloat(gv(ipIdx))) > 0,
                         hitterStats: hCols.map(c => {
                             let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
                             return {val: val || 0, label: c.label, fix: c.fix};
