@@ -21,7 +21,6 @@
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
-        .table-wrapper table { min-width: 500px; }
         
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
@@ -35,13 +34,21 @@
         .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
         .active { background: #003366; color: white; }
         .inactive { background: #eee; color: #333; }
+
+        /* 리더보드 레이아웃 최적화 */
+        .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .leader-table td { padding: 8px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .player-info { display: flex; flex-direction: column; overflow: hidden; }
+        .player-name { font-weight: bold; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .player-team { font-size: 0.65rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
-    <h1>밴쿠버 K-리그</h1>
+    <h1>밴쿠버 K-리그 (Vancouver K-League)</h1>
     <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
 </header>
 
@@ -81,9 +88,9 @@
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (뉴웨스트)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (리치몬드)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (버나비)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (New West)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (Richmond)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (Burnaby)</a>
             </div>
         </div>
     </div>
@@ -106,33 +113,33 @@
         </div>
         
         <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">타자 부문 (Batting)</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타율 (AVG)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="avg-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">홈런 (HR)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="hr-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타점 (RBI)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="rbi-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="ops-leaders"></tbody></table></div>
+        <div class="leader-grid">
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">타율 (AVG)</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">홈런 (HR)</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">타점 (RBI)</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
         <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">투수 부문 (Pitching)</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">평균자책점 (ERA)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="era-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">다승 (W)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="win-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">탈삼진 (SO)</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="so-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4><table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="whip-leaders"></tbody></table></div>
+        <div class="leader-grid">
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">평균자책점 (ERA)</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">다승 (W)</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">탈삼진 (SO)</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
         </div>
         <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 20px;">선수 전체 기록 보기 →</a>
     </div>
-</div>
 
-<div class="card" style="border-top: 4px solid #333; text-align: center;">
-    <h3 style="border-left: none; padding-left: 0; color: #333;">⚾ 참여 팀</h3>
-    <div id="team-logo-container" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; padding: 15px 0;">
-        <img src="logos/Arirang Rays.png" alt="Arirang Rays" style="width: 60px; height: 60px; object-fit: contain;">
-        <img src="logos/Van Avengers.png" alt="Van Avengers" style="width: 60px; height: 60px; object-fit: contain;">
-        <img src="logos/Van Bros.png" alt="Van Bros" style="width: 60px; height: 60px; object-fit: contain;">
-        <img src="logos/Karis Cubs.png" alt="Karis Cubs" style="width: 60px; height: 60px; object-fit: contain;">
-        <img src="logos/Van Dragons.png" alt="Van Dragons" style="width: 60px; height: 60px; object-fit: contain;">
-        <img src="logos/Fire Bats.png" alt="Fire Bats" style="width: 60px; height: 60px; object-fit: contain;">
+    <div class="card" style="border-top: 4px solid #333; text-align: center;">
+        <h3>⚾ 참여 팀</h3>
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; padding: 15px 0;">
+            <img src="logos/Arirang Rays.png" alt="Arirang Rays" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Avengers.png" alt="Van Avengers" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Bros.png" alt="Van Bros" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Karis Cubs.png" alt="Karis Cubs" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Dragons.png" alt="Van Dragons" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Fire Bats.png" alt="Fire Bats" style="width: 60px; height: 60px; object-fit: contain;">
+        </div>
     </div>
 </div>
 
@@ -156,10 +163,7 @@
 
     function changeYear(year) {
         currentYear = year;
-        loadNotice();
-        loadStandings();
-        loadSchedule();
-        loadStats();
+        loadNotice(); loadStandings(); loadSchedule(); loadStats();
     }
 
     function switchSeason(s) {
@@ -230,23 +234,18 @@
         }).catch(e=>{});
     }
 
-    // [기록 로딩 함수 - GameChanger 2025 리포트 완벽 호환 버전]
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
 
-        // 💡 2026년은 Stats_Reg, 그 외 연도는 Stats_2025_Reg 식으로 호출
         let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
 
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows; 
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-            
-            // 이닝(IP) 위치 파악
             const ipI = cols.findIndex(c => c === 'IP' || c.includes('INNINGS PITCHED'));
 
-            // 컬럼 찾기 보조 함수
             const fi = (arr, isPit = false) => {
                 let start = (isPit && ipI !== -1) ? ipI : 0;
                 let slice = cols.slice(start);
@@ -254,11 +253,7 @@
                 return idx !== -1 ? start + idx : -1;
             };
 
-            const playerI = fi(['PLAYER']);
-            const lnI = fi(['LAST NAME']);
-            const fnI = fi(['FIRST NAME']);
-            const nameI = fi(['NAME']);
-            const tmI = fi(['TEAM']);
+            const playerI = fi(['PLAYER']); const lnI = fi(['LAST NAME']); const fnI = fi(['FIRST NAME']); const nameI = fi(['NAME']); const tmI = fi(['TEAM']);
 
             const metrics = [
                 {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
@@ -273,37 +268,21 @@
 
             metrics.forEach(m => {
                 let vI = fi(m.n, m.pit);
-                let isCalc = false;
-                let calcFn = null;
-
-                // OPS가 없을 경우 OBP+SLG 계산 로직
+                let isCalc = false; let calcFn = null;
                 if (vI === -1 && m.id === 'ops-leaders') {
                     const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
                     const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
-                    if (obpI !== -1 && slgI !== -1) {
-                        isCalc = true;
-                        calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0);
-                    }
+                    if (obpI !== -1 && slgI !== -1) { isCalc = true; calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0); }
                 }
 
                 const target = document.getElementById(m.id);
-
-                // 기록이 아예 없는 경우 (컬럼 미존재 등)
-                if (vI === -1 && !isCalc) {
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.8rem;">아직 기록이 없습니다.</td></tr>`;
-                    return;
-                }
+                if (vI === -1 && !isCalc) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">아직 기록이 없습니다.</td></tr>`; return; }
 
                 const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
-
-                // 0개 데이터 필터링
                 let validRows = rows;
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => (parseFloat(gv(r, ipI)) || 0) > 0);
-                if(m.countStat || m.id === 'ops-leaders' || m.id === 'avg-leaders') {
-                    validRows = validRows.filter(r => getVal(r) > 0);
-                }
+                if(m.countStat || m.id === 'ops-leaders' || m.id === 'avg-leaders') validRows = validRows.filter(r => getVal(r) > 0);
                 
-                // 정렬
                 const sorted = [...validRows].sort((a,b) => {
                     const vA = getVal(a); const vB = getVal(b);
                     if(m.asc) { 
@@ -314,13 +293,8 @@
                     return vB - vA;
                 }).slice(0, 5);
 
-                // 정렬 후 데이터가 없는 경우
-                if(sorted.length === 0) {
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.8rem;">아직 기록이 없습니다.</td></tr>`;
-                    return;
-                }
+                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">아직 기록이 없습니다.</td></tr>`; return; }
 
-                // 렌더링
                 sorted.forEach((r, i) => {
                     let name = "";
                     if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
@@ -331,20 +305,22 @@
                     let val = getVal(r);
                     let valStr = (m.asc && val === 999) ? '-' : val.toFixed(m.d);
                     
-                    target.innerHTML += `<tr>
-                        <td style="width:30px; font-weight:bold;">${i+1}</td>
-                        <td style="text-align:left; padding:8px 10px;">
-                            <div style="display:flex; flex-direction:column;">
-                                <span style="font-weight:bold; font-size:0.85rem;">${name.trim()}</span>
-                                <span style="font-size:0.65rem; color:#888;">${gv(r, tmI)}</span>
-                            </div>
-                        </td>
-                        <td class="val-highlight" style="font-size:0.9rem;">${valStr}</td>
-                    </tr>`;
+                    target.innerHTML += `
+                        <tr>
+                            <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
+                            <td style="text-align: left; padding-left: 4px;">
+                                <div class="player-info">
+                                    <span class="player-name" title="${name.trim()}">${name.trim()}</span>
+                                    <span class="player-team">${gv(r, tmI)}</span>
+                                </div>
+                            </td>
+                            <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${valStr}</td>
+                        </tr>`;
                 });
             });
         }).catch(e=>{ console.error(e); });
     }
+
     changeYear('2026');
 </script>
 </body>
