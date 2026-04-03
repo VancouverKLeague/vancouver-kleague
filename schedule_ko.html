@@ -93,22 +93,14 @@
             const awayTeam = formatTeamName(c[3] ? (c[3].f || c[3].v) : '');
             const homeTeam = formatTeamName(c[4] ? (c[4].f || c[4].v) : '');
             
-            // 🔥 핵심 로직: G열(비고)이 비어있을 때만 Home/Away 라벨 표시
-            let matchupHTML = '';
-            if (note.trim() === '') {
-                matchupHTML = `
-                    <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:6px;">
-                        <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px; margin-right:4px;">Away</span><strong>${awayTeam}</strong></span>
-                        <span style="font-size:0.8rem; font-weight:normal; color:#aaa;">vs</span>
-                        <span><span style="font-size:0.65rem; font-weight:normal; color:#d32f2f; border:1px solid #d32f2f; border-radius:3px; padding:1px 3px; margin-right:4px;">Home</span><strong style="color:#003366;">${homeTeam}</strong></span>
-                    </div>`;
-            } else {
-                matchupHTML = `
-                    <div style="display:flex; justify-content:flex-start; align-items:center; flex-wrap:wrap; gap:6px;">
-                        <span class="po-badge ${badgeClass}">${note}</span>
-                        <strong>${awayTeam}</strong> <span style="font-size:0.8rem; font-weight:normal; color:#aaa;">vs</span> <strong>${homeTeam}</strong>
-                    </div>`;
-            }
+            // 항상 Away / Home 표시 (배지가 있으면 맨 앞에 붙임)
+            const matchupHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:6px;">
+                    ${note ? `<span class="po-badge ${badgeClass}">${note}</span>` : ''}
+                    <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px; margin-right:4px;">Away</span><strong>${awayTeam}</strong></span>
+                    <span style="font-size:0.8rem; font-weight:normal; color:#aaa;">vs</span>
+                    <span><span style="font-size:0.65rem; font-weight:normal; color:#d32f2f; border:1px solid #d32f2f; border-radius:3px; padding:1px 3px; margin-right:4px;">Home</span><strong style="color:#003366;">${homeTeam}</strong></span>
+                </div>`;
 
             tr.innerHTML = `
                 <td style="width:20%; font-size:0.8rem; vertical-align:middle;">${c[0]?(c[0].f||c[0].v):''}<br><span style="color:#888;">${c[1]?(c[1].f||c[1].v):''}</span></td>
