@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밴쿠버 K-League | 전체 일정</title>
     <style>
-        /* 영문과 동일한 스타일 적용 */
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
@@ -13,11 +12,10 @@
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
-        .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; }
-        table { width:100%; border-collapse: collapse; text-align: center; }
+        table { width:100%; border-collapse: collapse; text-align: center; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
-        th { background: #f8f9fa; font-weight: bold; }
+        th { background: #f8f9fa; }
+        .loading { text-align: center; padding: 20px; color: #888; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
     </style>
 </head>
@@ -34,20 +32,19 @@
 </nav>
 
 <div class="container">
-    <div class="card">
-        <h3>⚾ 리그 전체 일정 (40경기)</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>날짜 & 시간</th>
-                    <th>구장</th>
-                    <th>대진</th>
-                    <th>결과</th>
-                </tr>
-            </thead>
-            <tbody id="full-schedule-body-ko"></tbody>
-        </table>
-    </div>
+    <h3>⚾ 리그 전체 일정 (40경기)</h3>
+    <div id="loading-msg-ko" class="loading">일정 데이터를 불러오는 중...</div>
+    <table id="full-table-ko" style="display:none;">
+        <thead>
+            <tr>
+                <th>날짜 & 시간</th>
+                <th>구장</th>
+                <th>대진</th>
+                <th>결과</th>
+            </tr>
+        </thead>
+        <tbody id="full-schedule-body-ko"></tbody>
+    </table>
 </div>
 
 <footer>
@@ -56,27 +53,20 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const sheetName = encodeURIComponent('Schedule(일정)');
-    
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`)
-        .then(r => r.text()).then(d => {
-            const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
-            const tbody = document.getElementById('full-schedule-body-ko');
-            
-            rows.forEach(row => {
-                const c = row.c;
-                const tr = document.createElement('tr');
-                // .f를 사용하여 구글 시트의 서식을 그대로 가져옴 (1899년 오류 방지)
-                tr.innerHTML = `
-                    <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-                    <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-                    <td><strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong></td>
-                    <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        });
-</script>
+    const tabNameKo = 'Schedule(일정)'; // 구글 시트 탭 이름과 반드시 일치해야 합니다!
+    const urlKo = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabNameKo)}`;
 
-</body>
-</html>
+    fetch(urlKo).then(r => r.text()).then(d => {
+        // 데이터 파싱
+        const json = JSON.parse(d.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+        const tbody = document.getElementById('full-schedule-body-ko');
+        
+        rows.forEach(row => {
+            const c = row.c;
+            const tr = document.createElement('tr');
+            // .f (서식 적용 텍스트)를 우선 사용하여 1899년 오류 및 소수점 잘림 방지
+            tr.innerHTML = `
+                <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
+                <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
+                <td><strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ?
