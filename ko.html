@@ -180,7 +180,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (이름 정리, 투/타 중복 컬럼 완벽 분리, OPS/WHIP 정상 출력)
+    // 기록실 로딩 (이름 정리, 투/타 중복 컬럼 완벽 분리, 0개 기록 처리)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -192,9 +192,8 @@
             // 1. IP(투수 이닝) 컬럼 인덱스를 먼저 찾음
             const ipI = cols.findIndex(c => c.trim() === 'IP' || c.trim() === 'INNINGS PITCHED');
 
-            // 2. 정확히 일치(Exact match)하는 컬럼만 찾기 (POPS 등 오작동 방지)
+            // 2. 정확히 일치(Exact match)하는 컬럼만 찾기
             const fi = (arr, isPit = false) => {
-                // 투수 기록일 경우 타자 기록(SO, HR 등)과 겹치지 않게 IP 컬럼 이후에서만 검색
                 let start = (isPit && ipI !== -1) ? ipI : 0;
                 let idx = cols.slice(start).findIndex(c => arr.some(n => c.trim() === n));
                 return idx !== -1 ? start + idx : -1;
@@ -208,22 +207,28 @@
 
             const metrics = [
                 {id: 'avg-leaders', n: ['AVG'], d: 3, asc: false, pit: false},
-                {id: 'hr-leaders', n: ['HR'], d: 0, asc: false, pit: false},
-                {id: 'rbi-leaders', n: ['RBI'], d: 0, asc: false, pit: false},
+                {id: 'hr-leaders', n: ['HR'], d: 0, asc: false, pit: false, countStat: true}, // countStat 추가
+                {id: 'rbi-leaders', n: ['RBI'], d: 0, asc: false, pit: false, countStat: true},
                 {id: 'ops-leaders', n: ['OPS'], d: 3, asc: false, pit: false},
                 {id: 'era-leaders', n: ['ERA'], d: 2, asc: true, pit: true},
-                {id: 'win-leaders', n: ['W'], d: 0, asc: false, pit: true},
-                {id: 'so-leaders', n: ['SO', 'K'], d: 0, asc: false, pit: true},
+                {id: 'win-leaders', n: ['W'], d: 0, asc: false, pit: true, countStat: true},
+                {id: 'so-leaders', n: ['SO', 'K'], d: 0, asc: false, pit: true, countStat: true},
                 {id: 'whip-leaders', n: ['WHIP'], d: 2, asc: true, pit: true}
             ];
 
             metrics.forEach(m => {
-                const vI = fi(m.n, m.pit); // 해당 스탯의 컬럼 위치 찾기 (투수 여부 전달)
+                const vI = fi(m.n, m.pit);
                 if(vI === -1) return;
                 
                 let validRows = rows;
-                // 투수 순위일 경우 이닝(IP)이 0 이상인 사람만 집계 (타자 제외)
+                
+                // 투수 순위일 경우 이닝(IP)이 0 초과인 사람만 집계
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => parseFloat(gv(r, ipI)) > 0);
+
+                // 🔥 [추가된 핵심 로직] 누적 스탯(HR, RBI, W, SO)이 0인 선수는 제외
+                if(m.countStat) {
+                    validRows = validRows.filter(r => (parseFloat(gv(r, vI)) || 0) > 0);
+                }
                 
                 const sorted = [...validRows].sort((a,b) => {
                     const vA = parseFloat(gv(a,vI)) || 0; const vB = parseFloat(gv(b,vI)) || 0;
@@ -236,8 +241,14 @@
                 }).slice(0, 5);
 
                 const target = document.getElementById(m.id);
+
+                // 🔥 [추가된 핵심 로직] 1개 이상 기록한 선수가 한 명도 없을 경우
+                if(sorted.length === 0) {
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">아직 기록이 없습니다.</td></tr>`;
+                    return;
+                }
+
                 sorted.forEach((r, i) => {
-                    // 이름 중복 방지 로직 (이전 버전 복구)
                     let name = "";
                     if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
                     else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = gv(r, fnI) + " " + gv(r, lnI);
@@ -249,7 +260,6 @@
                     let val = parseFloat(gv(r, vI)) || 0; if(m.d > 0) val = val.toFixed(m.d);
                     if(m.asc && (gv(r,vI)==='' || gv(r,vI)==='-')) val = '-';
                     
-                    // 이름이 너무 길면 모바일에서 자동으로 ... 처리됨
                     target.innerHTML += `<tr>
                         <td style="width:30px; padding:8px 5px;">${i+1}</td>
                         <td style="text-align:left; padding:8px 10px; width:100%;">
