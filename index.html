@@ -36,7 +36,7 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>Vancouver's Premier Korean Amateur Baseball League</p>
+    <p>Official Website of the Korean Baseball League in Vancouver</p>
 </header>
 
 <nav>
@@ -59,7 +59,7 @@
             <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead>
             <tbody id="main-sched-body"></tbody>
         </table>
-        <a href="schedule.html" class="btn-more">View Full 40-Game Schedule →</a>
+        <a href="schedule.html" class="btn-more">View Full Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 5px solid #ffc107;">
@@ -71,36 +71,20 @@
             </div>
         </div>
 
-        <h4 style="color: #0288d1;">Batting Leaders (TOP 5)</h4>
+        <h4 style="color: #0288d1;">Batting (TOP 5)</h4>
         <div class="stats-grid">
-            <div class="stats-col">
-                <h4>Average (AVG)</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="avg-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>Home Runs (HR)</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="hr-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>RBI</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="rbi-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>OPS</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="ops-leaders"></tbody></table>
-            </div>
+            <div class="stats-col"><h4>AVG</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>HR</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>RBI</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
-        <h4 style="color: #2e7d32; margin-top: 30px;">Pitching Leaders (TOP 5)</h4>
+        <h4 style="color: #2e7d32; margin-top: 30px;">Pitching (TOP 5)</h4>
         <div class="stats-grid">
-            <div class="stats-col">
-                <h4>ERA</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="era-leaders"></tbody></table>
-            </div>
-            <div class="stats-col">
-                <h4>Wins (W)</h4>
-                <table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="win-leaders"></tbody></table>
-            </div>
+            <div class="stats-col"><h4>ERA</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="era-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>Wins</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="win-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>SO</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="so-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>WHIP</h4><table><thead><tr><th>#</th><th>Player</th><th>Record</th></tr></thead><tbody id="whip-leaders"></tbody></table></div>
         </div>
     </div>
 </div>
@@ -134,7 +118,6 @@
     }
 
     function loadInitialData() {
-        // Standings
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -150,7 +133,6 @@
                 }});
             });
 
-        // Schedule Summary
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`)
             .then(r => r.text()).then(d => {
                 const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
@@ -166,25 +148,22 @@
                     upcoming.filter(g => g.c[0].v === nextDate).forEach(g => renderSchedRow(g, tbody));
                 }
             });
-        
         loadStats();
     }
 
     function loadStats() {
-        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders'].forEach(id => {
-            document.getElementById(id).innerHTML = '';
-        });
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders', 'era-leaders', 'win-leaders', 'so-leaders', 'whip-leaders'].forEach(id => document.getElementById(id).innerHTML = '');
 
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Batting_'+currentSeason)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
-                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG', 'BA']);
+
+                const avgIdx = getIdx(headers, ['BATTING AVERAGE', 'AVG']);
                 const hrIdx = getIdx(headers, ['HOME RUNS', 'HR']);
                 const rbiIdx = getIdx(headers, ['RUNS BATTED IN', 'RBI']);
                 const opsIdx = getIdx(headers, ['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
@@ -200,22 +179,19 @@
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-
                 const lnIdx = getIdx(headers, ['LAST NAME', 'PLAYER', 'NAME']);
                 const fnIdx = getIdx(headers, ['FIRST NAME']);
                 const teamIdx = getIdx(headers, ['TEAM']);
-                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
-                const winIdx = getIdx(headers, ['WINS', 'W', 'WIN']);
 
-                if(eraIdx > -1) {
-                    const sorted = [...rows].filter(r => (r.c[eraIdx]?.v || 0) > 0)
-                                           .sort((a,b) => (a.c[eraIdx]?.v || 0) - (b.c[eraIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
-                }
-                if(winIdx > -1) {
-                    const sorted = [...rows].sort((a,b) => (b.c[winIdx]?.v || 0) - (a.c[winIdx]?.v || 0)).slice(0, 5);
-                    renderStats(sorted, 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
-                }
+                const eraIdx = getIdx(headers, ['EARNED RUN AVERAGE', 'ERA']);
+                const winIdx = getIdx(headers, ['WINS', 'W']);
+                const soIdx = getIdx(headers, ['STRIKEOUTS', 'SO', 'K']);
+                const whipIdx = getIdx(headers, ['WALKS HITS INNINGS PITCHED', 'WHIP']);
+
+                if(eraIdx > -1) renderStats([...rows].filter(r=>(r.c[eraIdx]?.v||0)>0).sort((a,b)=>(a.c[eraIdx]?.v||0)-(b.c[eraIdx]?.v||0)).slice(0,5), 'era-leaders', lnIdx, fnIdx, eraIdx, teamIdx);
+                if(winIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[winIdx]?.v||0)-(a.c[winIdx]?.v||0)).slice(0,5), 'win-leaders', lnIdx, fnIdx, winIdx, teamIdx);
+                if(soIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[soIdx]?.v||0)-(a.c[soIdx]?.v||0)).slice(0,5), 'so-leaders', lnIdx, fnIdx, soIdx, teamIdx);
+                if(whipIdx > -1) renderStats([...rows].filter(r=>(r.c[whipIdx]?.v||0)>0).sort((a,b)=>(a.c[whipIdx]?.v||0)-(b.c[whipIdx]?.v||0)).slice(0,5), 'whip-leaders', lnIdx, fnIdx, whipIdx, teamIdx);
             });
     }
 
