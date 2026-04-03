@@ -178,10 +178,42 @@
         }
     }).catch(e=>{});
 
-    // Standings Loading
+    // 순위표 로딩 (팀 로고 자동 삽입 기능 추가)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
-        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
-        rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; 
+        const tb = document.getElementById('standing-body');
+        
+        // 💡 구글 시트의 '팀 이름'과 '로고 파일 경로'를 짝지어주는 사전입니다.
+        // 시트에 적힌 이름과 정확히 일치해야 합니다!
+        const teamLogos = {
+            "Vancouver Avengers": "logos/Van Avengers.png",
+            "Vancouver Dragons": "logos/Van Dragons.png",
+            "Karis-Cubs": "logos/Karis Cubs.png",
+            "Arirang Rays": "logos/Arirang Rays.png",
+            "FireBats": "logos/Fire Bats.png",
+            "Vancouver Bros": "logos/Van Bros.png"
+            // 새로운 팀이 추가되면 여기에 "시트 팀명": "경로" 형태로 추가하세요.
+        };
+
+        rows.forEach(r => { 
+            if(gv(r, 1) && !gv(r, 1).includes('Team')) { 
+                let teamName = gv(r, 1);
+                // 사전에 등록된 로고가 있으면 가져오고, 없으면 기본 투명 이미지 처리
+                let logoPath = teamLogos[teamName];
+                let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
+
+                let tr = '<tr>'; 
+                for(let i=0; i<7; i++) { 
+                    if (i === 1) {
+                        // 팀 이름(1번 인덱스) 칸에만 로고와 함께 왼쪽 정렬 적용
+                        tr += `<td style="text-align:left; padding-left:15px; font-weight:bold;">${logoHTML}<span style="vertical-align:middle;">${teamName}</span></td>`;
+                    } else {
+                        tr += `<td>${gv(r, i) || '0'}</td>`; 
+                    }
+                } 
+                tb.innerHTML += tr + '</tr>'; 
+            } 
+        });
     }).catch(e=>{});
 
     // Schedule Loading (가로 확장형 & Home/Away 라벨)
