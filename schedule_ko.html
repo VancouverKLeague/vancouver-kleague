@@ -14,8 +14,10 @@
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
         table { width:100%; border-collapse: collapse; text-align: center; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
-        th { background: #f8f9fa; }
+        th { background: #f8f9fa; font-weight: bold; }
         .loading { text-align: center; padding: 20px; color: #888; }
+        /* 포스트시즌 배지 스타일 */
+        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-right: 8px; vertical-align: middle; display: inline-block; font-weight: bold; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
     </style>
 </head>
@@ -39,7 +41,7 @@
             <tr>
                 <th>날짜 & 시간</th>
                 <th>구장</th>
-                <th>대진</th>
+                <th>대진 (Matchup)</th>
                 <th>결과</th>
             </tr>
         </thead>
@@ -53,11 +55,10 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const tabNameKo = 'Schedule(일정)'; // 구글 시트 탭 이름과 반드시 일치해야 합니다!
+    const tabNameKo = 'Schedule(일정)';
     const urlKo = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabNameKo)}`;
 
     fetch(urlKo).then(r => r.text()).then(d => {
-        // 데이터 파싱
         const json = JSON.parse(d.substr(47).slice(0, -2));
         const rows = json.table.rows;
         const tbody = document.getElementById('full-schedule-body-ko');
@@ -65,8 +66,36 @@
         rows.forEach(row => {
             const c = row.c;
             const tr = document.createElement('tr');
-            // .f (서식 적용 텍스트)를 우선 사용하여 1899년 오류 및 소수점 잘림 방지
+            
+            // G열(c[6]) 데이터 확인 (비고/Note 칸)
+            const note = c[6] ? (c[6].f || c[6].v || '') : '';
+            // PO나 Final이라는 단어가 포함되어 있는지 체크
+            const isSpecial = note.trim().length > 0;
+
+            // 특별 경기(포스트시즌 등)일 경우 줄 배경색 변경
+            if (isSpecial) {
+                tr.style.backgroundColor = '#fff9c4'; // 연한 노란색
+            }
+
             tr.innerHTML = `
                 <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
                 <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-                <td><strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ?
+                <td style="text-align:left; padding-left:20px;">
+                    ${isSpecial ? `<span class="po-badge">${note.toUpperCase()}</span>` : ''}
+                    <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
+                </td>
+                <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        document.getElementById('loading-msg-ko').style.display = 'none';
+        document.getElementById('full-table-ko').style.display = 'table';
+    }).catch(err => {
+        console.error(err);
+        document.getElementById('loading-msg-ko').textContent = '에러: 데이터를 불러올 수 없습니다.';
+    });
+</script>
+
+</body>
+</html>
