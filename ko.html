@@ -20,7 +20,10 @@
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        /* 수정된 CSS: 전체 테이블의 최소 너비 제한을 풀고 wrapper 안의 테이블만 고정 */
+        table { width: 100%; border-collapse: collapse; }
+        .table-wrapper table { min-width: 500px; }
+        
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
         
@@ -40,7 +43,7 @@
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
+    <p>캐나다 밴쿠버 최초 한인 사회인 야구 리그</p>
 </header>
 
 <nav><a href="ko.html">홈</a> <a href="schedule_ko.html">전체 일정</a></nav>
@@ -95,19 +98,19 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타율 (AVG)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="avg-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="avg-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">홈런 (HR)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="hr-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="hr-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">타점 (RBI)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="rbi-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="rbi-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="ops-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="ops-leaders"></tbody></table>
             </div>
         </div>
 
@@ -115,19 +118,19 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">방어율 (ERA)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="era-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="era-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">다승 (W)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="win-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="win-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">탈삼진 (SO)</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="so-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="so-leaders"></tbody></table>
             </div>
             <div>
                 <h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;"><tbody id="whip-leaders"></tbody></table>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed;"><tbody id="whip-leaders"></tbody></table>
             </div>
         </div>
         <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 20px;">전체 선수 기록 보기 →</a>
@@ -148,7 +151,7 @@
     }
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // 공지사항 로딩 (A1: 한글, C1: 링크)
+    // 공지사항 로딩
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
         if(data && data.c[0]) { 
