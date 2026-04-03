@@ -270,8 +270,6 @@
         const data = JSON.parse(t.substr(47).slice(0, -2)).table;
         const rows = data.rows; 
         const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-        
-        // [핵심] 이닝(IP) 컬럼 위치 찾기 (숫자 계산을 위해 필수)
         const ipI = cols.findIndex(c => c === 'IP' || c === 'INN' || c.includes('INNINGS PITCHED'));
 
         const fi = (arr, isPit = false) => {
@@ -285,68 +283,64 @@
 
         const metrics = [
             {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
-            {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
-            {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false, countStat: true},
+            {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false},
+            {id: 'rbi-leaders', n: ['RBI', 'RUNS BATTED IN'], d: 0, asc: false, pit: false},
             {id: 'ops-leaders', n: ['OPS', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'], d: 3, asc: false, pit: false},
             {id: 'era-leaders', n: ['ERA', 'EARNED RUN AVERAGE'], d: 2, asc: true, pit: true},
-            {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true, countStat: true},
-            {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true, countStat: true},
+            {id: 'win-leaders', n: ['W', 'WINS'], d: 0, asc: false, pit: true},
+            {id: 'so-leaders', n: ['SO', 'STRIKEOUTS'], d: 0, asc: false, pit: true},
             {id: 'whip-leaders', n: ['WHIP', 'WALKS HITS INNINGS PITCHED'], d: 2, asc: true, pit: true}
         ];
 
         metrics.forEach(m => {
             let vI = fi(m.n, m.pit);
-            let isCalc = false; let calcFn = null;
-            if (vI === -1 && m.id === 'ops-leaders') {
-                const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
-                const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
-                if (obpI !== -1 && slgI !== -1) { isCalc = true; calcFn = (r) => (parseFloat(gv(r, obpI)) || 0) + (parseFloat(gv(r, slgI)) || 0); }
-            }
+            
+            // [핵심] 게임체인저의 순위(Rank) 컬럼을 찾습니다. 
+            // 예: Earned Run Average (rank)
+            const rankColName = m.n[0] + " (RANK)";
+            const rankI = cols.findIndex(c => c === rankColName);
 
             const target = document.getElementById(m.id);
-            if (vI === -1 && !isCalc) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">아직 기록이 없습니다.</td></tr>`; return; }
+            if (vI === -1) { 
+                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">아직 기록이 없습니다.</td></tr>`; 
+                return; 
+            }
 
-            const getVal = (r) => isCalc ? calcFn(r) : (parseFloat(gv(r, vI)) || 0);
-            
-            // [강력 필터링 및 규정 이닝 로직]
+            const getVal = (r) => (parseFloat(gv(r, vI)) || 0);
+
+            // [강력한 필터 로직 적용]
             let validRows = rows.filter(r => {
                 const val = getVal(r);
-                const ipValue = (ipI !== -1) ? (parseFloat(gv(r, ipI)) || 0) : 0;
-
-                // 1. 투수 지표(ERA, WHIP)인 경우
-                if (m.pit) {
-                    // [핵심] 규정 이닝 설정: 2025년 데이터는 최소 5이닝 이상 던진 선수만 순위에 표시
-                    // (규정 이닝이 없으면 1이닝이라도 던지고 ERA 0인 선수가 무조건 1위가 됩니다)
-                    const minIP = (currentYear === '2025') ? 5 : 1; 
-                    return ipValue >= minIP;
+                
+                // 투수 항목(ERA, WHIP)은 시트의 Rank 칸에 숫자가 있는 사람만 필터링
+                if (m.pit && rankI !== -1) {
+                    const rankValue = gv(r, rankI).trim();
+                    // Rank 칸이 비어있지 않고, 이닝이 0보다 큰 경우만 포함
+                    return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
                 }
                 
-                // 2. 타자 지표인 경우: 해당 스탯이 0보다 커야 함
+                // 타자 항목은 스탯이 0보다 큰 경우만
                 return val > 0;
             });
 
+            // 정렬 (ERA 등은 낮은 순, 홈런 등은 높은 순)
             const sorted = [...validRows].sort((a,b) => {
                 const vA = getVal(a); const vB = getVal(b);
-                if(m.asc) { 
-                    const realA = (vA === 0 && !isCalc && (gv(a,vI)==='' || gv(a,vI)==='-')) ? 999 : vA;
-                    const realB = (vB === 0 && !isCalc && (gv(b,vI)==='' || gv(b,vI)==='-')) ? 999 : vB;
-                    return realA - realB; 
-                }
-                return vB - vA;
+                return m.asc ? vA - vB : vB - vA;
             }).slice(0, 5);
 
-            if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">아직 기록이 없습니다.</td></tr>`; return; }
+            if(sorted.length === 0) { 
+                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records yet.</td></tr>`; 
+                return; 
+            }
 
             sorted.forEach((r, i) => {
                 let name = "";
                 if (playerI !== -1 && gv(r, playerI)) name = gv(r, playerI);
                 else if (fnI !== -1 && lnI !== -1 && (gv(r, fnI) || gv(r, lnI))) name = (gv(r, fnI) + " " + gv(r, lnI)).trim();
-                else if (nameI !== -1 && gv(r, nameI)) name = gv(r, nameI);
-                else name = gv(r, lnI) || "알 수 없음";
+                else name = gv(r, lnI) || "Unknown";
 
                 let val = getVal(r);
-                let valStr = (m.asc && val === 999) ? '-' : val.toFixed(m.d);
-                
                 target.innerHTML += `
                     <tr>
                         <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
@@ -356,7 +350,7 @@
                                 <span class="player-team">${gv(r, tmI)}</span>
                             </div>
                         </td>
-                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${valStr}</td>
+                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${val.toFixed(m.d)}</td>
                     </tr>`;
             });
         });
