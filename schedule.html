@@ -38,16 +38,28 @@
         const tbody = document.getElementById('full-schedule-body');
         
         rows.forEach(row => {
-            const c = row.c;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
-                <td>${c[2]?(c[2].f||c[2].v):''}</td>
-                <td><strong>${c[3]?(c[3].f||c[3].v):''}</strong> vs <strong>${c[4]?(c[4].f||c[4].v):''}</strong></td>
-                <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
-            `;
-            tbody.appendChild(tr);
-        });
+    const c = row.c;
+    const tr = document.createElement('tr');
+    
+    // G열(c[6]) 데이터 확인 및 PO 여부 체크
+    const note = c[6] ? (c[6].f || c[6].v || '') : '';
+    const isPO = note.toLowerCase().includes('po') || note.toLowerCase().includes('final');
+
+    if (isPO) {
+        tr.style.backgroundColor = '#fff9c4'; // PO 경기 배경색
+    }
+
+    tr.innerHTML = `
+        <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
+        <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
+        <td style="text-align:left; padding-left:20px;">
+            ${isPO ? `<span style="background:#d32f2f; color:white; padding:2px 6px; border-radius:3px; font-size:0.75rem; margin-right:5px; vertical-align:middle;">${note.toUpperCase()}</span>` : ''}
+            <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
+        </td>
+        <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
+    `;
+    tbody.appendChild(tr);
+});
         document.getElementById('loading-msg').style.display = 'none';
         document.getElementById('full-table').style.display = 'table';
     }).catch(err => {
