@@ -53,14 +53,13 @@
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`;
 
-    // 팀명에 포함된 [1위], [2위] 등을 배지로 변환하는 함수
     function formatTeamName(name) {
         if (!name) return '';
         return name.replace(/\[(.*?)\]/g, (match, p1) => {
-            let color = '#78909c'; // 기본 회색
-            if (p1.includes('1')) color = '#D4AF37'; // 금색 (1위)
-            if (p1.includes('2')) color = '#A9A9A9'; // 은색 (2위)
-            if (p1.includes('3')) color = '#CD7F32'; // 동색 (3위)
+            let color = '#78909c'; 
+            if (p1.includes('1')) color = '#D4AF37'; 
+            if (p1.includes('2')) color = '#A9A9A9'; 
+            if (p1.includes('3')) color = '#CD7F32'; 
             return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
         });
     }
@@ -72,14 +71,14 @@
         
         rows.forEach(row => {
             const c = row.c;
+            if (!c[3]) return;
+
             const tr = document.createElement('tr');
             const note = c[6] ? (c[6].f || c[6].v || '') : '';
             const noteUpper = note.toUpperCase();
 
-            // 포스트시즌 경기 배경색 강조
             if (note.trim().length > 0) tr.style.backgroundColor = '#fffdec';
 
-            // 비고(Note) 내용에 따른 배지 색상 결정
             let badgeClass = 'badge-default';
             if (noteUpper.includes('WILD') || noteUpper.includes('WC') || note.includes('와일드')) {
                 badgeClass = 'badge-wc';
@@ -91,15 +90,33 @@
                 badgeClass = 'badge-3rd';
             }
 
+            const awayTeam = formatTeamName(c[3] ? (c[3].f || c[3].v) : '');
+            const homeTeam = formatTeamName(c[4] ? (c[4].f || c[4].v) : '');
+            
+            // 🔥 핵심 로직: G열(비고)이 비어있을 때만 Home/Away 라벨 표시
+            let matchupHTML = '';
+            if (note.trim() === '') {
+                matchupHTML = `
+                    <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px; margin-right:4px;">Away</span><strong>${awayTeam}</strong></span>
+                        <span style="font-size:0.8rem; font-weight:normal; color:#aaa;">vs</span>
+                        <span><span style="font-size:0.65rem; font-weight:normal; color:#d32f2f; border:1px solid #d32f2f; border-radius:3px; padding:1px 3px; margin-right:4px;">Home</span><strong style="color:#003366;">${homeTeam}</strong></span>
+                    </div>`;
+            } else {
+                matchupHTML = `
+                    <div style="display:flex; justify-content:flex-start; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span class="po-badge ${badgeClass}">${note}</span>
+                        <strong>${awayTeam}</strong> <span style="font-size:0.8rem; font-weight:normal; color:#aaa;">vs</span> <strong>${homeTeam}</strong>
+                    </div>`;
+            }
+
             tr.innerHTML = `
-                <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
-                <td>${c[2]?(c[2].f||c[2].v):''}</td>
-                <td style="text-align:left; padding-left:15px;">
-                    ${note ? `<span class="po-badge ${badgeClass}">${note}</span>` : ''}
-                    <strong>${formatTeamName(c[3]?(c[3].f||c[3].v):'')}</strong> vs 
-                    <strong>${formatTeamName(c[4]?(c[4].f||c[4].v):'')}</strong>
+                <td style="width:20%; font-size:0.8rem; vertical-align:middle;">${c[0]?(c[0].f||c[0].v):''}<br><span style="color:#888;">${c[1]?(c[1].f||c[1].v):''}</span></td>
+                <td style="width:20%; font-size:0.8rem; vertical-align:middle;">${c[2]?(c[2].f||c[2].v):''}</td>
+                <td style="width:48%; text-align:center; vertical-align:middle;">
+                    ${matchupHTML}
                 </td>
-                <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
+                <td style="width:12%; color:red; font-weight:bold; vertical-align:middle;">${c[5]?(c[5].f||c[5].v):'-'}</td>
             `;
             tbody.appendChild(tr);
         });
