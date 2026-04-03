@@ -15,13 +15,13 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
+        /* 공지사항 스타일 */
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
-        
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; }
         
@@ -35,7 +35,6 @@
         .active { background: #003366; color: white; }
         .inactive { background: #eee; color: #333; }
 
-        /* 리더보드 레이아웃 최적화 */
         .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .leader-table td { padding: 8px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
@@ -48,7 +47,7 @@
 
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
-    <h1>밴쿠버 K-리그 (Vancouver K-League)</h1>
+    <h1>밴쿠버 K-리그</h1>
     <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
 </header>
 
@@ -68,9 +67,9 @@
 
 <div class="container">
     <div class="card" id="notice-card" style="display: none;">
-        <h3>📢 공지사항</h3>
+        <h3>📢 공지사항 (Notice)</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 규정집 보기</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
     </div>
 
     <div class="card">
@@ -88,9 +87,9 @@
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (Richmond)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (Burnaby)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (뉴웨스트)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (리치몬드)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (버나비)</a>
             </div>
         </div>
     </div>
@@ -173,13 +172,21 @@
         loadStats();
     }
 
+    // 공지사항 로딩 (한글 페이지 최적화)
     function loadNotice() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
             const noticeCard = document.getElementById('notice-card');
+            
+            // gv(data, 0)은 A열(한글 공지), gv(data, 2)는 C열(규정집 링크)
             if(data && data.c[0] && gv(data, 0).trim() !== '') { 
                 noticeCard.style.display = 'block'; 
                 document.getElementById('notice-content').innerText = gv(data, 0);
+                if(gv(data, 2)) { 
+                    const rbLink = document.getElementById('rulebook-link');
+                    rbLink.href = gv(data, 2);
+                    rbLink.style.display = 'inline-block';
+                }
             } else { noticeCard.style.display = 'none'; }
         }).catch(e=>{});
     }
