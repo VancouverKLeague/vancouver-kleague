@@ -20,7 +20,6 @@
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
-        /* Adjusted CSS: Unbound table min-width, applied strictly to the wrapper's main tables */
         table { width: 100%; border-collapse: collapse; }
         .table-wrapper table { min-width: 500px; }
         
@@ -46,7 +45,7 @@
     <p>Vancouver's First Korean-Canadian Amateur Baseball League</p>
 </header>
 
-<nav><a href="index.html">Home</a> <a href="schedule_en.html">Full Schedule</a></nav>
+<nav><a href="index.html">Home</a> <a href="schedule.html">Full Schedule</a></nav>
 
 <div class="container">
     <div class="card" id="notice-card" style="display: none;">
@@ -82,7 +81,7 @@
         <div class="table-wrapper">
             <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
-        <a href="schedule_en.html" class="btn-more">View Full Season Schedule →</a>
+        <a href="schedule.html" class="btn-more">View Full Season Schedule →</a>
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
@@ -154,10 +153,9 @@
     // Notice Loading (index.html용 - B1열 영문 읽기)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
         const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-        // B1(data.c[1])에 내용이 있을 때만 공지사항 카드 표시
         if(data && data.c[1] && gv(data, 1).trim() !== '') { 
             document.getElementById('notice-card').style.display = 'block'; 
-            document.getElementById('notice-content').innerText = gv(data, 1); // B1 가져오기
+            document.getElementById('notice-content').innerText = gv(data, 1);
             if(gv(data, 2)) { 
                 document.getElementById('rulebook-link').href = gv(data, 2); 
                 document.getElementById('rulebook-link').style.display = 'inline-block'; 
@@ -165,13 +163,13 @@
         }
     }).catch(e=>{});
 
-    // 순위표 로딩
+    // Standings Loading
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; const tb = document.getElementById('standing-body');
         rows.forEach(r => { if(gv(r, 1) && !gv(r, 1).includes('Team')) { let tr = '<tr>'; for(let i=0; i<7; i++) tr += `<td>${gv(r, i) || '0'}</td>`; tb.innerHTML += tr + '</tr>'; } });
     }).catch(e=>{});
 
-    // 일정표 로딩 (대진 칸 확장 & 가로 배치)
+    // Schedule Loading (가로 확장형 & Home/Away 라벨)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(res => res.text()).then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3)); const tb = document.getElementById('schedule-body');
         const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA');
@@ -199,7 +197,7 @@
         if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
     }).catch(e=>{});
 
-    // 기록실 로딩 (GameChanger의 긴 풀네임 컬럼명 완벽 대응)
+    // Stats Loading (GameChanger 풀네임 호환 & 계산기 & 0개 필터)
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
@@ -229,7 +227,6 @@
             const nameI = fi(['NAME']);
             const tmI = fi(['TEAM']);
 
-            // 🔥 게임체인저의 길고 정확한 풀네임을 배열에 모두 추가했습니다!
             const metrics = [
                 {id: 'avg-leaders', n: ['AVG', 'BATTING AVERAGE'], d: 3, asc: false, pit: false},
                 {id: 'hr-leaders', n: ['HR', 'HOME RUNS'], d: 0, asc: false, pit: false, countStat: true},
@@ -246,7 +243,6 @@
                 let isCalc = false;
                 let calcFn = null;
 
-                // 혹시라도 구버전 게임체인저에서 OPS 풀네임조차 없을 때를 대비한 자동계산 백업 로직
                 if (vI === -1 && m.id === 'ops-leaders') {
                     const obpI = fi(['OBP', 'ON-BASE PERCENTAGE'], false);
                     const slgI = fi(['SLG', 'SLUGGING PERCENTAGE'], false);
@@ -259,7 +255,7 @@
                 const target = document.getElementById(m.id);
 
                 if (vI === -1 && !isCalc) {
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No data.</td></tr>`;
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px 5px; color:#999; font-size:0.85rem;">No records yet.</td></tr>`;
                     return;
                 }
 
@@ -269,10 +265,7 @@
                 };
 
                 let validRows = rows;
-                // 투수 기록은 1아웃 이상 잡은 사람만
                 if(m.pit && ipI !== -1) validRows = rows.filter(r => (parseFloat(gv(r, ipI)) || 0) > 0);
-                
-                // 누적 스탯이 0이거나, 타석이 부족해 OPS가 0이 된 선수 제외
                 if(m.countStat || m.id === 'ops-leaders') {
                     validRows = validRows.filter(r => getVal(r) > 0);
                 }
