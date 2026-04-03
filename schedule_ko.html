@@ -3,97 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>밴쿠버 K-League | 전체 일정</title>
+    <title>밴쿠버 K-League | 전체 일정 및 대진표</title>
     <style>
         body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
-        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
-        .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; font-size: 0.9rem; border: 1px solid white; padding: 3px 8px; border-radius: 3px; }
+        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
         nav { background: #333; color: #fff; padding: 0.5rem; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 20px; max-width: 1000px; margin: auto; background: #fff; min-height: 800px; }
         table { width:100%; border-collapse: collapse; text-align: center; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; font-size: 0.9rem; }
         th { background: #f8f9fa; font-weight: bold; }
-        .loading { text-align: center; padding: 20px; color: #888; }
-        /* 포스트시즌 배지 스타일 */
-        .po-badge { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-right: 8px; vertical-align: middle; display: inline-block; font-weight: bold; }
+        
+        /* 포스트시즌 단계별 배지 스타일 */
+        .po-badge { display: inline-block; padding: 3px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 8px; vertical-align: middle; text-transform: uppercase; }
+        .badge-wc { background-color: #0288d1; } /* 와일드카드: 파란색 */
+        .badge-sf { background-color: #ef6c00; } /* 준결승: 주황색 */
+        .badge-final { background-color: #d32f2f; } /* 결승전: 빨간색 */
+        .badge-3rd { background-color: #607d8b; } /* 3-4위전: 회색 */
+        .badge-default { background-color: #555; }
+
+        /* 정규시즌 시드 순위 배지 */
+        .seed-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.75rem; color: white; margin-right: 5px; font-weight: bold; }
+        
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        .loading { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="lang-switch"><a href="schedule_ko.html">KO</a> | <a href="schedule.html">EN</a></div>
     <h1>Vancouver K-League</h1>
-    <p>2026 시즌 전체 경기 일정 및 결과</p>
+    <p>2026 시즌 전체 일정 및 포스트시즌 대진</p>
 </header>
 
-<nav>
-    <a href="ko.html">← 홈으로 돌아가기</a>
-</nav>
+<nav><a href="ko.html">← 홈으로 돌아가기</a></nav>
 
 <div class="container">
-    <h3>⚾ 리그 전체 일정 (40경기)</h3>
-    <div id="loading-msg-ko" class="loading">일정 데이터를 불러오는 중...</div>
-    <table id="full-table-ko" style="display:none;">
+    <h3>⚾ 전체 경기 일정 및 토너먼트 안내</h3>
+    <div id="loading-msg" class="loading">데이터를 불러오는 중...</div>
+    <table id="full-table" style="display:none;">
         <thead>
-            <tr>
-                <th>날짜 & 시간</th>
-                <th>구장</th>
-                <th>대진 (Matchup)</th>
-                <th>결과</th>
-            </tr>
+            <tr><th>날짜 & 시간</th><th>구장</th><th>대진 (Matchup)</th><th>결과</th></tr>
         </thead>
-        <tbody id="full-schedule-body-ko"></tbody>
+        <tbody id="full-schedule-body"></tbody>
     </table>
 </div>
 
-<footer>
-    <p>&copy; 2026 Vancouver K-League. All Rights Reserved.</p>
-</footer>
-
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    const tabNameKo = 'Schedule(일정)';
-    const urlKo = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabNameKo)}`;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`;
 
-    fetch(urlKo).then(r => r.text()).then(d => {
+    // 팀명에 포함된 [1위], [2위] 등을 배지로 변환하는 함수
+    function formatTeamName(name) {
+        if (!name) return '';
+        return name.replace(/\[(.*?)\]/g, (match, p1) => {
+            let color = '#78909c'; // 기본 회색
+            if (p1.includes('1')) color = '#D4AF37'; // 금색 (1위)
+            if (p1.includes('2')) color = '#A9A9A9'; // 은색 (2위)
+            if (p1.includes('3')) color = '#CD7F32'; // 동색 (3위)
+            return `<span class="seed-badge" style="background:${color}">${p1}</span>`;
+        });
+    }
+
+    fetch(url).then(r => r.text()).then(d => {
         const json = JSON.parse(d.substr(47).slice(0, -2));
         const rows = json.table.rows;
-        const tbody = document.getElementById('full-schedule-body-ko');
+        const tbody = document.getElementById('full-schedule-body');
         
         rows.forEach(row => {
             const c = row.c;
             const tr = document.createElement('tr');
-            
-            // G열(c[6]) 데이터 확인 (비고/Note 칸)
             const note = c[6] ? (c[6].f || c[6].v || '') : '';
-            // PO나 Final이라는 단어가 포함되어 있는지 체크
-            const isSpecial = note.trim().length > 0;
+            const noteUpper = note.toUpperCase();
 
-            // 특별 경기(포스트시즌 등)일 경우 줄 배경색 변경
-            if (isSpecial) {
-                tr.style.backgroundColor = '#fff9c4'; // 연한 노란색
+            // 포스트시즌 경기 배경색 강조
+            if (note.trim().length > 0) tr.style.backgroundColor = '#fffdec';
+
+            // 비고(Note) 내용에 따른 배지 색상 결정
+            let badgeClass = 'badge-default';
+            if (noteUpper.includes('WILD') || noteUpper.includes('WC') || note.includes('와일드')) {
+                badgeClass = 'badge-wc';
+            } else if (noteUpper.includes('SF') || noteUpper.includes('SEMI') || note.includes('준결승')) {
+                badgeClass = 'badge-sf';
+            } else if (noteUpper.includes('FINAL') || note.includes('결승')) {
+                badgeClass = 'badge-final';
+            } else if (noteUpper.includes('3RD') || note.includes('3-4위')) {
+                badgeClass = 'badge-3rd';
             }
 
             tr.innerHTML = `
-                <td>${c[0] ? (c[0].f || c[0].v) : ''} ${c[1] ? (c[1].f || c[1].v) : ''}</td>
-                <td>${c[2] ? (c[2].f || c[2].v) : ''}</td>
-                <td style="text-align:left; padding-left:20px;">
-                    ${isSpecial ? `<span class="po-badge">${note.toUpperCase()}</span>` : ''}
-                    <strong>${c[3] ? (c[3].f || c[3].v) : ''}</strong> vs <strong>${c[4] ? (c[4].f || c[4].v) : ''}</strong>
+                <td>${c[0]?(c[0].f||c[0].v):''} ${c[1]?(c[1].f||c[1].v):''}</td>
+                <td>${c[2]?(c[2].f||c[2].v):''}</td>
+                <td style="text-align:left; padding-left:15px;">
+                    ${note ? `<span class="po-badge ${badgeClass}">${note}</span>` : ''}
+                    <strong>${formatTeamName(c[3]?(c[3].f||c[3].v):'')}</strong> vs 
+                    <strong>${formatTeamName(c[4]?(c[4].f||c[4].v):'')}</strong>
                 </td>
-                <td style="color:red; font-weight:bold;">${c[5] ? (c[5].f || c[5].v) : '-'}</td>
+                <td style="color:red; font-weight:bold;">${c[5]?(c[5].f||c[5].v):'-'}</td>
             `;
             tbody.appendChild(tr);
         });
         
-        document.getElementById('loading-msg-ko').style.display = 'none';
-        document.getElementById('full-table-ko').style.display = 'table';
-    }).catch(err => {
-        console.error(err);
-        document.getElementById('loading-msg-ko').textContent = '에러: 데이터를 불러올 수 없습니다.';
+        document.getElementById('loading-msg').style.display = 'none';
+        document.getElementById('full-table').style.display = 'table';
     });
 </script>
 
