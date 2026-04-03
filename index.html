@@ -14,16 +14,12 @@
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 800px; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h3 { border-left: 5px solid #003366; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
-        
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; font-size: 0.95rem; }
-        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
-        .btn-rulebook:hover { background: #e64a19; }
-
+        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
         .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
         th { background: #f8f9fa; white-space: nowrap; }
-        
         .val-highlight { color: #d32f2f; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 10px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
@@ -44,21 +40,18 @@
     <div class="card" id="notice-card" style="border-top: 5px solid #ff5722; display: none;">
         <h3>📢 Notice</h3>
         <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 View 2026 Rule Book (KR/EN)</a>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 View Rule Book</a>
     </div>
 
     <div class="card">
-        <h3>🏆 League Standings</h3>
+        <h3>🏆 Standings</h3>
         <div class="table-wrapper">
-            <table>
-                <thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead>
-                <tbody id="standing-body-en"></tbody>
-            </table>
+            <table><thead><tr><th>Rank</th><th>Team</th><th>GP</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead><tbody id="standing-body-en"></tbody></table>
         </div>
     </div>
 
     <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather Info</h3>
+        <h3>📍 Field & Weather</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
             <div style="flex: 1.5; min-width: 280px;">
                 <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
@@ -73,20 +66,21 @@
     </div>
 
     <div class="card">
-        <h3>⚾ Recent & Upcoming Games</h3>
+        <h3>⚾ Schedule</h3>
         <div class="table-wrapper">
-            <table id="main-sched-table">
-                <thead id="main-sched-head"></thead>
-                <tbody id="main-sched-body"></tbody>
-            </table>
+            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr></thead><tbody id="main-sched-body"></tbody></table>
         </div>
-        <a href="schedule.html" class="btn-more">View Full Season Schedule →</a>
+        <a href="schedule.html" class="btn-more">View Full Schedule →</a>
     </div>
 
-    <div class="card" style="border-top: 4px solid #ffc107;">
+    <div class="card" id="leaders-card" style="border-top: 4px solid #ffc107;">
         <h3>🔥 League Leaders</h3>
         <div class="stats-grid" id="stats-grid-en">
-            </div>
+            <div class="stats-col"><h4>AVG</h4><table><thead><tr><th>#</th><th>Name</th><th>Record</th></tr></thead><tbody id="avg-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>HR</h4><table><thead><tr><th>#</th><th>Name</th><th>Record</th></tr></thead><tbody id="hr-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>RBI</h4><table><thead><tr><th>#</th><th>Name</th><th>Record</th></tr></thead><tbody id="rbi-leaders"></tbody></table></div>
+            <div class="stats-col"><h4>OPS</h4><table><thead><tr><th>#</th><th>Name</th><th>Record</th></tr></thead><tbody id="ops-leaders"></tbody></table></div>
+        </div>
         <a href="stats.html" class="btn-more" style="background: #444;">View Full Stats →</a>
     </div>
 </div>
@@ -94,46 +88,52 @@
 <footer><p>© 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
-    /* JavaScript logic matches ko.html (Single B1 Link detection) */
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    function getIdx(headers, searchNames) { return headers.findIndex(h => searchNames.some(name => h.includes(name.toUpperCase().trim()))); }
+    function getSafe(cell) { return cell ? (cell.f || cell.v || '') : ''; }
     function loadInitialData() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(r => r.text()).then(d => {
             const row = JSON.parse(d.substr(47).slice(0, -2)).table.rows[0];
-            if(row && row.c[0]) {
-                document.getElementById('notice-card').style.display = 'block';
-                document.getElementById('notice-content').innerText = row.c[0].v;
-                if(row.c[1]?.v) { document.getElementById('rulebook-link').href = row.c[1].v; document.getElementById('rulebook-link').style.display = 'inline-block'; }
-            }
+            if(row && row.c[0]) { document.getElementById('notice-card').style.display = 'block'; document.getElementById('notice-content').innerText = getSafe(row.c[0]); if(row.c[1]?.v) { document.getElementById('rulebook-link').href = row.c[1].v; document.getElementById('rulebook-link').style.display = 'inline-block'; } }
         });
-        /* ... Other loading logic same as ko.html ... */
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Standings(순위)')}`).then(r => r.text()).then(d => {
             const rows = JSON.parse(d.substr(47).slice(0, -2)).table.rows;
             const tbody = document.getElementById('standing-body-en');
-            rows.forEach(row => { if(row.c && row.c[1] && row.c[1].v !== 'Team') {
-                const tr = document.createElement('tr');
-                for(let i=0; i<7; i++) { const td = document.createElement('td'); td.textContent = row.c[i] ? (row.c[i].f || row.c[i].v || '0') : '0'; tr.appendChild(td); }
-                tbody.appendChild(tr);
-            }});
+            rows.forEach(row => { if(row.c && row.c[1] && row.c[1].v !== 'Team') { const tr = document.createElement('tr'); for(let i=0; i<7; i++) { const td = document.createElement('td'); td.textContent = getSafe(row.c[i]) || '0'; tr.appendChild(td); } tbody.appendChild(tr); } });
         });
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Schedule(일정)')}`).then(r => r.text()).then(d => {
             const data = JSON.parse(d.substr(47).slice(0, -2)).table;
             const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
             const rows = data.rows;
             const tbody = document.getElementById('main-sched-body');
-            const dIdx = getIdx(headers, ['DATE']), tIdx = getIdx(headers, ['TIME']), fIdx = getIdx(headers, ['FIELD']), hIdx = getIdx(headers, ['HOME']), vIdx = getIdx(headers, ['AWAY']), sIdx = getIdx(headers, ['SCORE']);
-            document.getElementById('main-sched-head').innerHTML = `<tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Score</th></tr>`;
-            const played = rows.filter(r => r.c && r.c[sIdx]?.v && r.c[sIdx].v !== '-' && r.c[sIdx].v !== 'TBA');
-            const upcoming = rows.filter(r => r.c && (!r.c[sIdx] || r.c[sIdx].v === '-' || r.c[sIdx].v === 'TBA'));
-            if (played.length > 0) { const last = played[played.length-1].c[dIdx]?.v; played.filter(g => g.c[dIdx]?.v === last).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx)); }
-            if (upcoming.length > 0) { const next = upcoming[0].c[dIdx]?.v; upcoming.filter(g => g.c[dIdx]?.v === next).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx)); }
+            const dIdx = headers.findIndex(h => h.includes('DATE')), tIdx = headers.findIndex(h => h.includes('TIME')), fIdx = headers.findIndex(h => h.includes('FIELD')), hIdx = headers.findIndex(h => h.includes('HOME')), vIdx = headers.findIndex(h => h.includes('AWAY') || h.includes('VISITOR')), sIdx = headers.findIndex(h => h.includes('SCORE'));
+            const played = rows.filter(r => r.c && getSafe(r.c[sIdx]) && getSafe(r.c[sIdx]) !== '-' && getSafe(r.c[sIdx]) !== 'TBA');
+            const upcoming = rows.filter(r => r.c && (!getSafe(r.c[sIdx]) || getSafe(r.c[sIdx]) === '-' || getSafe(r.c[sIdx]) === 'TBA'));
+            if (played.length > 0) { const last = getSafe(played[played.length-1].c[dIdx]); played.filter(g => getSafe(g.c[dIdx]) === last).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx)); }
+            if (upcoming.length > 0) { const next = getSafe(upcoming[0].c[dIdx]); upcoming.filter(g => getSafe(g.c[dIdx]) === next).forEach(g => renderSchedRow(g, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx)); }
         });
+        loadStats();
     }
     function renderSchedRow(row, tbody, dIdx, tIdx, fIdx, hIdx, vIdx, sIdx) {
-        const c = row.c;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${(c[dIdx]?.f||'')} ${(c[tIdx]?.f||'')}</td><td>${c[fIdx]?.v||''}</td><td style="font-weight:bold;">${c[vIdx]?.v} vs ${c[hIdx]?.v}</td><td class="val-highlight">${c[sIdx]?.v||'-'}</td>`;
+        const c = row.c; const tr = document.createElement('tr'); const dt = (getSafe(c[dIdx]) + " " + getSafe(c[tIdx])).trim();
+        tr.innerHTML = `<td>${dt}</td><td>${getSafe(c[fIdx])}</td><td style="font-weight:bold;">${getSafe(c[vIdx])} vs ${getSafe(c[hIdx])}</td><td class="val-highlight">${getSafe(c[sIdx]) || '-'}</td>`;
         tbody.appendChild(tr);
+    }
+    function loadStats() {
+        ['avg-leaders', 'hr-leaders', 'rbi-leaders', 'ops-leaders'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Stats_Reg`).then(r => r.text()).then(d => {
+            const data = JSON.parse(d.substr(47).slice(0, -2)).table;
+            const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
+            const rows = data.rows;
+            const lnIdx = headers.findIndex(h => ['LAST NAME', 'PLAYER', 'NAME'].includes(h)), fnIdx = headers.findIndex(h => h === 'FIRST NAME'), teamIdx = headers.findIndex(h => h === 'TEAM'), avgIdx = headers.findIndex(h => ['BATTING AVERAGE', 'AVG'].includes(h)), hrIdx = headers.findIndex(h => ['HOME RUNS', 'HR'].includes(h)), rbiIdx = headers.findIndex(h => ['RUNS BATTED IN', 'RBI'].includes(h)), opsIdx = headers.findIndex(h => h.includes('OPS'));
+            if(avgIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[avgIdx]?.v||0)-(a.c[avgIdx]?.v||0)).slice(0,5), 'avg-leaders', lnIdx, fnIdx, avgIdx, teamIdx, true);
+            if(hrIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[hrIdx]?.v||0)-(a.c[hrIdx]?.v||0)).slice(0,5), 'hr-leaders', lnIdx, fnIdx, hrIdx, teamIdx);
+            if(rbiIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[rbiIdx]?.v||0)-(a.c[rbiIdx]?.v||0)).slice(0,5), 'rbi-leaders', lnIdx, fnIdx, rbiIdx, teamIdx);
+            if(opsIdx > -1) renderStats([...rows].sort((a,b)=>(b.c[opsIdx]?.v||0)-(a.c[opsIdx]?.v||0)).slice(0,5), 'ops-leaders', lnIdx, fnIdx, opsIdx, teamIdx, true);
+        });
+    }
+    function renderStats(data, id, lnIdx, fnIdx, valIdx, teamIdx, isFixed3 = false) {
+        const tbody = document.getElementById(id); if(!tbody) return;
+        data.forEach((r, i) => { const tr = document.createElement('tr'); let name = getSafe(r.c[lnIdx]); if(fnIdx > -1 && r.c[fnIdx]?.v) name = r.c[fnIdx].v + " " + name; const team = (teamIdx > -1) ? getSafe(r.c[teamIdx]) : ''; let val = r.c[valIdx]?.v || 0; if (isFixed3) val = parseFloat(val).toFixed(3); tr.innerHTML = `<td>${i+1}</td><td style="text-align:left; padding-left:10px;"><div style="display:flex;flex-direction:column;"><span style="font-weight:bold;">${name}</span><span style="font-size:0.7rem;color:#888;">${team}</span></div></td><td class="val-highlight">${val}</td>`; tbody.appendChild(tr); });
     }
     loadInitialData();
 </script>
