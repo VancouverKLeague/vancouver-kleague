@@ -36,6 +36,23 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
+        /* Playoff Badge Style for Main Page */
+        .po-badge-sm {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .badge-wc { background-color: #0288d1; }
+        .badge-sf { background-color: #ef6c00; }
+        .badge-final { background-color: #d32f2f; }
+        .badge-3rd { background-color: #607d8b; }
+        .badge-default { background-color: #555; }
+
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
         .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
@@ -203,10 +220,10 @@
         "Fire Bats": "logos/Fire Bats.png",
         "FireBats": "logos/Fire Bats.png",
         "Van Bros": "logos/Van Bros.png",
-        "Vancouver  Bros 2025": "logos/Van Bros.png"
+        "Vancouver Bros 2025": "logos/Van Bros.png"
     };
 
-    // [MOD] Champion Data based on 2025 Regular Season (no badges) and Postseason (with badges) results [cite: 1, 2, 3]
+    // Champion Data [cite: 1, 2, 3]
     const championData = {
         "2025": {
             reg1st: "Arirang Rays",
@@ -303,11 +320,27 @@
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
 
             const render = (r) => { 
-                const away = gv(r, 3); const home = gv(r, 4);
+                const away = gv(r, 3); 
+                const home = gv(r, 4);
+                const note = gv(r, 6).trim(); 
+                const noteUpper = note.toUpperCase();
+                
+                let badgeHtml = '';
+                if (note) {
+                    let badgeClass = 'badge-default';
+                    if (noteUpper.includes('WILD') || noteUpper.includes('WC')) badgeClass = 'badge-wc';
+                    else if (noteUpper.includes('SF') || noteUpper.includes('SEMI')) badgeClass = 'badge-sf';
+                    else if (noteUpper.includes('FINAL')) badgeClass = 'badge-final';
+                    else if (noteUpper.includes('3RD') || noteUpper.includes('4TH')) badgeClass = 'badge-3rd';
+                    
+                    badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
+                }
+
                 tb.innerHTML += `<tr>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 2)}</td>
                     <td style="width:48%; text-align:center;">
+                        ${badgeHtml}
                         <div style="display:flex; justify-content:center; align-items:center; gap:6px; font-weight:bold;">
                             <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px;">Away</span> ${away}</span>
                             <span style="color:#aaa;">vs</span>
