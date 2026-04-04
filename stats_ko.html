@@ -5,47 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밴쿠버 K-League | 전체 기록실</title>
     <style>
-        /* 1. 표를 감싸는 컨테이너: 가로 스크롤 활성화 */
-.stats-scroll-container {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* 아이폰용 부드러운 스크롤 */
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-top: 10px;
-}
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; }
+        nav { background: #333; color: #fff; padding: 10px; text-align: center; }
+        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        .container { padding: 15px; max-width: 1200px; margin: auto; background: #fff; min-height: 100vh; }
+        
+        /* 컨트롤 패널 스타일 */
+        .controls { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
+        .btn-group { display: flex; gap: 2px; }
+        select, button, #search-input { padding: 8px 12px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; }
+        button.active { background: #003366; color: white; border-color: #003366; }
+        button.inactive { background: white; color: #333; }
+        #search-input { cursor: text; font-weight: normal; }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-    min-width: 900px; /* 표가 찌그러지지 않게 최소 너비 유지 */
-}
+        /* 표 가로 스크롤 및 고정 열 디자인 */
+        .stats-scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        
+        .player-info-sticky { position: sticky; left: 0; z-index: 5; background-color: #ffffff !important; box-shadow: 2px 0 5px rgba(0,0,0,0.1); width: 180px !important; min-width: 180px; padding-left: 10px !important; }
+        th.player-info-sticky { z-index: 11; background-color: #f8f9fa !important; }
 
-/* 2. 이름 열 왼쪽 고정 (Sticky) */
-.player-info-sticky {
-    position: sticky;
-    left: 0;
-    z-index: 5;
-    background-color: #ffffff !important;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* 고정된 느낌을 주는 그림자 */
-    width: 160px !important;
-    min-width: 160px;
-    padding-left: 10px !important;
-}
-
-/* 헤더(제목단) 고정 */
-th.player-info-sticky {
-    z-index: 11;
-    background-color: #f8f9fa !important;
-}
-
-/* 글자가 줄바꿈되어 표가 길어지는 것 방지 */
-td, th {
-    white-space: nowrap;
-    padding: 12px 8px;
-    border: 1px solid #eee;
-}
+        td, th { white-space: nowrap; padding: 12px 8px; border: 1px solid #eee; text-align: center; font-size: 0.85rem; }
+        th { background: #f8f9fa; cursor: pointer; }
+        .val-highlight { color: #d32f2f; font-weight: bold; background-color: #fff9f9; }
+        
+        .player-info { display: flex; flex-direction: column; text-align: left; }
+        .p-name { font-weight: bold; color: #003366; }
+        .p-team { font-size: 0.7rem; color: #888; }
+        .rank-tag { font-size: 0.7rem; color: #d32f2f; font-weight: 900; background: #ffeeee; padding: 1px 4px; border-radius: 4px; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -78,9 +66,12 @@ td, th {
         <input type="text" id="search-input" placeholder="선수 이름 검색..." onkeyup="filterTable()">
     </div>
 
-    <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">* 각 항목 제목(타율, 홈런 등)을 클릭하면 해당 순위로 정렬됩니다.</p>
+    <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
+        * <strong>공식 순위</strong>: 게임체인저 규정 타석/이닝을 충족한 선수가 상단에 노출됩니다.<br>
+        * 항목 제목을 클릭하면 정렬 기준이 바뀝니다.
+    </p>
 
-    <div style="overflow-x: auto; border: 1px solid #ddd; border-radius: 8px;">
+    <div class="stats-scroll-container">
         <table id="stats-table">
             <thead id="table-head"></thead>
             <tbody id="table-body"></tbody>
@@ -90,14 +81,13 @@ td, th {
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    let currentYear = '2026'; // 연도 상태 추가
+    let currentYear = '2026';
     let currentSeason = 'Reg';
     let currentCategory = 'Hitter';
     let allData = [];
     let sortColIdx = 0; 
     let sortOrder = -1; 
 
-    // [기능 추가] 연도 변경
     function changeYear(y) {
         currentYear = y;
         loadData();
@@ -124,12 +114,36 @@ td, th {
             sortOrder *= -1; 
         } else {
             sortColIdx = idx;
-            sortOrder = (currentCategory === 'Pitcher' && (idx === 0 || idx === 5)) ? 1 : -1;
+            // 투수 ERA, WHIP, 실점은 오름차순(낮은게 장땡)이 기본
+            const label = (currentCategory === 'Hitter' ? hCols[idx].id : pCols[idx].id);
+            sortOrder = (label === 'ERA' || label === 'WHIP' || label === 'R') ? 1 : -1;
         }
         renderTable();
     }
 
+    // 컬럼 정의 (id는 시트의 원본 헤더 찾기용)
+    const hCols = [
+        {label: '타율', id: 'BATTING AVERAGE', fix: 3},
+        {label: '홈런', id: 'HOME RUNS'},
+        {label: '타점', id: 'RUNS BATTED IN'},
+        {label: 'OPS', id: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', fix: 3},
+        {label: '안타', id: 'HITS'},
+        {label: '출루율', id: 'ON-BASE PERCENTAGE', fix: 3}
+    ];
+
+    const pCols = [
+        {label: '방어율', id: 'EARNED RUN AVERAGE', fix: 2},
+        {label: '승', id: 'WINS'},
+        {label: 'IP', id: 'INNINGS PITCHED', fix: 1},
+        {label: '탈삼진', id: 'STRIKEOUTS'},
+        {label: '실점', id: 'RUNS ALLOWED'},
+        {label: 'WHIP', id: 'WALKS HITS INNINGS PITCHED', fix: 3}
+    ];
+
     function loadData() {
+        const body = document.getElementById('table-body');
+        body.innerHTML = '<tr><td colspan="10" style="padding:50px;">데이터 로드 중...</td></tr>';
+
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
@@ -138,160 +152,108 @@ td, th {
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
 
-                const getIdx = (names) => headers.findIndex(h => names.some(n => h === n || h.includes(n)));
-                
-                const lnIdx = getIdx(['LAST NAME', 'PLAYER', 'NAME']);
-                const fnIdx = getIdx(['FIRST NAME']);
-                const teamIdx = getIdx(['TEAM']);
-                const ipIdx = getIdx(['INNINGS PITCHED', 'IP', 'INN']);
+                const getIdx = (name) => headers.findIndex(h => h === name || h.includes(name));
 
-                const hCols = [
-                    {label: (currentYear === '2026' ? '타율' : 'AVG'), id: 'AVG', idx: getIdx(['BATTING AVERAGE', 'AVG', 'BA']), fix: 3},
-                    {label: (currentYear === '2026' ? '홈런' : 'HR'), id: 'HR', idx: getIdx(['HOME RUNS', 'HR'])},
-                    {label: (currentYear === '2026' ? '타점' : 'RBI'), id: 'RBI', idx: getIdx(['RUNS BATTED IN', 'RBI'])},
-                    {label: 'OPS', id: 'OPS', idx: getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']), fix: 3},
-                    {label: (currentYear === '2026' ? '안타' : 'H'), id: 'H', idx: getIdx(['HITS', 'H'])},
-                    {label: (currentYear === '2026' ? '출루율' : 'OBP'), id: 'OBP', idx: getIdx(['ON-BASE PERCENTAGE', 'OBP']), fix: 3}
-                ];
-
-                const pCols = [
-                    {label: (currentYear === '2026' ? '방어율' : 'ERA'), id: 'ERA', idx: getIdx(['EARNED RUN AVERAGE', 'ERA']), fix: 2},
-                    {label: (currentYear === '2026' ? '승' : 'W'), id: 'W', idx: getIdx(['WINS', 'W'])},
-                    {label: 'IP', id: 'IP', idx: ipIdx, fix: 1},
-                    {label: (currentYear === '2026' ? '탈삼진' : 'SO'), id: 'SO', idx: getIdx(['STRIKEOUTS', 'SO', 'K'])},
-                    {label: (currentYear === '2026' ? '실점' : 'R'), id: 'R', idx: getIdx(['RUNS ALLOWED', 'R'])},
-                    {label: 'WHIP', id: 'WHIP', idx: getIdx(['WALKS HITS INNINGS PITCHED', 'WHIP']), fix: 3}
-                ];
-
-                // ⭐ 여기서부터 이름 결합 강화 로직이 적용됩니다 ⭐
                 allData = rows.map(r => {
-    // 값을 가져오는 함수: 숫자인지 문자인지 상관없이 안전하게 문자열로 변환
-    const gv = (idx) => {
-        if (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) {
-            return String(r.c[idx].v).trim();
-        }
-        return '';
-    };
+                    const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? r.c[idx].v : '';
 
-    // [핵심] 컬럼 이름과 상관없이 데이터가 들어있을 법한 모든 곳을 뒤집니다.
-    let first = gv(fnIdx); // First Name 컬럼
-    let last = gv(lnIdx);  // Last Name 컬럼
-    let fallback1 = gv(0); // 엑셀 A열 (실제 이름이 여기 있을 확률이 높음)
-    let fallback2 = gv(1); // 엑셀 B열
+                    // 이름 결합 로직
+                    let first = String(gv(getIdx('FIRST NAME'))).trim();
+                    let last = String(gv(getIdx('LAST NAME'))).trim();
+                    let full = String(gv(getIdx('PLAYER'))).trim();
+                    let name = full || ((first && last && first !== last) ? first + " " + last : first || last || "Unknown");
+                    name = name.replace(/null/g, '').trim();
 
-    let finalName = "";
-
-    // 1. 성과 이름이 따로 잘 들어있는 경우 (2026년식)
-    if (first && last && first !== last) {
-        finalName = (last.includes(first)) ? last : first + " " + last;
-    } 
-    // 2. 한쪽 컬럼에만 이름이 있는 경우 (2025년식)
-    else if (first || last) {
-        finalName = first || last;
-    } 
-    // 3. 인덱스로 못 찾았을 때 A열이나 B열에서 강제로 가져오기 (Unknown 방지)
-    else {
-        finalName = fallback2 || fallback1 || "Unknown Player";
-    }
-
-    // "null" 글자 제거 및 정리
-    finalName = finalName.replace(/null/g, '').trim();
-
-    // 팀 정보 가져오기
-    let teamName = (teamIdx > -1 && r.c[teamIdx]?.v) ? r.c[teamIdx].v : 'K-League';
-
-    // OPS 계산 로직
-    const calculateOps = () => {
-        const opsIdx = getIdx(['ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', 'OPS']);
-        if (opsIdx > -1 && gv(opsIdx) !== '') return parseFloat(gv(opsIdx)) || 0;
-        const obp = parseFloat(gv(getIdx(['ON-BASE PERCENTAGE', 'OBP']))) || 0;
-        const slg = parseFloat(gv(getIdx(['SLUGGING PERCENTAGE', 'SLG']))) || 0;
-        return obp + slg;
-    };
-
-    return {
-        name: finalName,
-        team: teamName,
-        isPitcher: (ipIdx > -1 && parseFloat(gv(ipIdx))) > 0,
-        hitterStats: hCols.map(c => {
-            let val = (c.id === 'OPS') ? calculateOps() : parseFloat(gv(c.idx));
-            return {val: val || 0, label: c.label, fix: c.fix};
-        }),
-        pitcherStats: pCols.map(c => ({val: parseFloat(gv(c.idx)) || 0, label: c.label, fix: c.fix}))
-    };
-});
+                    return {
+                        name: name,
+                        team: gv(getIdx('TEAM')) || 'K-League',
+                        isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
+                        // 타자 데이터 + 각 항목의 순위(Rank) 정보 함께 저장
+                        hitterStats: hCols.map(c => {
+                            const val = parseFloat(gv(getIdx(c.id))) || 0;
+                            const rank = parseInt(gv(getIdx(c.id + " (RANK)"))) || 999;
+                            return { val, rank, label: c.label, fix: c.fix };
+                        }),
+                        // 투수 데이터 + 각 항목의 순위(Rank) 정보 함께 저장
+                        pitcherStats: pCols.map(c => {
+                            const val = parseFloat(gv(getIdx(c.id))) || 0;
+                            const rank = parseInt(gv(getIdx(c.id + " (RANK)"))) || 999;
+                            return { val, rank, label: c.label, fix: c.fix };
+                        })
+                    };
+                });
                 renderTable();
-            }).catch(e => console.error("Data loading error:", e));
+            }).catch(e => { body.innerHTML = '<tr><td colspan="10">기록이 없습니다.</td></tr>'; });
     }
 
     function renderTable() {
-    const head = document.getElementById('table-head');
-    const body = document.getElementById('table-body');
-    if (!allData.length) return;
-    head.innerHTML = '';
-    body.innerHTML = '';
+        const head = document.getElementById('table-head');
+        const body = document.getElementById('table-body');
+        if (!allData.length) return;
+        head.innerHTML = '';
+        body.innerHTML = '';
 
-    // 표를 감싸는 부모 요소에 스크롤 클래스 부여
-    const tableWrapper = document.getElementById('stats-table').parentElement;
-    tableWrapper.className = 'stats-scroll-container';
+        let displayData = [...allData];
+        if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.isPitcher);
 
-    let displayData = [...allData];
-    if (currentCategory === 'Pitcher') {
-        displayData = displayData.filter(d => d.isPitcher);
-        displayData.sort((a,b) => (a.pitcherStats[sortColIdx].val - b.pitcherStats[sortColIdx].val) * sortOrder);
-    } else {
-        displayData.sort((a,b) => (a.hitterStats[sortColIdx].val - b.hitterStats[sortColIdx].val) * sortOrder);
-    }
+        // ⭐ 핵심 정렬 로직: 공식 순위(RANK)가 있는 선수를 우선적으로 상단 배치
+        displayData.sort((a, b) => {
+            const statsA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx]; // b를 쓰는건 ERA 때문이 아니라 구조상 참조용
+            const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
+            const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
 
-    // 헤더 생성 (이름 열에 sticky 클래스 적용)
-    const hTr = document.createElement('tr');
-    let headerHtml = `<th class="player-info-sticky">Rank / Player</th>`;
-    const activeCols = currentCategory === 'Hitter' ? displayData[0].hitterStats : displayData[0].pitcherStats;
-    
-    activeCols.forEach((c, idx) => {
-        const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
-        headerHtml += `<th onclick="changeSort(${idx})">${c.label}<span class="sort-icon">${arrow}</span></th>`;
-    });
-    hTr.innerHTML = headerHtml;
-    head.appendChild(hTr);
+            // 1순위: 공식 랭킹(RANK) 유무 (999는 랭킹 없음 의미)
+            if (itemA.rank !== itemB.rank) return itemA.rank - itemB.rank;
 
-    // 데이터 행 생성
-    displayData.forEach((d, i) => {
-        const tr = document.createElement('tr');
-        let statsHtml = '';
-        const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
-        
-        stats.forEach((s, idx) => {
-            let v = s.val;
-            if (s.fix !== undefined) v = v.toFixed(s.fix);
-            statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
+            // 2순위: 랭킹이 같거나 둘 다 없을 경우 성적순 정렬
+            return (itemA.val - itemB.val) * sortOrder;
         });
 
-        // 순위와 이름을 하나의 고정 열로 합쳐서 출력
-        tr.innerHTML = `
-            <td class="player-info-sticky">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:0.75rem; color:#999; font-weight:bold; min-width:15px;">${i+1}</span>
-                    <div class="player-info">
-                        <span class="p-name">${d.name}</span>
-                        <span class="p-team">${d.team}</span>
+        // 헤더 생성
+        let headerHtml = `<tr><th class="player-info-sticky">공식 순위 / 선수명</th>`;
+        const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
+        activeCols.forEach((c, idx) => {
+            const arrow = (sortColIdx === idx) ? (sortOrder === 1 ? ' ▲' : ' ▼') : '';
+            headerHtml += `<th onclick="changeSort(${idx})">${c.label}${arrow}</th>`;
+        });
+        head.innerHTML = headerHtml + `</tr>`;
+
+        // 행 생성
+        displayData.forEach((d, i) => {
+            const tr = document.createElement('tr');
+            const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
+            const officialRank = stats[sortColIdx].rank;
+            const rankDisplay = (officialRank !== 999) ? `<span class="rank-tag">${officialRank}위</span>` : '';
+
+            let statsHtml = '';
+            stats.forEach((s, idx) => {
+                let v = (s.fix !== undefined) ? s.val.toFixed(s.fix) : s.val;
+                statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
+            });
+
+            tr.innerHTML = `
+                <td class="player-info-sticky">
+                    <div style="display:flex; align-items:center;">
+                        <div class="player-info">
+                            <span class="p-name">${rankDisplay}${d.name}</span>
+                            <span class="p-team">${d.team}</span>
+                        </div>
                     </div>
-                </div>
-            </td>
-            ${statsHtml}
-        `;
-        body.appendChild(tr);
-    });
-}
+                </td>
+                ${statsHtml}
+            `;
+            body.appendChild(tr);
+        });
+    }
 
     function filterTable() {
         const input = document.getElementById('search-input').value.toUpperCase();
         const rows = document.getElementById('table-body').getElementsByTagName('tr');
         for (let i = 0; i < rows.length; i++) {
-            const nameCell = rows[i].getElementsByClassName('p-name')[0];
+            const nameCell = rows[i].querySelector('.p-name');
             if (nameCell) {
-                const txtValue = nameCell.textContent || nameCell.innerText;
-                rows[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                const txt = nameCell.textContent || nameCell.innerText;
+                rows[i].style.display = txt.toUpperCase().includes(input) ? "" : "none";
             }
         }
     }
