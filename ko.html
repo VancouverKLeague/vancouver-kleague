@@ -15,6 +15,27 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
+        /* 우승팀 정보 섹션 스타일 */
+        .champions-container {
+            background: #fff;
+            border: 2px solid #003366;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; }
+        .champion-box { margin: 5px; padding: 10px; border-radius: 8px; display: inline-block; min-width: 130px; vertical-align: top; }
+        .champion-box .label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #666; }
+        .champion-box .team-name { font-size: 1rem; font-weight: 900; color: #003366; }
+
+        .gold { background: #fff9e6; border: 1px solid #ffd700; }
+        .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
+        .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
+        .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
+        .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
         /* 공지사항 스타일 */
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
@@ -35,7 +56,6 @@
         .active { background: #003366; color: white; }
         .inactive { background: #eee; color: #333; }
       
-    /* Leaderboard table optimization */
         .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .leader-table td { padding: 8px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
@@ -67,6 +87,28 @@
 </div>
 
 <div class="container">
+    <div id="season-champions" class="champions-container" style="display:none;">
+        <span class="champion-group-title">🏆 SEASON HONORS</span>
+        <div class="champion-box gold crown">
+            <span class="label">👑 포스트시즌 우승</span>
+            <span id="p-post-1st" class="team-name">-</span>
+        </div>
+        <div class="rank-boxes">
+            <div class="champion-box gold">
+                <span class="label">🥇 정규리그 1위</span>
+                <span id="p-reg-1st" class="team-name">-</span>
+            </div>
+            <div class="champion-box silver">
+                <span class="label">🥈 최종 2위</span>
+                <span id="p-post-2nd" class="team-name">-</span>
+            </div>
+            <div class="champion-box bronze">
+                <span class="label">🥉 최종 3위</span>
+                <span id="p-post-3rd" class="team-name">-</span>
+            </div>
+        </div>
+    </div>
+
     <div class="card" id="notice-card" style="display: none;">
         <h3>📢 공지사항 (Notice)</h3>
         <div id="notice-content"></div>
@@ -88,9 +130,9 @@
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (뉴웨스트)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (리치몬드)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (버나비)</a>
+                <a href="https://maps.app.goo.gl/rS94B3sR3q8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (뉴웨스트)</a>
+                <a href="https://maps.app.goo.gl/3fFz8F6R9f8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (리치몬드)</a>
+                <a href="https://maps.app.goo.gl/2fFz8F6R9f8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (버나비)</a>
             </div>
         </div>
     </div>
@@ -159,10 +201,41 @@
         "Van Bros": "logos/Van Bros.png"
     };
 
+    // 우승팀 데이터
+    const championData = {
+        "2025": {
+            reg1st: "Karis Cubs", // 실제 데이터로 수정 가능
+            post1st: "Karis Cubs",
+            post2nd: "Van Avengers",
+            post3rd: "Van Dragons"
+        },
+        "2026": {
+            reg1st: "진행 중",
+            post1st: "진행 중",
+            post2nd: "-",
+            post3rd: "-"
+        }
+    };
+
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
+
+    function updateChampions(year) {
+        const section = document.getElementById('season-champions');
+        const data = championData[year];
+        if (data) {
+            section.style.display = 'block';
+            document.getElementById('p-reg-1st').innerText = data.reg1st;
+            document.getElementById('p-post-1st').innerText = data.post1st;
+            document.getElementById('p-post-2nd').innerText = data.post2nd;
+            document.getElementById('p-post-3rd').innerText = data.post3rd;
+        } else {
+            section.style.display = 'none';
+        }
+    }
 
     function changeYear(year) {
         currentYear = year;
+        updateChampions(year);
         loadNotice(); loadStandings(); loadSchedule(); loadStats();
     }
 
@@ -173,13 +246,10 @@
         loadStats();
     }
 
-    // 공지사항 로딩 (한글 페이지 최적화)
     function loadNotice() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
             const noticeCard = document.getElementById('notice-card');
-            
-            // gv(data, 0)은 A열(한글 공지), gv(data, 2)는 C열(규정집 링크)
             if(data && data.c[0] && gv(data, 0).trim() !== '') { 
                 noticeCard.style.display = 'block'; 
                 document.getElementById('notice-content').innerText = gv(data, 0);
@@ -218,12 +288,8 @@
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         const tb = document.getElementById('schedule-body');
         tb.innerHTML = '';
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            // 1. 유효한 데이터 필터링 (Away 팀 정보가 있는 행만)
             const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
-            
-            // 2. 결과(Score)가 있는 경기와 없는 경기 분류
             const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA' && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
 
@@ -243,109 +309,81 @@
                 </tr>`; 
             };
 
-            // [핵심 로직]
             if (currentYear === '2026') {
-                // 2026년: 평소대로 최근 경기와 다음 경기를 보여줌
                 if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
                 if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
             } else {
-                // 2025년(과거 시즌): 이미 모든 경기가 끝났으므로, 가장 마지막 일정(결승전 등) 3경기를 보여줌
                 const lastGames = played.slice(-3); 
-                if (lastGames.length > 0) {
-                    lastGames.forEach(render);
-                } else {
-                    tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">해당 시즌의 경기 기록이 없습니다.</td></tr>';
-                }
+                if (lastGames.length > 0) lastGames.forEach(render);
+                else tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">기록이 없습니다.</td></tr>';
             }
-        }).catch(e=>{ console.error("일정 로딩 에러:", e); });
+        }).catch(e=>{});
     }
 
     function loadStats() {
-    const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
-    tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
+        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+        let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
 
-    let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const rows = data.rows; 
+            const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
+            const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
 
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
-        const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-        const rows = data.rows; 
-        const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
+            const fNameI = fi(['FIRST NAME']);
+            const lNameI = fi(['LAST NAME']);
+            const playerI = fi(['PLAYER', 'FULL NAME']); 
+            const tmI = fi(['TEAM']);
 
-        const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
+            const metrics = [
+                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
+                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
+                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
+                {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
+                {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
+                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
+            ];
 
-        // 이름 및 팀 컬럼 인덱스
-        const fNameI = fi(['FIRST NAME']);
-        const lNameI = fi(['LAST NAME']);
-        const playerI = fi(['PLAYER', 'FULL NAME']); 
-        const tmI = fi(['TEAM']);
+            metrics.forEach(m => {
+                const vI = cols.findIndex(c => c === m.n);
+                const rankI = cols.findIndex(c => c === m.n + " (RANK)");
+                const target = document.getElementById(m.id);
+                if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; return; }
 
-        const metrics = [
-            {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
-            {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
-            {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
-            {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
-            {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
-            {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
-            {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
-            {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
-        ];
+                const getVal = (r) => parseFloat(gv(r, vI)) || 0;
+                let validRows = rows.filter(r => {
+                    const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
+                    if (rankI !== -1) return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
+                    return getVal(r) > 0;
+                });
 
-        metrics.forEach(m => {
-            const vI = cols.findIndex(c => c === m.n);
-            const rankI = cols.findIndex(c => c === m.n + " (RANK)"); // 게임체인저의 (rank) 컬럼 찾기
-            const target = document.getElementById(m.id);
+                const sorted = [...validRows].sort((a,b) => {
+                    const valA = getVal(a); const valB = getVal(b);
+                    return m.asc ? valA - valB : valB - valA;
+                }).slice(0, 5);
 
-            if (vI === -1) {
-                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`;
-                return;
-            }
+                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; return; }
 
-            const getVal = (r) => parseFloat(gv(r, vI)) || 0;
+                sorted.forEach((r, i) => {
+                    let first = gv(r, fNameI).toString().trim();
+                    let last = gv(r, lNameI).toString().trim();
+                    let full = gv(r, playerI).toString().trim();
+                    let name = full || ( (first && last && first!==last) ? first + " " + last : first || last || "Unknown" );
+                    name = name.replace(/null/g, '').trim();
 
-            // [핵심 로직] 게임체인저가 순위(rank)를 매긴 선수만 필터링
-            let validRows = rows.filter(r => {
-                const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                const dataValue = getVal(r);
-                
-                // (rank) 컬럼에 숫자가 써있는 선수만 통과 (규정 이닝/타석 자동 필터)
-                // 만약 (rank) 컬럼이 없는 2026년 데이터라면 데이터가 0보다 큰 경우만 표시
-                if (rankI !== -1) {
-                    return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
-                }
-                return dataValue > 0;
+                    target.innerHTML += `<tr><td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
+                        <td style="text-align: left; padding-left: 4px;"><div class="player-info">
+                        <span class="player-name">${name}</span><span class="player-team">${gv(r, tmI)}</span>
+                        </div></td><td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td></tr>`;
+                });
             });
+        }).catch(e=>{});
+    }
 
-            // 정렬
-            const sorted = [...validRows].sort((a,b) => {
-                const valA = getVal(a); const valB = getVal(b);
-                return m.asc ? valA - valB : valB - valA;
-            }).slice(0, 5);
-
-            if(sorted.length === 0) {
-                target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`;
-                return;
-            }
-
-            sorted.forEach((r, i) => {
-                let name = gv(r, playerI) || (gv(r, fNameI) + " " + gv(r, lNameI)).trim();
-                if (!name || name === "null null") name = gv(r, lNameI) || "Unknown";
-
-                target.innerHTML += `
-                    <tr>
-                        <td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
-                        <td style="text-align: left; padding-left: 4px;">
-                            <div class="player-info">
-                                <span class="player-name" title="${name}">${name}</span>
-                                <span class="player-team">${gv(r, tmI)}</span>
-                            </div>
-                        </td>
-                        <td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td>
-                    </tr>`;
-            });
-        });
-    }).catch(e=>{ console.error(e); });
-}
-
+    // 초기 실행
     changeYear('2026');
 </script>
 </body>
