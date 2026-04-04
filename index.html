@@ -194,20 +194,25 @@
 
     const teamLogos = {
         "Van Avengers": "logos/Van Avengers.png",
+        "Vancouver Avengers": "logos/Van Avengers.png",
         "Van Dragons": "logos/Van Dragons.png",
+        "Vancouver Dragons": "logos/Van Dragons.png",
         "Karis Cubs": "logos/Karis Cubs.png",
+        "Karis-Cubs": "logos/Karis Cubs.png",
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png"
+        "FireBats": "logos/Fire Bats.png",
+        "Van Bros": "logos/Van Bros.png",
+        "Vancouver  Bros 2025": "logos/Van Bros.png"
     };
 
-    // [MOD] Year-dependent Champion Data
+    // [MOD] Champion Data based on 2025 Regular Season (no badges) and Postseason (with badges) results [cite: 1, 2, 3]
     const championData = {
         "2025": {
-            reg1st: "Karis Cubs", 
-            post1st: "Blue Jays",
-            post2nd: "Karis Cubs",
-            post3rd: "Van Avengers"
+            reg1st: "Arirang Rays",
+            post1st: "Arirang Rays",
+            post2nd: "Karis-Cubs",
+            post3rd: "Van Dragons"
         },
         "2026": {
             reg1st: "In Progress",
@@ -219,7 +224,6 @@
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    // [ADD] Update Champions Section
     function updateChampions(year) {
         const section = document.getElementById('season-champions');
         const data = championData[year];
