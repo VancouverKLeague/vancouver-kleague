@@ -36,6 +36,23 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
+        /* 포스트시즌 배지 스타일 (메인용) */
+        .po-badge-sm {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .badge-wc { background-color: #0288d1; }
+        .badge-sf { background-color: #ef6c00; }
+        .badge-final { background-color: #d32f2f; }
+        .badge-3rd { background-color: #607d8b; }
+        .badge-default { background-color: #555; }
+
         /* 공지사항 스타일 */
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
@@ -194,19 +211,14 @@
 
     const teamLogos = {
         "Van Avengers": "logos/Van Avengers.png",
-        "Vancouver Avengers": "logos/Van Avengers.png",
         "Van Dragons": "logos/Van Dragons.png",
-        "Vancouver Dragons": "logos/Van Dragons.png",
         "Karis Cubs": "logos/Karis Cubs.png",
-        "Karis-Cubs": "logos/Karis Cubs.png",
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
-        "FireBats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png",
-        "Vancouver  Bros 2025": "logos/Van Bros.png"
+        "Van Bros": "logos/Van Bros.png"
     };
 
-    // 우승팀 데이터 (2025년 결과 업데이트)
+    // 우승팀 데이터 (Arirang Rays 통합 우승 반영)
     const championData = {
         "2025": {
             reg1st: "Arirang Rays",
@@ -299,11 +311,27 @@
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
 
             const render = (r) => { 
-                const away = gv(r, 3); const home = gv(r, 4);
+                const away = gv(r, 3); 
+                const home = gv(r, 4);
+                const note = gv(r, 6).trim(); // 비고란(배지용)
+                const noteUpper = note.toUpperCase();
+                
+                let badgeHtml = '';
+                if (note) {
+                    let badgeClass = 'badge-default';
+                    if (noteUpper.includes('WILD') || noteUpper.includes('WC') || note.includes('와일드')) badgeClass = 'badge-wc';
+                    else if (noteUpper.includes('SF') || noteUpper.includes('SEMI') || note.includes('준결승')) badgeClass = 'badge-sf';
+                    else if (noteUpper.includes('FINAL') || note.includes('결승')) badgeClass = 'badge-final';
+                    else if (noteUpper.includes('3RD') || note.includes('3-4위')) badgeClass = 'badge-3rd';
+                    
+                    badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
+                }
+
                 tb.innerHTML += `<tr>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 2)}</td>
                     <td style="width:48%; text-align:center;">
+                        ${badgeHtml}
                         <div style="display:flex; justify-content:center; align-items:center; gap:6px; font-weight:bold;">
                             <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px;">원정</span> ${away}</span>
                             <span style="color:#aaa;">vs</span>
