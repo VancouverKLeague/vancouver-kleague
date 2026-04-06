@@ -225,7 +225,8 @@
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
         "FireBats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png"
+        "Van Bros": "logos/Van Bros.png",
+        "Vancouver Bros 2025": "logos/Van Bros.png"
     };
 
     const championData = {
@@ -441,8 +442,13 @@
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
                 let validRows = rows.filter(r => {
                     const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                    if (rankI !== -1) return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
-                    return getVal(r) > 0;
+                    const value = getVal(r);
+
+                    // Skip 0 wins for the Wins category
+                    if (m.n === 'WINS' && value <= 0) return false;
+                    
+                    if (rankI !== -1 && rankValue !== "" && rankValue !== "-" && rankValue !== "0") return true;
+                    return value > 0;
                 });
 
                 const sorted = [...validRows].sort((a,b) => {
