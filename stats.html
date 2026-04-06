@@ -10,26 +10,18 @@
         nav { background: #333; color: #fff; padding: 10px; text-align: center; }
         nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
         .container { padding: 15px; max-width: 1200px; margin: auto; background: #fff; min-height: 100vh; }
-        
-        /* Matching stats_ko.html Controls Panel */
         .controls { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
         .btn-group { display: flex; gap: 2px; }
         select, button, #search-input { padding: 8px 12px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer; }
         button.active { background: #003366; color: white; border-color: #003366; }
         button.inactive { background: white; color: #333; }
-        #search-input { cursor: text; font-weight: normal; }
-
-        /* Table Design */
         .stats-scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
-        
         .player-info-sticky { position: sticky; left: 0; z-index: 5; background-color: #ffffff !important; box-shadow: 2px 0 5px rgba(0,0,0,0.1); width: 180px !important; min-width: 180px; padding-left: 10px !important; }
         th.player-info-sticky { z-index: 11; background-color: #f8f9fa !important; }
-
         td, th { white-space: nowrap; padding: 12px 8px; border: 1px solid #eee; text-align: center; font-size: 0.85rem; }
         th { background: #f8f9fa; cursor: pointer; }
         .val-highlight { color: #d32f2f; font-weight: bold; background-color: #fff9f9; }
-        
         .player-info { display: flex; flex-direction: column; text-align: left; }
         .p-name { font-weight: bold; color: #003366; }
         .p-team { font-size: 0.75rem; color: #888; }
@@ -54,23 +46,19 @@
             <option value="2026" selected>2026 Season</option>
             <option value="2025">2025 Season</option>
         </select>
-
         <div class="btn-group">
             <button id="btn-Reg" class="active" onclick="switchSeason('Reg')">Regular Season</button>
             <button id="btn-Post" class="inactive" onclick="switchSeason('Post')">Post Season</button>
         </div>
-
         <div class="btn-group">
             <button id="btn-Hitter" class="active" onclick="switchCategory('Hitter')">Batting</button>
             <button id="btn-Pitcher" class="inactive" onclick="switchCategory('Pitcher')">Pitching</button>
         </div>
-
-        <input type="text" id="search-input" placeholder="Search player name..." onkeyup="filterTable()">
+        <input type="text" id="search-input" placeholder="Search Player..." onkeyup="filterTable()">
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * <strong>Official Rank</strong>: Qualified players (meeting minimum criteria) are prioritized. (0-win pitchers excluded from rankings)<br>
-        * Click on column headers to sort the stats.
+        * Statistics are sorted by performance (Descending).
     </p>
 
     <div class="stats-scroll-container">
@@ -88,7 +76,6 @@
     let currentCategory = 'Hitter';
     let allData = [];
     let sortColIdx = 0; 
-    let sortOrder = -1; 
 
     function changeYear(y) { currentYear = y; loadData(); }
     function switchSeason(s) {
@@ -100,20 +87,18 @@
     function switchCategory(c) {
         currentCategory = c;
         sortColIdx = 0; 
-        sortOrder = (c === 'Pitcher') ? 1 : -1;
         document.getElementById('btn-Hitter').className = (c === 'Hitter' ? 'active' : 'inactive');
         document.getElementById('btn-Pitcher').className = (c === 'Pitcher' ? 'active' : 'inactive');
         renderTable();
     }
     function changeSort(idx) {
-        if (sortColIdx === idx) { sortOrder *= -1; } 
-        else {
-            sortColIdx = idx;
-            const label = (currentCategory === 'Hitter' ? hCols[idx].id : pCols[idx].id);
-            // Lower is better for ERA, WHIP, and Runs Allowed
-            sortOrder = (label === 'EARNED RUN AVERAGE' || label === 'WALKS HITS INNINGS PITCHED' || label === 'RUNS ALLOWED') ? 1 : -1;
-        }
+        sortColIdx = idx; 
         renderTable();
+    }
+
+    function getOrdinal(n) {
+        let s = ["th", "st", "nd", "rd"], v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
     }
 
     const hCols = [
@@ -134,10 +119,7 @@
     ];
 
     function loadData() {
-        const body = document.getElementById('table-body');
-        body.innerHTML = '<tr><td colspan="10" style="padding:50px;">Loading data...</td></tr>';
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
-        
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
@@ -151,28 +133,16 @@
                     let last = String(gv(getIdx('LAST NAME'))).trim();
                     let full = String(gv(getIdx('PLAYER'))).trim();
                     let name = full || ((first && last && first !== last) ? first + " " + last : first || last || "Unknown");
-                    
                     return {
                         name: name.replace(/null/g, '').trim(),
                         team: gv(getIdx('TEAM')) || 'K-League',
                         isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
-                        hitterStats: hCols.map(c => ({
-                            val: parseFloat(gv(getIdx(c.id))) || 0,
-                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
-                        })),
-                        pitcherStats: pCols.map(c => ({
-                            val: parseFloat(gv(getIdx(c.id))) || 0,
-                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
-                        }))
+                        hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 })),
+                        pitcherStats: pCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 }))
                     };
                 });
                 renderTable();
-            }).catch(e => { body.innerHTML = '<tr><td colspan="10">No records found.</td></tr>'; });
-    }
-
-    function getOrdinal(n) {
-        let s = ["th", "st", "nd", "rd"], v = n % 100;
-        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+            });
     }
 
     function renderTable() {
@@ -187,32 +157,31 @@
         displayData.sort((a, b) => {
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
+            const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
             
-            // Logic: Filter out 0-win pitchers from ranking priority
-            let rankA = itemA.rank; let rankB = itemB.rank;
-            if (currentCategory === 'Pitcher' && pCols[sortColIdx].id === 'WINS') {
-                if (itemA.val <= 0) rankA = 999;
-                if (itemB.val <= 0) rankB = 999;
-            }
+            let rA = itemA.rank; let rB = itemB.rank;
+            if (colId === 'WINS' && itemA.val <= 0) rA = 999;
+            if (colId === 'WINS' && itemB.val <= 0) rB = 999;
 
-            if (rankA !== rankB) return rankA - rankB;
-            return (itemA.val - itemB.val) * sortOrder;
+            if (rA !== rB) return rA - rB;
+            if (colId === 'EARNED RUN AVERAGE' || colId === 'WALKS HITS INNINGS PITCHED' || colId === 'RUNS ALLOWED') {
+                return itemA.val - itemB.val;
+            }
+            return itemB.val - itemA.val;
         });
 
         let headerHtml = `<tr><th class="player-info-sticky">Rank / Player</th>`;
         const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
-            headerHtml += `<th onclick="changeSort(${idx})">${c.label}${sortColIdx === idx ? (sortOrder === 1 ? ' ▲' : ' ▼') : ''}</th>`;
+            headerHtml += `<th onclick="changeSort(${idx})">${c.label}${sortColIdx === idx ? ' ▼' : ''}</th>`;
         });
         head.innerHTML = headerHtml + `</tr>`;
 
         displayData.forEach((d) => {
             const tr = document.createElement('tr');
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
-            let officialRank = stats[sortColIdx].rank;
-            
-            // Hide Rank Tag for 0-win pitchers
-            if (currentCategory === 'Pitcher' && pCols[sortColIdx].id === 'WINS' && stats[sortColIdx].val <= 0) officialRank = 999;
+            const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
+            let officialRank = (colId === 'WINS' && stats[sortColIdx].val <= 0) ? 999 : stats[sortColIdx].rank;
             const rankDisplay = (officialRank !== 999) ? `<span class="rank-tag">${getOrdinal(officialRank)}</span>` : '';
 
             let statsHtml = '';
@@ -220,7 +189,6 @@
                 const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${(activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val}</td>`;
             });
-
             tr.innerHTML = `<td class="player-info-sticky"><div class="player-info"><span class="p-name">${rankDisplay}${d.name}</span><span class="p-team">${d.team}</span></div></td>${statsHtml}`;
             body.appendChild(tr);
         });
