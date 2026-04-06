@@ -58,7 +58,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * 항목 제목을 클릭하면 성적순(내림차순)으로 정렬됩니다.
+        * 항목 제목을 클릭하면 해당 수치 기준으로 정렬됩니다. (수치가 같을 경우 공식 순위 적용)
     </p>
 
     <div class="stats-scroll-container">
@@ -91,10 +91,7 @@
         document.getElementById('btn-Pitcher').className = (c === 'Pitcher' ? 'active' : 'inactive');
         renderTable();
     }
-    function changeSort(idx) {
-        sortColIdx = idx; // 클릭 시 무조건 해당 인덱스로 정렬 (순서 반전 기능 제거)
-        renderTable();
-    }
+    function changeSort(idx) { sortColIdx = idx; renderTable(); }
 
     const hCols = [
         {label: '타율', id: 'BATTING AVERAGE', fix: 3},
@@ -110,7 +107,8 @@
         {label: 'IP', id: 'INNINGS PITCHED', fix: 1},
         {label: '탈삼진', id: 'STRIKEOUTS'},
         {label: '실점', id: 'RUNS ALLOWED'},
-        {label: 'WHIP', id: 'WALKS HITS INNINGS PITCHED', fix: 3}
+        {label: 'WHIP', id: 'WALKS HITS INNINGS PITCHED', fix: 3},
+        {label: '피안타', id: 'HITS ALLOWED'}
     ];
 
     function loadData() {
@@ -133,7 +131,10 @@
                         team: gv(getIdx('TEAM')) || 'K-League',
                         isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
                         hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 })),
-                        pitcherStats: pCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 }))
+                        pitcherStats: pCols.map(c => {
+                            const searchId = (c.id === 'HITS ALLOWED') ? 'HITS' : c.id;
+                            return { val: parseFloat(gv(getIdx(searchId))) || 0, rank: parseInt(gv(getIdx(searchId + " (RANK)"))) || 999 };
+                        })
                     };
                 });
                 renderTable();
@@ -153,19 +154,15 @@
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-            
-            let rA = itemA.rank; let rB = itemB.rank;
-            if (colId === 'WINS' && itemA.val <= 0) rA = 999;
-            if (colId === 'WINS' && itemB.val <= 0) rB = 999;
 
-            if (rA !== rB) return rA - rB;
-
-            // 정렬 로직 수정: ERA, WHIP, R(실점)만 오름차순(낮은순)
-            // IP(이닝), W(승), SO(탈삼진) 등 나머지는 모두 내림차순(높은순)
-            if (colId === 'EARNED RUN AVERAGE' || colId === 'WALKS HITS INNINGS PITCHED' || colId === 'RUNS ALLOWED') {
-                return itemA.val - itemB.val;
+            // 1순위: 값(Value) 비교
+            if (itemA.val !== itemB.val) {
+                const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
+                if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
+                return itemB.val - itemA.val;
             }
-            return itemB.val - itemA.val;
+            // 2순위: 값이 같을 경우 공식 순위(Rank) 참조
+            return itemA.rank - itemB.rank;
         });
 
         let headerHtml = `<tr><th class="player-info-sticky">공식 순위 / 선수명</th>`;
@@ -181,7 +178,6 @@
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
             let officialRank = (colId === 'WINS' && stats[sortColIdx].val <= 0) ? 999 : stats[sortColIdx].rank;
             const rankDisplay = (officialRank !== 999) ? `<span class="rank-tag">${officialRank}위</span>` : '';
-
             let statsHtml = '';
             stats.forEach((s, idx) => {
                 const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
