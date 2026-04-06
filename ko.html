@@ -329,7 +329,7 @@
                 };
             }).filter(item => item !== null);
 
-            // [GameChanger Logic] 승률 > 승수 > 득실차 > 득점 > 실점(최소)
+            // [GameChanger 로직] 승률 > 승수 > 득실차 > 득점 > 최소실점
             standings.sort((a, b) => {
                 if (b.pct !== a.pct) return b.pct - a.pct;
                 if (b.w !== a.w) return b.w - a.w;
@@ -449,8 +449,13 @@
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
                 let validRows = rows.filter(r => {
                     const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                    if (rankI !== -1) return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
-                    return getVal(r) > 0;
+                    const value = getVal(r);
+
+                    // 0승 투수 제외 로직 추가
+                    if (m.n === 'WINS' && value <= 0) return false;
+                    
+                    if (rankI !== -1 && rankValue !== "" && rankValue !== "-" && rankValue !== "0") return true;
+                    return value > 0;
                 });
 
                 const sorted = [...validRows].sort((a,b) => {
