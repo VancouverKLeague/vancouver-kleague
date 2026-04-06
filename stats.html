@@ -58,7 +58,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * Statistics are sorted by performance (Descending).
+        * Click column headers to sort by performance values. (Rankings applied for ties)
     </p>
 
     <div class="stats-scroll-container">
@@ -91,10 +91,7 @@
         document.getElementById('btn-Pitcher').className = (c === 'Pitcher' ? 'active' : 'inactive');
         renderTable();
     }
-    function changeSort(idx) {
-        sortColIdx = idx; 
-        renderTable();
-    }
+    function changeSort(idx) { sortColIdx = idx; renderTable(); }
 
     function getOrdinal(n) {
         let s = ["th", "st", "nd", "rd"], v = n % 100;
@@ -115,7 +112,8 @@
         {label: 'IP', id: 'INNINGS PITCHED', fix: 1},
         {label: 'SO', id: 'STRIKEOUTS'},
         {label: 'R', id: 'RUNS ALLOWED'},
-        {label: 'WHIP', id: 'WALKS HITS INNINGS PITCHED', fix: 3}
+        {label: 'WHIP', id: 'WALKS HITS INNINGS PITCHED', fix: 3},
+        {label: 'H', id: 'HITS ALLOWED'}
     ];
 
     function loadData() {
@@ -138,7 +136,10 @@
                         team: gv(getIdx('TEAM')) || 'K-League',
                         isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
                         hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 })),
-                        pitcherStats: pCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0, rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999 }))
+                        pitcherStats: pCols.map(c => {
+                            const searchId = (c.id === 'HITS ALLOWED') ? 'HITS' : c.id;
+                            return { val: parseFloat(gv(getIdx(searchId))) || 0, rank: parseInt(gv(getIdx(searchId + " (RANK)"))) || 999 };
+                        })
                     };
                 });
                 renderTable();
@@ -158,22 +159,16 @@
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-            
-            let rA = itemA.rank; let rB = itemB.rank;
-            if (colId === 'WINS' && itemA.val <= 0) rA = 999;
-            if (colId === 'WINS' && itemB.val <= 0) rB = 999;
 
-            if (rA !== rB) return rA - rB;
-
-            // Logic: Ascending for ERA, WHIP, Runs Allowed.
-            // Descending for IP (Innings Pitched), Wins, SO, and all Batting stats.
-            if (colId === 'EARNED RUN AVERAGE' || colId === 'WALKS HITS INNINGS PITCHED' || colId === 'RUNS ALLOWED') {
-                return itemA.val - itemB.val;
+            if (itemA.val !== itemB.val) {
+                const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
+                if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
+                return itemB.val - itemA.val;
             }
-            return itemB.val - itemA.val;
+            return itemA.rank - itemB.rank;
         });
-        
-        let headerHtml = `<tr><th class="player-info-sticky">Rank / Player</th>`;
+
+        let headerHtml = `<tr><th class="player-info-sticky">Official Rank / Player</th>`;
         const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
             headerHtml += `<th onclick="changeSort(${idx})">${c.label}${sortColIdx === idx ? ' ▼' : ''}</th>`;
@@ -186,7 +181,6 @@
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
             let officialRank = (colId === 'WINS' && stats[sortColIdx].val <= 0) ? 999 : stats[sortColIdx].rank;
             const rankDisplay = (officialRank !== 999) ? `<span class="rank-tag">${getOrdinal(officialRank)}</span>` : '';
-
             let statsHtml = '';
             stats.forEach((s, idx) => {
                 const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
