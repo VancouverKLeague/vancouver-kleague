@@ -154,14 +154,14 @@
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
             
-            // 랭킹 우선 정렬 (0승 투수 배제 포함)
             let rA = itemA.rank; let rB = itemB.rank;
             if (colId === 'WINS' && itemA.val <= 0) rA = 999;
             if (colId === 'WINS' && itemB.val <= 0) rB = 999;
 
             if (rA !== rB) return rA - rB;
 
-            // 값 정렬: 방어율, WHIP, 실점은 오름차순(낮은순), 나머지는 내림차순
+            // 정렬 로직 수정: ERA, WHIP, R(실점)만 오름차순(낮은순)
+            // IP(이닝), W(승), SO(탈삼진) 등 나머지는 모두 내림차순(높은순)
             if (colId === 'EARNED RUN AVERAGE' || colId === 'WALKS HITS INNINGS PITCHED' || colId === 'RUNS ALLOWED') {
                 return itemA.val - itemB.val;
             }
