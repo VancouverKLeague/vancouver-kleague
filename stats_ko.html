@@ -21,7 +21,7 @@
 
         /* 표 가로 스크롤 및 고정 열 디자인 */
         .stats-scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
         
         .player-info-sticky { position: sticky; left: 0; z-index: 5; background-color: #ffffff !important; box-shadow: 2px 0 5px rgba(0,0,0,0.1); width: 180px !important; min-width: 180px; padding-left: 10px !important; }
         th.player-info-sticky { z-index: 11; background-color: #f8f9fa !important; }
@@ -67,7 +67,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * <strong>공식 순위</strong>: 게임체인저 규정 타석/이닝을 충족한 선수가 상단에 노출됩니다.<br>
+        * <strong>공식 순위</strong>: 게임체인저 규정 타석/이닝을 충족한 선수가 상단에 노출됩니다. (0승 투수는 다승 순위에서 제외)<br>
         * 항목 제목을 클릭하면 정렬 기준이 바뀝니다.
     </p>
 
@@ -114,14 +114,12 @@
             sortOrder *= -1; 
         } else {
             sortColIdx = idx;
-            // 투수 ERA, WHIP, 실점은 오름차순(낮은게 장땡)이 기본
             const label = (currentCategory === 'Hitter' ? hCols[idx].id : pCols[idx].id);
-            sortOrder = (label === 'ERA' || label === 'WHIP' || label === 'R') ? 1 : -1;
+            sortOrder = (label === 'EARNED RUN AVERAGE' || label === 'WALKS HITS INNINGS PITCHED' || label === 'RUNS ALLOWED') ? 1 : -1;
         }
         renderTable();
     }
 
-    // 컬럼 정의 (id는 시트의 원본 헤더 찾기용)
     const hCols = [
         {label: '타율', id: 'BATTING AVERAGE', fix: 3},
         {label: '홈런', id: 'HOME RUNS'},
@@ -151,13 +149,10 @@
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
                 const headers = data.cols.map(col => (col.label || '').toUpperCase().trim());
                 const rows = data.rows;
-
                 const getIdx = (name) => headers.findIndex(h => h === name || h.includes(name));
 
                 allData = rows.map(r => {
                     const gv = (idx) => (idx > -1 && r.c && r.c[idx] && r.c[idx].v !== null) ? r.c[idx].v : '';
-
-                    // 이름 결합 로직
                     let first = String(gv(getIdx('FIRST NAME'))).trim();
                     let last = String(gv(getIdx('LAST NAME'))).trim();
                     let full = String(gv(getIdx('PLAYER'))).trim();
@@ -168,18 +163,14 @@
                         name: name,
                         team: gv(getIdx('TEAM')) || 'K-League',
                         isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
-                        // 타자 데이터 + 각 항목의 순위(Rank) 정보 함께 저장
-                        hitterStats: hCols.map(c => {
-                            const val = parseFloat(gv(getIdx(c.id))) || 0;
-                            const rank = parseInt(gv(getIdx(c.id + " (RANK)"))) || 999;
-                            return { val, rank, label: c.label, fix: c.fix };
-                        }),
-                        // 투수 데이터 + 각 항목의 순위(Rank) 정보 함께 저장
-                        pitcherStats: pCols.map(c => {
-                            const val = parseFloat(gv(getIdx(c.id))) || 0;
-                            const rank = parseInt(gv(getIdx(c.id + " (RANK)"))) || 999;
-                            return { val, rank, label: c.label, fix: c.fix };
-                        })
+                        hitterStats: hCols.map(c => ({
+                            val: parseFloat(gv(getIdx(c.id))) || 0,
+                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
+                        })),
+                        pitcherStats: pCols.map(c => ({
+                            val: parseFloat(gv(getIdx(c.id))) || 0,
+                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
+                        }))
                     };
                 });
                 renderTable();
@@ -196,20 +187,21 @@
         let displayData = [...allData];
         if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.isPitcher);
 
-        // ⭐ 핵심 정렬 로직: 공식 순위(RANK)가 있는 선수를 우선적으로 상단 배치
         displayData.sort((a, b) => {
-            const statsA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx]; // b를 쓰는건 ERA 때문이 아니라 구조상 참조용
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
+            
+            // 0승 투수 순위 배제 로직
+            let rankA = itemA.rank; let rankB = itemB.rank;
+            if (currentCategory === 'Pitcher' && pCols[sortColIdx].id === 'WINS') {
+                if (itemA.val <= 0) rankA = 999;
+                if (itemB.val <= 0) rankB = 999;
+            }
 
-            // 1순위: 공식 랭킹(RANK) 유무 (999는 랭킹 없음 의미)
-            if (itemA.rank !== itemB.rank) return itemA.rank - itemB.rank;
-
-            // 2순위: 랭킹이 같거나 둘 다 없을 경우 성적순 정렬
+            if (rankA !== rankB) return rankA - rankB;
             return (itemA.val - itemB.val) * sortOrder;
         });
 
-        // 헤더 생성
         let headerHtml = `<tr><th class="player-info-sticky">공식 순위 / 선수명</th>`;
         const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
@@ -218,26 +210,27 @@
         });
         head.innerHTML = headerHtml + `</tr>`;
 
-        // 행 생성
-        displayData.forEach((d, i) => {
+        displayData.forEach((d) => {
             const tr = document.createElement('tr');
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
-            const officialRank = stats[sortColIdx].rank;
+            let officialRank = stats[sortColIdx].rank;
+            
+            // 0승 투수는 화면상 순위 태그 표시 안함
+            if (currentCategory === 'Pitcher' && pCols[sortColIdx].id === 'WINS' && stats[sortColIdx].val <= 0) officialRank = 999;
             const rankDisplay = (officialRank !== 999) ? `<span class="rank-tag">${officialRank}위</span>` : '';
 
             let statsHtml = '';
             stats.forEach((s, idx) => {
-                let v = (s.fix !== undefined) ? s.val.toFixed(s.fix) : s.val;
+                const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
+                let v = (activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val;
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${v}</td>`;
             });
 
             tr.innerHTML = `
                 <td class="player-info-sticky">
-                    <div style="display:flex; align-items:center;">
-                        <div class="player-info">
-                            <span class="p-name">${rankDisplay}${d.name}</span>
-                            <span class="p-team">${d.team}</span>
-                        </div>
+                    <div class="player-info">
+                        <span class="p-name">${rankDisplay}${d.name}</span>
+                        <span class="p-team">${d.team}</span>
                     </div>
                 </td>
                 ${statsHtml}
