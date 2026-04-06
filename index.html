@@ -36,17 +36,8 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
-        /* Playoff Badge Style for Main Page */
-        .po-badge-sm {
-            display: inline-block;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
+        /* Playoff Badge Style */
+        .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
         .badge-wc { background-color: #0288d1; }
         .badge-sf { background-color: #ef6c00; }
         .badge-final { background-color: #d32f2f; }
@@ -59,8 +50,8 @@
 
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
-        .table-wrapper table { min-width: 500px; }
-        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.85rem; text-align: center; }
+        .table-wrapper table { min-width: 600px; }
+        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
         th { background: #f8f9fa; }
         
         .val-highlight { color: #d32f2f; font-weight: bold; }
@@ -135,7 +126,23 @@
     <div class="card">
         <h3>🏆 Standings</h3>
         <div class="table-wrapper">
-            <table><thead><tr><th>Rank</th><th>Team</th><th>G</th><th>W</th><th>L</th><th>T</th><th>PCT</th></tr></thead><tbody id="standing-body"></tbody></table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Team</th>
+                        <th>G</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>T</th>
+                        <th>PCT</th>
+                        <th>RS</th>
+                        <th>RA</th>
+                        <th>DIFF</th>
+                    </tr>
+                </thead>
+                <tbody id="standing-body"></tbody>
+            </table>
         </div>
     </div>
 
@@ -211,7 +218,6 @@
 
     const teamLogos = {
         "Van Avengers": "logos/Van Avengers.png",
-        "Vancouver Avengers": "logos/Van Avengers.png",
         "Van Dragons": "logos/Van Dragons.png",
         "Vancouver Dragons": "logos/Van Dragons.png",
         "Karis Cubs": "logos/Karis Cubs.png",
@@ -219,11 +225,9 @@
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
         "FireBats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png",
-        "Vancouver Bros 2025": "logos/Van Bros.png"
+        "Van Bros": "logos/Van Bros.png"
     };
 
-    // Champion Data [cite: 1, 2, 3]
     const championData = {
         "2025": {
             reg1st: "Arirang Rays",
@@ -290,23 +294,63 @@
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Standings(순위)' : `Standings_${currentYear}`;
         const tb = document.getElementById('standing-body');
-        tb.innerHTML = '';
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows; 
-            rows.forEach(r => { 
-                if(gv(r, 1) && !gv(r, 1).includes('Team')) { 
-                    let teamName = gv(r, 1);
-                    let logoPath = teamLogos[teamName];
-                    let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
-                    let tr = '<tr>'; 
-                    for(let i=0; i<7; i++) { 
-                        if (i === 1) tr += `<td style="text-align:left; padding-left:15px; font-weight:bold;">${logoHTML}${teamName}</td>`;
-                        else tr += `<td>${gv(r, i) || '0'}</td>`; 
-                    } 
-                    tb.innerHTML += tr + '</tr>'; 
-                } 
+        tb.innerHTML = '<tr><td colspan="10">Loading...</td></tr>';
+
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
+        .then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const rows = data.rows;
+            
+            let standings = rows.map(r => {
+                const teamName = gv(r, 1);
+                if (!teamName || teamName.includes('Team')) return null;
+
+                const rs = parseInt(gv(r, 7)) || 0;
+                const ra = parseInt(gv(r, 8)) || 0;
+
+                return {
+                    name: teamName,
+                    g: parseInt(gv(r, 2)) || 0,
+                    w: parseInt(gv(r, 3)) || 0,
+                    l: parseInt(gv(r, 4)) || 0,
+                    t: parseInt(gv(r, 5)) || 0,
+                    pct: parseFloat(gv(r, 6)) || 0,
+                    rs: rs,
+                    ra: ra,
+                    diff: rs - ra
+                };
+            }).filter(item => item !== null);
+
+            // [GameChanger Logic] PCT > W > DIFF > RS > RA(min)
+            standings.sort((a, b) => {
+                if (b.pct !== a.pct) return b.pct - a.pct;
+                if (b.w !== a.w) return b.w - a.w;
+                if (b.diff !== a.diff) return b.diff - a.diff;
+                if (b.rs !== a.rs) return b.rs - a.rs;
+                return a.ra - b.ra;
             });
-        }).catch(e=>{});
+
+            tb.innerHTML = '';
+            standings.forEach((s, idx) => {
+                let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(/-/g, ' ')];
+                let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
+                
+                tb.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td style="text-align:left; padding-left:10px; font-weight:bold;">${logoHTML}${s.name}</td>
+                        <td>${s.g}</td>
+                        <td>${s.w}</td>
+                        <td>${s.l}</td>
+                        <td>${s.t}</td>
+                        <td class="val-highlight">${s.pct.toFixed(3)}</td>
+                        <td>${s.rs}</td>
+                        <td>${s.ra}</td>
+                        <td style="font-weight:bold; color:${s.diff >= 0 ? '#003366' : '#d32f2f'};">${s.diff > 0 ? '+' + s.diff : s.diff}</td>
+                    </tr>
+                `;
+            });
+        }).catch(e => { console.error(e); });
     }
 
     function loadSchedule() {
@@ -331,8 +375,7 @@
                     if (noteUpper.includes('WILD') || noteUpper.includes('WC')) badgeClass = 'badge-wc';
                     else if (noteUpper.includes('SF') || noteUpper.includes('SEMI')) badgeClass = 'badge-sf';
                     else if (noteUpper.includes('FINAL')) badgeClass = 'badge-final';
-                    else if (noteUpper.includes('3RD') || noteUpper.includes('4TH')) badgeClass = 'badge-3rd';
-                    
+                    else if (noteUpper.includes('3RD')) badgeClass = 'badge-3rd';
                     badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
                 }
 
@@ -365,7 +408,6 @@
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
-
         let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
 
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
@@ -397,7 +439,6 @@
                 if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-
                 let validRows = rows.filter(r => {
                     const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
                     if (rankI !== -1) return rankValue !== "" && rankValue !== "-" && rankValue !== "0";
