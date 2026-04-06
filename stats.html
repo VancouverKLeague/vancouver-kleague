@@ -164,12 +164,15 @@
             if (colId === 'WINS' && itemB.val <= 0) rB = 999;
 
             if (rA !== rB) return rA - rB;
+
+            // Logic: Ascending for ERA, WHIP, Runs Allowed.
+            // Descending for IP (Innings Pitched), Wins, SO, and all Batting stats.
             if (colId === 'EARNED RUN AVERAGE' || colId === 'WALKS HITS INNINGS PITCHED' || colId === 'RUNS ALLOWED') {
                 return itemA.val - itemB.val;
             }
             return itemB.val - itemA.val;
         });
-
+        
         let headerHtml = `<tr><th class="player-info-sticky">Rank / Player</th>`;
         const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
