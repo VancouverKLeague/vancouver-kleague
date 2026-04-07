@@ -225,8 +225,7 @@
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
         "FireBats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png",
-        "Vancouver Bros 2025": "logos/Van Bros.png"
+        "Van Bros": "logos/Van Bros.png"
     };
 
     const championData = {
@@ -322,7 +321,6 @@
                 };
             }).filter(item => item !== null);
 
-            // [GameChanger Logic] PCT > W > DIFF > RS > RA(min)
             standings.sort((a, b) => {
                 if (b.pct !== a.pct) return b.pct - a.pct;
                 if (b.w !== a.w) return b.w - a.w;
@@ -421,6 +419,7 @@
             const lNameI = fi(['LAST NAME']);
             const playerI = fi(['PLAYER', 'FULL NAME']); 
             const tmI = fi(['TEAM']);
+            const ipIdx = fi(['INNINGS PITCHED']);
 
             const metrics = [
                 {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
@@ -440,15 +439,15 @@
                 if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
+                
                 let validRows = rows.filter(r => {
-                    const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                    const value = getVal(r);
-
-                    // Skip 0 wins for the Wins category
-                    if (m.n === 'WINS' && value <= 0) return false;
-                    
-                    if (rankI !== -1 && rankValue !== "" && rankValue !== "-" && rankValue !== "0") return true;
-                    return value > 0;
+                    const val = getVal(r);
+                    // For ERA/WHIP, check if they have pitched innings
+                    if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') {
+                        return val >= 0 && parseFloat(gv(r, ipIdx)) > 0;
+                    }
+                    // For others (Wins, HR, RBI etc.), must be greater than 0
+                    return val > 0;
                 });
 
                 const sorted = [...validRows].sort((a,b) => {
@@ -456,7 +455,10 @@
                     return m.asc ? valA - valB : valB - valA;
                 }).slice(0, 5);
 
-                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
+                if(sorted.length === 0) { 
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; 
+                    return; 
+                }
 
                 sorted.forEach((r, i) => {
                     let first = gv(r, fNameI).toString().trim();
@@ -474,7 +476,6 @@
         }).catch(e=>{});
     }
 
-    // Initial Load
     changeYear('2026');
 </script>
 </body>
