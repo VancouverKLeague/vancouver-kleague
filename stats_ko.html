@@ -58,7 +58,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * 항목 제목을 클릭하면 수치순으로 정렬됩니다. 기록이 0인 선수는 순위권에서 제외되며, 현재 정렬 순서에 맞춰 순위가 표시됩니다.
+        * 항목 제목을 클릭하면 성적순으로 정렬됩니다. 누적 기록이 0인 선수는 순위권에서 제외됩니다.
     </p>
 
     <div class="stats-scroll-container">
@@ -136,7 +136,7 @@
                         ip: parseFloat(gv(getIdx('INNINGS PITCHED'))) || 0,
                         hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0 })),
                         pitcherStats: pCols.map(c => {
-                            const searchId = (c.id === 'HITS ALLOWED' || c.id === 'H') ? 'HITS' : c.id;
+                            const searchId = (c.id === 'HITS ALLOWED') ? 'HITS' : c.id;
                             return { val: parseFloat(gv(getIdx(searchId))) || 0 };
                         })
                     };
@@ -154,49 +154,52 @@
         let displayData = [...allData];
         if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.ip > 0);
 
-        // 값 기준 정렬 로직
+        const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
+        const colId = activeCols[sortColIdx].id;
+        const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
+
+        // 수치 기준 정렬 로직
         displayData.sort((a, b) => {
-            const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
-            const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
-            const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-            const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
+            const valA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx].val : a.pitcherStats[sortColIdx].val;
+            const valB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx].val : b.pitcherStats[sortColIdx].val;
             
-            if (itemA.val !== itemB.val) {
-                if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
-                return itemB.val - itemA.val;
+            if (valA !== valB) {
+                if (lowIsBetter.includes(colId)) return valA - valB; // 오름차순 (낮은게 장땡)
+                return valB - valA; // 내림차순 (높은게 장땡)
             }
             return 0;
         });
 
         let headerHtml = `<tr><th class="player-info-sticky">순위 / 선수명</th>`;
-        const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
             headerHtml += `<th onclick="changeSort(${idx})">${c.label}${sortColIdx === idx ? ' ▼' : ''}</th>`;
         });
         head.innerHTML = headerHtml + `</tr>`;
 
-        // 동적 순위 부여 변수
         let runningRank = 1;
         displayData.forEach((d) => {
             const tr = document.createElement('tr');
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
-            const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
             const val = stats[sortColIdx].val;
 
-            // 순위 표시 조건: 누적 기록(홈런, 승, 타점 등)은 0보다 커야 함
-            const cumulativeFields = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS', 'HITS ALLOWED'];
+            // 순위 부여 로직
+            const cumulativePositive = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS'];
             
             let rankDisplay = '';
-            if (cumulativeFields.includes(colId)) {
+            if (lowIsBetter.includes(colId)) {
+                // ERA, WHIP, R, 피안타는 0도 훌륭한 성적이므로 무조건 순위 부여
+                rankDisplay = `<span class="rank-tag">${runningRank++}위</span>`;
+            } else if (cumulativePositive.includes(colId)) {
+                // 홈런, 승리 등은 0보다 클 때만 순위 부여
                 if (val > 0) rankDisplay = `<span class="rank-tag">${runningRank++}위</span>`;
             } else {
-                // 타율, 방어율 등 비율 지표는 경기 참여자(필터링됨) 모두에게 순위 부여
+                // 타율, IP 등은 활동 기록이 있으면 부여
                 rankDisplay = `<span class="rank-tag">${runningRank++}위</span>`;
             }
 
             let statsHtml = '';
             stats.forEach((s, idx) => {
-                const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
+                const activeColDef = activeCols[idx];
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${(activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val}</td>`;
             });
 
