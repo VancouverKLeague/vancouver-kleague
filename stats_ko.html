@@ -58,7 +58,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * 항목 제목을 클릭하면 수치순으로 정렬됩니다. (0점인 항목은 순위에서 제외됩니다.)
+        * 항목 제목을 클릭하면 수치순으로 정렬됩니다. 기록이 0인 선수는 순위권에서 제외되며, 현재 정렬 순서에 맞춰 순위가 표시됩니다.
     </p>
 
     <div class="stats-scroll-container">
@@ -112,7 +112,10 @@
     ];
 
     function loadData() {
+        const body = document.getElementById('table-body');
+        body.innerHTML = '<tr><td colspan="10" style="padding:50px;">데이터 로드 중...</td></tr>';
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
@@ -130,17 +133,11 @@
                     return {
                         name: name.replace(/null/g, '').trim(),
                         team: gv(getIdx('TEAM')) || 'K-League',
-                        isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
-                        hitterStats: hCols.map(c => ({
-                            val: parseFloat(gv(getIdx(c.id))) || 0,
-                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
-                        })),
+                        ip: parseFloat(gv(getIdx('INNINGS PITCHED'))) || 0,
+                        hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0 })),
                         pitcherStats: pCols.map(c => {
-                            const searchId = (c.id === 'HITS ALLOWED') ? 'HITS' : c.id;
-                            return {
-                                val: parseFloat(gv(getIdx(searchId))) || 0,
-                                rank: parseInt(gv(getIdx(searchId + " (RANK)"))) || 999
-                            };
+                            const searchId = (c.id === 'HITS ALLOWED' || c.id === 'H') ? 'HITS' : c.id;
+                            return { val: parseFloat(gv(getIdx(searchId))) || 0 };
                         })
                     };
                 });
@@ -155,50 +152,54 @@
         head.innerHTML = ''; body.innerHTML = '';
 
         let displayData = [...allData];
-        if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.isPitcher);
+        if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.ip > 0);
 
+        // 값 기준 정렬 로직
         displayData.sort((a, b) => {
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-
-            // 정렬 로직: 낮을수록 좋은 지표 (방어율, WHIP, 실점, 피안타)
             const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
             
             if (itemA.val !== itemB.val) {
                 if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
                 return itemB.val - itemA.val;
             }
-            return itemA.rank - itemB.rank;
+            return 0;
         });
 
-        let headerHtml = `<tr><th class="player-info-sticky">공식 순위 / 선수명</th>`;
+        let headerHtml = `<tr><th class="player-info-sticky">순위 / 선수명</th>`;
         const activeCols = currentCategory === 'Hitter' ? hCols : pCols;
         activeCols.forEach((c, idx) => {
             headerHtml += `<th onclick="changeSort(${idx})">${c.label}${sortColIdx === idx ? ' ▼' : ''}</th>`;
         });
         head.innerHTML = headerHtml + `</tr>`;
 
+        // 동적 순위 부여 변수
+        let runningRank = 1;
         displayData.forEach((d) => {
             const tr = document.createElement('tr');
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-            const currentVal = stats[sortColIdx].val;
+            const val = stats[sortColIdx].val;
 
-            // 제외 로직: 누적 기록(홈런, 타점, 승, 탈삼진, 안타 등)이 0이면 순위 숨김
-            const cumulativeFields = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS'];
-            let shouldShowRank = stats[sortColIdx].rank !== 999;
+            // 순위 표시 조건: 누적 기록(홈런, 승, 타점 등)은 0보다 커야 함
+            const cumulativeFields = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS', 'HITS ALLOWED'];
             
-            if (cumulativeFields.includes(colId) && currentVal <= 0) shouldShowRank = false;
-            if (currentCategory === 'Pitcher' && !d.isPitcher) shouldShowRank = false;
-
-            const rankDisplay = shouldShowRank ? `<span class="rank-tag">${stats[sortColIdx].rank}위</span>` : '';
+            let rankDisplay = '';
+            if (cumulativeFields.includes(colId)) {
+                if (val > 0) rankDisplay = `<span class="rank-tag">${runningRank++}위</span>`;
+            } else {
+                // 타율, 방어율 등 비율 지표는 경기 참여자(필터링됨) 모두에게 순위 부여
+                rankDisplay = `<span class="rank-tag">${runningRank++}위</span>`;
+            }
 
             let statsHtml = '';
             stats.forEach((s, idx) => {
                 const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${(activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val}</td>`;
             });
+
             tr.innerHTML = `<td class="player-info-sticky"><div class="player-info"><span class="p-name">${rankDisplay}${d.name}</span><span class="p-team">${d.team}</span></div></td>${statsHtml}`;
             body.appendChild(tr);
         });
@@ -208,8 +209,11 @@
         const input = document.getElementById('search-input').value.toUpperCase();
         const rows = document.getElementById('table-body').getElementsByTagName('tr');
         for (let i = 0; i < rows.length; i++) {
-            const txt = rows[i].querySelector('.p-name').textContent || rows[i].querySelector('.p-name').innerText;
-            rows[i].style.display = txt.toUpperCase().includes(input) ? "" : "none";
+            const nameCell = rows[i].querySelector('.p-name');
+            if (nameCell) {
+                const txt = nameCell.textContent || nameCell.innerText;
+                rows[i].style.display = txt.toUpperCase().includes(input) ? "" : "none";
+            }
         }
     }
     loadData();
