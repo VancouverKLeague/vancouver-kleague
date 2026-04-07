@@ -58,7 +58,7 @@
     </div>
 
     <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">
-        * Statistics are sorted by value. Players with 0 records (HR, Wins, etc.) are excluded from rankings.
+        * Players with 0 records in selected category are excluded from rankings. Rankings are updated based on the current sorted view.
     </p>
 
     <div class="stats-scroll-container">
@@ -117,7 +117,10 @@
     ];
 
     function loadData() {
+        const body = document.getElementById('table-body');
+        body.innerHTML = '<tr><td colspan="10" style="padding:50px;">Loading data...</td></tr>';
         const sheetName = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
             .then(r => r.text()).then(d => {
                 const data = JSON.parse(d.substr(47).slice(0, -2)).table;
@@ -135,17 +138,11 @@
                     return {
                         name: name.replace(/null/g, '').trim(),
                         team: gv(getIdx('TEAM')) || 'K-League',
-                        isPitcher: parseFloat(gv(getIdx('INNINGS PITCHED'))) > 0,
-                        hitterStats: hCols.map(c => ({
-                            val: parseFloat(gv(getIdx(c.id))) || 0,
-                            rank: parseInt(gv(getIdx(c.id + " (RANK)"))) || 999
-                        })),
+                        ip: parseFloat(gv(getIdx('INNINGS PITCHED'))) || 0,
+                        hitterStats: hCols.map(c => ({ val: parseFloat(gv(getIdx(c.id))) || 0 })),
                         pitcherStats: pCols.map(c => {
-                            const searchId = (c.id === 'HITS ALLOWED') ? 'HITS' : c.id;
-                            return {
-                                val: parseFloat(gv(getIdx(searchId))) || 0,
-                                rank: parseInt(gv(getIdx(searchId + " (RANK)"))) || 999
-                            };
+                            const searchId = (c.id === 'HITS ALLOWED' || c.id === 'H') ? 'HITS' : c.id;
+                            return { val: parseFloat(gv(getIdx(searchId))) || 0 };
                         })
                     };
                 });
@@ -160,21 +157,17 @@
         head.innerHTML = ''; body.innerHTML = '';
 
         let displayData = [...allData];
-        if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.isPitcher);
+        if (currentCategory === 'Pitcher') displayData = displayData.filter(d => d.ip > 0);
 
+        // Sorting by actual value
         displayData.sort((a, b) => {
             const itemA = currentCategory === 'Hitter' ? a.hitterStats[sortColIdx] : a.pitcherStats[sortColIdx];
             const itemB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx] : b.pitcherStats[sortColIdx];
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-
-            // Sorting Logic: Ascending for ERA, WHIP, Runs Allowed, Hits Allowed. Others Descending.
             const lowIsBetter = ['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'RUNS ALLOWED', 'HITS ALLOWED'];
             
-            if (itemA.val !== itemB.val) {
-                if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
-                return itemB.val - itemA.val;
-            }
-            return itemA.rank - itemB.rank;
+            if (lowIsBetter.includes(colId)) return itemA.val - itemB.val;
+            return itemB.val - itemA.val;
         });
 
         let headerHtml = `<tr><th class="player-info-sticky">Rank / Player</th>`;
@@ -184,28 +177,33 @@
         });
         head.innerHTML = headerHtml + `</tr>`;
 
+        // Dynamic ranking logic
+        let runningRank = 1;
         displayData.forEach((d) => {
             const tr = document.createElement('tr');
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
             const colId = currentCategory === 'Hitter' ? hCols[sortColIdx].id : pCols[sortColIdx].id;
-            const currentVal = stats[sortColIdx].val;
+            const val = stats[sortColIdx].val;
 
-            // Exclusion Logic: If cumulative stats (HR, RBI, W, SO, H, etc.) are 0, hide rank.
-            // ERA/WHIP/R/H for pitchers: hide if 0 unless they actually played (IP > 0).
-            const cumulativeFields = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS'];
-            let shouldShowRank = stats[sortColIdx].rank !== 999;
+            // Define who gets a rank tag:
+            // Cumulative stats like HR, Wins, SO, H, RBI must be > 0.
+            // Percentage/Ratio stats like ERA, AVG, WHIP, OBP, OPS must have played (d.ip > 0 or d.hitterStats exists).
+            const cumulativeFields = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS', 'HITS ALLOWED'];
             
-            if (cumulativeFields.includes(colId) && currentVal <= 0) shouldShowRank = false;
-            // Additional check for 0-inning pitchers
-            if (currentCategory === 'Pitcher' && !d.isPitcher) shouldShowRank = false;
-
-            const rankDisplay = shouldShowRank ? `<span class="rank-tag">${getOrdinal(stats[sortColIdx].rank)}</span>` : '';
+            let rankDisplay = '';
+            if (cumulativeFields.includes(colId)) {
+                if (val > 0) rankDisplay = `<span class="rank-tag">${getOrdinal(runningRank++)}</span>`;
+            } else {
+                // For ERA, AVG, etc., show rank if they have played
+                rankDisplay = `<span class="rank-tag">${getOrdinal(runningRank++)}</span>`;
+            }
 
             let statsHtml = '';
             stats.forEach((s, idx) => {
                 const activeColDef = currentCategory === 'Hitter' ? hCols[idx] : pCols[idx];
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${(activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val}</td>`;
             });
+
             tr.innerHTML = `<td class="player-info-sticky"><div class="player-info"><span class="p-name">${rankDisplay}${d.name}</span><span class="p-team">${d.team}</span></div></td>${statsHtml}`;
             body.appendChild(tr);
         });
@@ -215,8 +213,11 @@
         const input = document.getElementById('search-input').value.toUpperCase();
         const rows = document.getElementById('table-body').getElementsByTagName('tr');
         for (let i = 0; i < rows.length; i++) {
-            const txt = rows[i].querySelector('.p-name').textContent || rows[i].querySelector('.p-name').innerText;
-            rows[i].style.display = txt.toUpperCase().includes(input) ? "" : "none";
+            const nameCell = rows[i].querySelector('.p-name');
+            if (nameCell) {
+                const txt = nameCell.textContent || nameCell.innerText;
+                rows[i].style.display = txt.toUpperCase().includes(input) ? "" : "none";
+            }
         }
     }
     loadData();
