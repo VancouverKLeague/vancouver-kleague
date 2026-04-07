@@ -329,7 +329,6 @@
                 };
             }).filter(item => item !== null);
 
-            // [GameChanger 로직] 승률 > 승수 > 득실차 > 득점 > 최소실점
             standings.sort((a, b) => {
                 if (b.pct !== a.pct) return b.pct - a.pct;
                 if (b.w !== a.w) return b.w - a.w;
@@ -447,15 +446,19 @@
                 if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; return; }
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
+                
+                // [핵심 수정] 수치가 0 이하인 선수는 순위에서 배제 (방어율/WHIP 제외)
                 let validRows = rows.filter(r => {
+                    const val = getVal(r);
                     const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                    const value = getVal(r);
-
-                    // 0승 투수 제외 로직 추가
-                    if (m.n === 'WINS' && value <= 0) return false;
                     
-                    if (rankI !== -1 && rankValue !== "" && rankValue !== "-" && rankValue !== "0") return true;
-                    return value > 0;
+                    // 방어율(ERA)과 WHIP은 수치가 낮아야 하므로 0보다 큰 기록이 있는지 확인
+                    if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') {
+                        return val >= 0 && gv(r, fi(['INNINGS PITCHED'])) > 0; 
+                    }
+                    
+                    // 다승, 홈런, 타점 등은 무조건 0보다 커야 함
+                    return val > 0;
                 });
 
                 const sorted = [...validRows].sort((a,b) => {
@@ -463,7 +466,10 @@
                     return m.asc ? valA - valB : valB - valA;
                 }).slice(0, 5);
 
-                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; return; }
+                if(sorted.length === 0) { 
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; 
+                    return; 
+                }
 
                 sorted.forEach((r, i) => {
                     let first = gv(r, fNameI).toString().trim();
@@ -481,7 +487,6 @@
         }).catch(e=>{});
     }
 
-    // 초기 실행
     changeYear('2026');
 </script>
 </body>
