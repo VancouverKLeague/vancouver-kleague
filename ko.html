@@ -4,30 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밴쿠버 K-리그 | 홈</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Roboto+Condensed:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
+        .lang-switch { position: absolute; top: 10px; right: 20px; }
+        .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
+        nav { background: #333; color: #fff; padding: 10px; text-align: center; }
+        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
+        .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
+        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
+        
+        /* 우승팀 정보 섹션 스타일 */
+        .champions-container {
+            background: #fff;
+            border: 2px solid #003366;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; }
+        .champion-box { margin: 5px; padding: 10px; border-radius: 8px; display: inline-block; min-width: 130px; vertical-align: top; }
+        .champion-box .label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #666; }
+        .champion-box .team-name { font-size: 1rem; font-weight: 900; color: #003366; }
+
+        .gold { background: #fff9e6; border: 1px solid #ffd700; }
+        .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
+        .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
+        .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
+        .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+        /* 포스트시즌 배지 스타일 (메인용) */
+        .po-badge-sm {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .badge-wc { background-color: #0288d1; }
+        .badge-sf { background-color: #ef6c00; }
+        .badge-final { background-color: #d32f2f; }
+        .badge-3rd { background-color: #607d8b; }
+        .badge-default { background-color: #555; }
+
+        /* 공지사항 스타일 */
+        #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
+        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
+        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
+
+        .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        .table-wrapper table { min-width: 600px; }
+        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
+        th { background: #f8f9fa; }
+        
+        .val-highlight { color: #d32f2f; font-weight: bold; }
+        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
+        footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+        
+        .toggle-container { text-align: right; margin-bottom: 10px; }
+        .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
+        .active { background: #003366; color: white; }
+        .inactive { background: #eee; color: #333; }
+      
+        .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
+        .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .leader-table td { padding: 8px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .player-info { display: flex; flex-direction: column; overflow: hidden; }
+        .player-name { font-weight: bold; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .player-team { font-size: 0.65rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
 </head>
 <body>
 
 <header>
     <div class="lang-switch"><a href="ko.html">KO</a> | <a href="index.html">EN</a></div>
-    <h1>VANCOUVER K-LEAGUE</h1>
+    <h1>밴쿠버 K-리그</h1>
     <p>캐나다 밴쿠버 한인 사회인 야구 리그</p>
 </header>
 
 <nav>
-    <div class="nav-container">
-        <a href="ko.html">홈</a> 
-        <a href="schedule_ko.html">전체 일정</a> 
-        <a href="stats_ko.html">기록실</a>
-    </div>
+    <a href="ko.html">홈</a> 
+    <a href="schedule_ko.html">전체 일정</a> 
+    <a href="stats_ko.html">기록실</a>
 </nav>
 
-<div class="season-ctrl">
-    <label for="season-select" style="font-weight: 800; margin-right: 10px; font-size: 0.9rem;">시즌 선택</label>
-    <select id="season-select" onchange="changeYear(this.value)">
-        <option value="2026" selected>2026 SEASON</option>
-        <option value="2025">2025 SEASON</option>
+<div style="background: #eee; padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+    <label for="season-select" style="font-weight: bold; margin-right: 10px;">시즌 선택:</label>
+    <select id="season-select" onchange="changeYear(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer;">
+        <option value="2026" selected>2026 시즌</option>
+        <option value="2025">2025 시즌</option>
     </select>
 </div>
 
@@ -38,31 +111,44 @@
             <span class="label">👑 포스트시즌 우승</span>
             <span id="p-post-1st" class="team-name">-</span>
         </div>
-        <div class="champion-box gold">
-            <span class="label">🥇 정규리그 1위</span>
-            <span id="p-reg-1st" class="team-name">-</span>
-        </div>
-        <div class="champion-box">
-            <span class="label">🥈 최종 2위</span>
-            <span id="p-post-2nd" class="team-name">-</span>
+        <div class="rank-boxes">
+            <div class="champion-box gold">
+                <span class="label">🥇 정규리그 1위</span>
+                <span id="p-reg-1st" class="team-name">-</span>
+            </div>
+            <div class="champion-box silver">
+                <span class="label">🥈 최종 2위</span>
+                <span id="p-post-2nd" class="team-name">-</span>
+            </div>
+            <div class="champion-box bronze">
+                <span class="label">🥉 최종 3위</span>
+                <span id="p-post-3rd" class="team-name">-</span>
+            </div>
         </div>
     </div>
 
     <div class="card" id="notice-card" style="display: none;">
-        <h3>📢 공지사항</h3>
-        <div id="notice-content" style="font-weight: 600; color: #444;"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 리그 규정집 보기</a>
+        <h3>📢 공지사항 (Notice)</h3>
+        <div id="notice-content"></div>
+        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 2026 리그 규정집 보기</a>
     </div>
 
     <div class="card">
-        <h3>🏆 리그 순위 (STANDINGS)</h3>
+        <h3>🏆 리그 순위 (Standings)</h3>
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
                         <th>순위</th>
-                        <th style="text-align:left; padding-left:10px;">팀명</th>
-                        <th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th><th>득실차</th>
+                        <th>팀명</th>
+                        <th>경기</th>
+                        <th>승</th>
+                        <th>패</th>
+                        <th>무</th>
+                        <th>승률</th>
+                        <th>득점</th>
+                        <th>실점</th>
+                        <th>득실차</th>
                     </tr>
                 </thead>
                 <tbody id="standing-body"></tbody>
@@ -70,161 +156,337 @@
         </div>
     </div>
 
-    <div class="card" style="border-top: 5px solid var(--accent-gold);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3>🔥 부문별 TOP 5</h3>
-            <div class="toggle-container">
-                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 8px 0 0 8px;">정규시즌</button>
-                <button id="btn-Post" class="toggle-btn" onclick="switchSeason('Post')" style="border-radius: 0 8px 8px 0;">포스트시즌</button>
+    <div class="card" style="border-top: 4px solid #17a2b8;">
+        <h3>📍 구장 정보 및 날씨</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div>
+                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
+                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+                <a href="https://maps.app.goo.gl/rS94B3sR3q8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Queen's Stadium (뉴웨스트)</a>
+                <a href="https://maps.app.goo.gl/3fFz8F6R9f8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🏟️ Blundell South (리치몬드)</a>
+                <a href="https://maps.app.goo.gl/2fFz8F6R9f8zX8K96" target="_blank" class="btn-field" style="margin: 0; padding: 12px;">🌳 Central Park (버나비)</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>⚾ 최근 결과 및 예정 경기</h3>
+        <div class="table-wrapper">
+            <table><thead><tr><th>날짜 및 시간</th><th>구장</th><th>대진</th><th>결과</th></tr></thead><tbody id="schedule-body"></tbody></table>
+        </div>
+        <a href="schedule_ko.html" class="btn-more">시즌 전체 일정 보기 →</a>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #ffc107;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>🔥 부문별 순위 (TOP 5)</h3>
+            <div class="toggle-container" style="margin-bottom: 0;">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규시즌</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트시즌</button>
             </div>
         </div>
         
-        <h4 style="color: var(--primary-blue); font-weight: 900; margin-bottom: 10px; border-left: 4px solid var(--primary-blue); padding-left: 10px;">타자 부문 (BATTING)</h4>
+        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">타자 부문 (Batting)</h4>
         <div class="leader-grid">
-            <div class="leader-box"><h4>타율 (AVG)</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>홈런 (HR)</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>타점 (RBI)</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">타율 (AVG)</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">홈런 (HR)</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">타점 (RBI)</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
-        <h4 style="color: #15803D; font-weight: 900; margin-top: 30px; margin-bottom: 10px; border-left: 4px solid #15803D; padding-left: 10px;">투수 부문 (PITCHING)</h4>
+        <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">투수 부문 (Pitching)</h4>
         <div class="leader-grid">
-            <div class="leader-box"><h4>평균자책점 (ERA)</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>다승 (W)</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>탈삼진 (SO)</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
-            <div class="leader-box"><h4>WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">평균자책점 (ERA)</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">다승 (W)</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">탈삼진 (SO)</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="margin:0 0 5px 0; font-size:0.85rem; background:#f8f9fa; padding:5px; border-radius:5px; text-align:center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
         </div>
-        <a href="stats_ko.html" class="btn-more">리그 전체 기록 데이터 보기 →</a>
+        <a href="stats_ko.html" class="btn-more" style="background: #444; margin-top: 20px;">선수 전체 기록 보기 →</a>
+    </div>
+
+    <div class="card" style="border-top: 4px solid #333; text-align: center;">
+        <h3>⚾ 참여 팀</h3>
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; padding: 15px 0;">
+            <img src="logos/Arirang Rays.png" alt="Arirang Rays" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Avengers.png" alt="Van Avengers" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Bros.png" alt="Van Bros" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Karis Cubs.png" alt="Karis Cubs" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Van Dragons.png" alt="Van Dragons" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="logos/Fire Bats.png" alt="Fire Bats" style="width: 60px; height: 60px; object-fit: contain;">
+        </div>
     </div>
 </div>
 
-<footer><p>© 2026 VANCOUVER K-LEAGUE. ALL RIGHTS RESERVED.</p></footer>
+<footer><p>© 2026 Vancouver K-League. All Rights Reserved.</p></footer>
 
 <script>
-    /* Javascript 로직 동일 */
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    let currentYear = '2026';
-    let currentSeason = 'Reg';
+    let currentYear = '2026'; 
+    let currentSeason = 'Reg'; 
 
     const teamLogos = {
-        "Arirang Rays": "logos/Arirang Rays.png",
         "Van Avengers": "logos/Van Avengers.png",
-        "Van Bros": "logos/Van Bros.png",
-        "Karis Cubs": "logos/Karis Cubs.png",
         "Van Dragons": "logos/Van Dragons.png",
-        "Fire Bats": "logos/Fire Bats.png"
+        "Vancouver Dragons": "logos/Van Dragons.png",
+        "Karis Cubs": "logos/Karis Cubs.png",
+        "Karis-Cubs": "logos/Karis Cubs.png",
+        "Arirang Rays": "logos/Arirang Rays.png",
+        "Fire Bats": "logos/Fire Bats.png",
+        "FireBats": "logos/Fire Bats.png",
+        "Van Bros": "logos/Van Bros.png",
+        "Vancouver Bros 2025": "logos/Van Bros.png"
     };
 
     const championData = {
-        "2025": { reg1st: "Arirang Rays", post1st: "Arirang Rays", post2nd: "Karis Cubs" },
-        "2026": { reg1st: "진행 중", post1st: "진행 중", post2nd: "-" }
+        "2025": {
+            reg1st: "Arirang Rays",
+            post1st: "Arirang Rays",
+            post2nd: "Karis-Cubs",
+            post3rd: "Van Dragons"
+        },
+        "2026": {
+            reg1st: "진행 중",
+            post1st: "진행 중",
+            post2nd: "-",
+            post3rd: "-"
+        }
     };
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    function changeYear(y) {
-        currentYear = y;
-        const data = championData[y];
-        if(data) {
-            document.getElementById('season-champions').style.display = 'block';
+    function updateChampions(year) {
+        const section = document.getElementById('season-champions');
+        const data = championData[year];
+        if (data) {
+            section.style.display = 'block';
             document.getElementById('p-reg-1st').innerText = data.reg1st;
             document.getElementById('p-post-1st').innerText = data.post1st;
             document.getElementById('p-post-2nd').innerText = data.post2nd;
-        } else { document.getElementById('season-champions').style.display = 'none'; }
+            document.getElementById('p-post-3rd').innerText = data.post3rd;
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function changeYear(year) {
+        currentYear = year;
+        updateChampions(year);
         loadNotice(); loadStandings(); loadSchedule(); loadStats();
     }
 
     function switchSeason(s) {
         currentSeason = s;
-        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : '');
-        document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : '');
+        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : 'inactive');
+        document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : 'inactive');
         loadStats();
     }
 
     function loadNotice() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-            if(data && gv(data, 0).trim() !== '') {
-                document.getElementById('notice-card').style.display = 'block';
+            const noticeCard = document.getElementById('notice-card');
+            if(data && data.c[0] && gv(data, 0).trim() !== '') { 
+                noticeCard.style.display = 'block'; 
                 document.getElementById('notice-content').innerText = gv(data, 0);
-                if(gv(data, 2)) {
-                    document.getElementById('rulebook-link').style.display = 'inline-block';
-                    document.getElementById('rulebook-link').href = gv(data, 2);
+                if(gv(data, 2)) { 
+                    const rbLink = document.getElementById('rulebook-link');
+                    rbLink.href = gv(data, 2);
+                    rbLink.style.display = 'inline-block';
                 }
-            } else { document.getElementById('notice-card').style.display = 'none'; }
-        });
+            } else { noticeCard.style.display = 'none'; }
+        }).catch(e=>{});
     }
 
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Standings(순위)' : `Standings_${currentYear}`;
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
+        const tb = document.getElementById('standing-body');
+        tb.innerHTML = '<tr><td colspan="10">데이터 로드 중...</td></tr>';
+
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
+        .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const tb = document.getElementById('standing-body');
-            tb.innerHTML = '';
-            data.rows.forEach((r, i) => {
-                const name = gv(r, 1);
-                if(!name || name.includes('Team')) return;
-                const logo = teamLogos[name] ? `<img src="${teamLogos[name]}" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;">` : '';
-                const diff = parseInt(gv(r, 7)) - parseInt(gv(r, 8)) || 0;
-                tb.innerHTML += `<tr>
-                    <td>${i+1}</td>
-                    <td style="text-align:left; font-weight:800; color:var(--primary-blue);">${logo}${name}</td>
-                    <td>${gv(r, 2)}</td><td>${gv(r, 3)}</td><td>${gv(r, 4)}</td><td>${gv(r, 5)}</td>
-                    <td class="val-highlight">${(parseFloat(gv(r, 6)) || 0).toFixed(3)}</td>
-                    <td style="font-weight:bold; color:${diff >= 0 ? '#1E40AF' : '#E11D48'}">${diff > 0 ? '+' + diff : diff}</td>
-                </tr>`;
+            const rows = data.rows;
+            
+            let standings = rows.map(r => {
+                const teamName = gv(r, 1);
+                if (!teamName || teamName.includes('Team')) return null;
+
+                const rs = parseInt(gv(r, 7)) || 0;
+                const ra = parseInt(gv(r, 8)) || 0;
+
+                return {
+                    name: teamName,
+                    g: parseInt(gv(r, 2)) || 0,
+                    w: parseInt(gv(r, 3)) || 0,
+                    l: parseInt(gv(r, 4)) || 0,
+                    t: parseInt(gv(r, 5)) || 0,
+                    pct: parseFloat(gv(r, 6)) || 0,
+                    rs: rs,
+                    ra: ra,
+                    diff: rs - ra
+                };
+            }).filter(item => item !== null);
+
+            standings.sort((a, b) => {
+                if (b.pct !== a.pct) return b.pct - a.pct;
+                if (b.w !== a.w) return b.w - a.w;
+                if (b.diff !== a.diff) return b.diff - a.diff;
+                if (b.rs !== a.rs) return b.rs - a.rs;
+                return a.ra - b.ra;
             });
-        });
+
+            tb.innerHTML = '';
+            standings.forEach((s, idx) => {
+                let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(/-/g, ' ')];
+                let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
+                
+                tb.innerHTML += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td style="text-align:left; padding-left:10px; font-weight:bold;">${logoHTML}${s.name}</td>
+                        <td>${s.g}</td>
+                        <td>${s.w}</td>
+                        <td>${s.l}</td>
+                        <td>${s.t}</td>
+                        <td class="val-highlight">${s.pct.toFixed(3)}</td>
+                        <td>${s.rs}</td>
+                        <td>${s.ra}</td>
+                        <td style="font-weight:bold; color:${s.diff >= 0 ? '#003366' : '#d32f2f'};">${s.diff > 0 ? '+' + s.diff : s.diff}</td>
+                    </tr>
+                `;
+            });
+        }).catch(e => { console.error(e); });
+    }
+
+    function loadSchedule() {
+        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
+        const tb = document.getElementById('schedule-body');
+        tb.innerHTML = '';
+
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
+            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
+            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA' && gv(r, 5).includes(':'));
+            const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
+
+            const render = (r) => { 
+                const away = gv(r, 3); 
+                const home = gv(r, 4);
+                const note = gv(r, 6).trim(); 
+                const noteUpper = note.toUpperCase();
+                
+                let badgeHtml = '';
+                if (note) {
+                    let badgeClass = 'badge-default';
+                    if (noteUpper.includes('WILD') || noteUpper.includes('WC') || note.includes('와일드')) badgeClass = 'badge-wc';
+                    else if (noteUpper.includes('SF') || noteUpper.includes('SEMI') || note.includes('준결승')) badgeClass = 'badge-sf';
+                    else if (noteUpper.includes('FINAL') || note.includes('결승')) badgeClass = 'badge-final';
+                    else if (noteUpper.includes('3RD') || note.includes('3-4위')) badgeClass = 'badge-3rd';
+                    badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
+                }
+
+                tb.innerHTML += `<tr>
+                    <td style="width:20%; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td>
+                    <td style="width:20%; font-size:0.75rem;">${gv(r, 2)}</td>
+                    <td style="width:48%; text-align:center;">
+                        ${badgeHtml}
+                        <div style="display:flex; justify-content:center; align-items:center; gap:6px; font-weight:bold;">
+                            <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px;">원정</span> ${away}</span>
+                            <span style="color:#aaa;">vs</span>
+                            <span><span style="font-size:0.65rem; font-weight:normal; color:#d32f2f; border:1px solid #d32f2f; border-radius:3px; padding:1px 3px;">홈</span> ${home}</span>
+                        </div>
+                    </td>
+                    <td class="val-highlight" style="width:12%;">${gv(r, 5) || '-'}</td>
+                </tr>`; 
+            };
+
+            if (currentYear === '2026') {
+                if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
+                if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
+            } else {
+                const lastGames = played.slice(-3);
+                if (lastGames.length > 0) lastGames.forEach(render);
+                else tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">기록이 없습니다.</td></tr>';
+            }
+        }).catch(e=>{});
     }
 
     function loadStats() {
-        const metrics = [
-            {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
-            {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
-            {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
-            {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
-            {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
-            {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
-            {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
-            {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
-        ];
-
+        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
+        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
         let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const rows = data.rows; 
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-            const ipI = cols.findIndex(c => c === 'INNINGS PITCHED');
+            const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
+
+            const fNameI = fi(['FIRST NAME']);
+            const lNameI = fi(['LAST NAME']);
+            const playerI = fi(['PLAYER', 'FULL NAME']); 
+            const tmI = fi(['TEAM']);
+
+            const metrics = [
+                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
+                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
+                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
+                {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
+                {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
+                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
+            ];
 
             metrics.forEach(m => {
-                const target = document.getElementById(m.id);
                 const vI = cols.findIndex(c => c === m.n);
-                const pI = cols.findIndex(c => c === 'PLAYER');
-                const tmI = cols.findIndex(c => c === 'TEAM');
+                const rankI = cols.findIndex(c => c === m.n + " (RANK)");
+                const target = document.getElementById(m.id);
+                if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; return; }
 
-                if (vI === -1) { target.innerHTML = '<tr><td>기록 없음</td></tr>'; return; }
-
-                let validRows = data.rows.filter(r => {
-                    const val = parseFloat(gv(r, vI)) || 0;
-                    if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') return (parseFloat(gv(r, ipI)) || 0) > 0;
+                const getVal = (r) => parseFloat(gv(r, vI)) || 0;
+                
+                // [핵심 수정] 수치가 0 이하인 선수는 순위에서 배제 (방어율/WHIP 제외)
+                let validRows = rows.filter(r => {
+                    const val = getVal(r);
+                    const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
+                    
+                    // 방어율(ERA)과 WHIP은 수치가 낮아야 하므로 0보다 큰 기록이 있는지 확인
+                    if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') {
+                        return val >= 0 && gv(r, fi(['INNINGS PITCHED'])) > 0; 
+                    }
+                    
+                    // 다승, 홈런, 타점 등은 무조건 0보다 커야 함
                     return val > 0;
                 });
 
-                const sorted = validRows.sort((a,b) => {
-                    const vA = parseFloat(gv(a, vI)) || 0; const vB = parseFloat(gv(b, vI)) || 0;
-                    return m.asc ? vA - vB : vB - vA;
+                const sorted = [...validRows].sort((a,b) => {
+                    const valA = getVal(a); const valB = getVal(b);
+                    return m.asc ? valA - valB : valB - valA;
                 }).slice(0, 5);
 
-                target.innerHTML = sorted.length ? '' : '<tr><td style="color:#999;font-size:0.75rem;">기록 없음</td></tr>';
+                if(sorted.length === 0) { 
+                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">기록이 없습니다.</td></tr>`; 
+                    return; 
+                }
+
                 sorted.forEach((r, i) => {
-                    target.innerHTML += `<tr>
-                        <td style="font-weight:900;color:#94A3B8;width:20px;">${i+1}</td>
-                        <td style="text-align:left;"><div class="player-info"><span class="player-name">${gv(r, pI)}</span><span class="player-team">${gv(r, tmI)}</span></div></td>
-                        <td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vI)) || 0).toFixed(m.d)}</td>
-                    </tr>`;
+                    let first = gv(r, fNameI).toString().trim();
+                    let last = gv(r, lNameI).toString().trim();
+                    let full = gv(r, playerI).toString().trim();
+                    let name = full || ( (first && last && first!==last) ? first + " " + last : first || last || "Unknown" );
+                    name = name.replace(/null/g, '').trim();
+
+                    target.innerHTML += `<tr><td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
+                        <td style="text-align: left; padding-left: 4px;"><div class="player-info">
+                        <span class="player-name">${name}</span><span class="player-team">${gv(r, tmI)}</span>
+                        </div></td><td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td></tr>`;
                 });
             });
-        });
+        }).catch(e=>{});
     }
+
     changeYear('2026');
 </script>
 </body>
