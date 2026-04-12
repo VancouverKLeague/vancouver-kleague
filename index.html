@@ -210,26 +210,14 @@
         "Van Dragons": "logos/Van Dragons.png",
         "Vancouver Dragons": "logos/Van Dragons.png",
         "Karis Cubs": "logos/Karis Cubs.png",
-        "Karis-Cubs": "logos/Karis Cubs.png",
         "Arirang Rays": "logos/Arirang Rays.png",
         "Fire Bats": "logos/Fire Bats.png",
-        "FireBats": "logos/Fire Bats.png",
         "Van Bros": "logos/Van Bros.png"
     };
 
     const championData = {
-        "2025": {
-            reg1st: "Arirang Rays",
-            post1st: "Arirang Rays",
-            post2nd: "Karis-Cubs",
-            post3rd: "Van Dragons"
-        },
-        "2026": {
-            reg1st: "In Progress",
-            post1st: "In Progress",
-            post2nd: "-",
-            post3rd: "-"
-        }
+        "2025": { reg1st: "Arirang Rays", post1st: "Arirang Rays", post2nd: "Karis-Cubs", post3rd: "Van Dragons" },
+        "2026": { reg1st: "In Progress", post1st: "In Progress", post2nd: "-", post3rd: "-" }
     };
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
@@ -243,18 +231,13 @@
             document.getElementById('p-post-1st').innerText = data.post1st;
             document.getElementById('p-post-2nd').innerText = data.post2nd;
             document.getElementById('p-post-3rd').innerText = data.post3rd;
-        } else {
-            section.style.display = 'none';
-        }
+        } else { section.style.display = 'none'; }
     }
 
     function changeYear(year) {
         currentYear = year;
         updateChampions(year);
-        loadNotice();
-        loadStandings();
-        loadSchedule();
-        loadStats();
+        loadNotice(); loadStandings(); loadSchedule(); loadStats();
     }
 
     function switchSeason(s) {
@@ -267,58 +250,69 @@
     function loadNotice() {
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
+            const noticeCard = document.getElementById('notice-card');
             if(data && data.c[1] && gv(data, 1).trim() !== '') { 
-                document.getElementById('notice-card').style.display = 'block'; 
+                noticeCard.style.display = 'block'; 
                 document.getElementById('notice-content').innerText = gv(data, 1);
                 if(gv(data, 2)) { 
-                    document.getElementById('rulebook-link').href = gv(data, 2); 
-                    document.getElementById('rulebook-link').style.display = 'inline-block'; 
-                } 
-            } else {
-                document.getElementById('notice-card').style.display = 'none';
-            }
+                    const rbLink = document.getElementById('rulebook-link');
+                    rbLink.href = gv(data, 2); rbLink.style.display = 'inline-block';
+                }
+            } else { noticeCard.style.display = 'none'; }
         }).catch(e=>{});
     }
 
+    // Fully Automated Standing Calculation Logic
     function loadStandings() {
-        const sheetName = (currentYear === '2026') ? 'Standings(순위)' : `Standings_${currentYear}`;
+        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         const tb = document.getElementById('standing-body');
-        tb.innerHTML = '<tr><td colspan="11">Loading...</td></tr>';
+        tb.innerHTML = '<tr><td colspan="11">Calculating...</td></tr>';
 
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
         .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const rows = data.rows;
             
-            let standings = rows.map(r => {
-                const teamName = gv(r, 1);
-                if (!teamName || teamName.includes('Team')) return null;
+            // Team list (must match spreadsheet team names exactly)
+            const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"];
+            let stats = {};
+            teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
 
-                const rs = parseInt(gv(r, 7)) || 0;
-                const ra = parseInt(gv(r, 8)) || 0;
+            rows.forEach(r => {
+                const awayTeam = gv(r, 3);
+                const homeTeam = gv(r, 4);
+                const scoreRaw = gv(r, 5); // Format "Score:Score"
 
-                return {
-                    name: teamName,
-                    g: parseInt(gv(r, 2)) || 0,
-                    w: parseInt(gv(r, 3)) || 0,
-                    l: parseInt(gv(r, 4)) || 0,
-                    t: parseInt(gv(r, 5)) || 0,
-                    pct: parseFloat(gv(r, 6)) || 0,
-                    rs: rs,
-                    ra: ra,
-                    diff: rs - ra
-                };
-            }).filter(item => item !== null);
+                if (scoreRaw && scoreRaw.includes(':') && stats[awayTeam] && stats[homeTeam]) {
+                    const scores = scoreRaw.split(':').map(Number);
+                    const awayScore = scores[0];
+                    const homeScore = scores[1];
 
+                    stats[awayTeam].rs += awayScore; stats[awayTeam].ra += homeScore;
+                    stats[homeTeam].rs += homeScore; stats[homeTeam].ra += awayScore;
+                    stats[awayTeam].g++; stats[homeTeam].g++;
+
+                    if (awayScore > homeScore) { stats[awayTeam].w++; stats[homeTeam].l++; }
+                    else if (homeScore > awayScore) { stats[homeTeam].w++; stats[awayTeam].l++; }
+                    else { stats[awayTeam].t++; stats[homeTeam].t++; }
+                }
+            });
+
+            let standings = Object.values(stats).map(s => {
+                const winLossTotal = s.w + s.l;
+                const pct = winLossTotal === 0 ? 0 : (s.w / winLossTotal);
+                return { ...s, pct: pct, diff: s.rs - s.ra };
+            });
+
+            // Sorting: PCT > Wins > Diff > RS
             standings.sort((a, b) => {
                 if (b.pct !== a.pct) return b.pct - a.pct;
                 if (b.w !== a.w) return b.w - a.w;
                 if (b.diff !== a.diff) return b.diff - a.diff;
-                if (b.rs !== a.rs) return b.rs - a.rs;
-                return a.ra - b.ra;
+                return b.rs - a.rs;
             });
 
-            // GB Calculation
+            // GB Calculation Logic
             const leader = standings[0];
             standings = standings.map(s => {
                 const gb = ((leader.w - s.w) + (s.l - leader.l)) / 2;
@@ -327,24 +321,18 @@
 
             tb.innerHTML = '';
             standings.forEach((s, idx) => {
-                let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(/-/g, ' ')];
+                let logoPath = teamLogos[s.name];
                 let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
-                
                 tb.innerHTML += `
                     <tr>
                         <td>${idx + 1}</td>
                         <td style="text-align:left; padding-left:10px; font-weight:bold;">${logoHTML}${s.name}</td>
-                        <td>${s.g}</td>
-                        <td>${s.w}</td>
-                        <td>${s.l}</td>
-                        <td>${s.t}</td>
+                        <td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td>
                         <td class="val-highlight">${s.pct.toFixed(3)}</td>
                         <td style="background:#fffef0; font-weight:bold;">${s.gb}</td>
-                        <td>${s.rs}</td>
-                        <td>${s.ra}</td>
+                        <td>${s.rs}</td><td>${s.ra}</td>
                         <td style="font-weight:bold; color:${s.diff >= 0 ? '#003366' : '#d32f2f'};">${s.diff > 0 ? '+' + s.diff : s.diff}</td>
-                    </tr>
-                `;
+                    </tr>`;
             });
         }).catch(e => { console.error(e); });
     }
@@ -353,18 +341,13 @@
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         const tb = document.getElementById('schedule-body');
         tb.innerHTML = '';
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
             const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
             const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA' && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
-
             const render = (r) => { 
-                const away = gv(r, 3); 
-                const home = gv(r, 4);
-                const note = gv(r, 6).trim(); 
-                const noteUpper = note.toUpperCase();
-                
+                const away = gv(r, 3); const home = gv(r, 4);
+                const note = gv(r, 6).trim(); const noteUpper = note.toUpperCase();
                 let badgeHtml = '';
                 if (note) {
                     let badgeClass = 'badge-default';
@@ -374,7 +357,6 @@
                     else if (noteUpper.includes('3RD')) badgeClass = 'badge-3rd';
                     badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
                 }
-
                 tb.innerHTML += `<tr>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td>
                     <td style="width:20%; font-size:0.75rem;">${gv(r, 2)}</td>
@@ -389,7 +371,6 @@
                     <td class="val-highlight" style="width:12%;">${gv(r, 5) || '-'}</td>
                 </tr>`; 
             };
-
             if (currentYear === '2026') {
                 if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
                 if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
@@ -398,77 +379,46 @@
                 if (lastGames.length > 0) lastGames.forEach(render);
                 else tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">No game records.</td></tr>';
             }
-        }).catch(e=>{});
+        });
     }
 
     function loadStats() {
         const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
         tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
         let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows; 
-            const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
+            const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
             const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
-
-            const fNameI = fi(['FIRST NAME']);
-            const lNameI = fi(['LAST NAME']);
-            const playerI = fi(['PLAYER', 'FULL NAME']); 
-            const tmI = fi(['TEAM']);
-            const ipIdx = fi(['INNINGS PITCHED']);
-
+            const fNameI = fi(['FIRST NAME']); const lNameI = fi(['LAST NAME']); const playerI = fi(['PLAYER', 'FULL NAME']); const tmI = fi(['TEAM']);
             const metrics = [
-                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
-                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
-                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
-                {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
-                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
-                {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
-                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
-                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
+                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false}, {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
+                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false}, {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true}, {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false}, {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
             ];
-
             metrics.forEach(m => {
                 const vI = cols.findIndex(c => c === m.n);
-                const rankI = cols.findIndex(c => c === m.n + " (RANK)");
                 const target = document.getElementById(m.id);
                 if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
-
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-                
-                let validRows = rows.filter(r => {
-                    const val = getVal(r);
-                    if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') {
-                        return val >= 0 && parseFloat(gv(r, ipIdx)) > 0;
-                    }
-                    return val > 0;
-                });
-
+                let validRows = rows.filter(r => getVal(r) > 0 || (m.n === 'EARNED RUN AVERAGE' && parseFloat(gv(r, fi(['INNINGS PITCHED']))) > 0));
                 const sorted = [...validRows].sort((a,b) => {
                     const valA = getVal(a); const valB = getVal(b);
                     return m.asc ? valA - valB : valB - valA;
                 }).slice(0, 5);
-
-                if(sorted.length === 0) { 
-                    target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; 
-                    return; 
-                }
-
+                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
                 sorted.forEach((r, i) => {
-                    let first = gv(r, fNameI).toString().trim();
-                    let last = gv(r, lNameI).toString().trim();
+                    let first = gv(r, fNameI).toString().trim(); let last = gv(r, lNameI).toString().trim();
                     let full = gv(r, playerI).toString().trim();
                     let name = full || ( (first && last && first!==last) ? first + " " + last : first || last || "Unknown" );
-                    name = name.replace(/null/g, '').trim();
-
                     target.innerHTML += `<tr><td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
                         <td style="text-align: left; padding-left: 4px;"><div class="player-info">
-                        <span class="player-name">${name}</span><span class="player-team">${gv(r, tmI)}</span>
+                        <span class="player-name">${name.replace(/null/g, '').trim()}</span><span class="player-team">${gv(r, tmI)}</span>
                         </div></td><td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td></tr>`;
                 });
             });
-        }).catch(e=>{});
+        });
     }
 
     changeYear('2026');
