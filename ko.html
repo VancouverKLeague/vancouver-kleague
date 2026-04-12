@@ -146,7 +146,7 @@
                         <th>패</th>
                         <th>무</th>
                         <th>승률</th>
-                        <th>득점</th>
+                        <th style="background:#fff9e6;">승차</th> <th>득점</th>
                         <th>실점</th>
                         <th>득실차</th>
                     </tr>
@@ -302,7 +302,7 @@
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Standings(순위)' : `Standings_${currentYear}`;
         const tb = document.getElementById('standing-body');
-        tb.innerHTML = '<tr><td colspan="10">데이터 로드 중...</td></tr>';
+        tb.innerHTML = '<tr><td colspan="11">데이터 로드 중...</td></tr>';
 
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
         .then(res => res.text()).then(t => {
@@ -329,12 +329,20 @@
                 };
             }).filter(item => item !== null);
 
+            // 기본 정렬
             standings.sort((a, b) => {
                 if (b.pct !== a.pct) return b.pct - a.pct;
                 if (b.w !== a.w) return b.w - a.w;
                 if (b.diff !== a.diff) return b.diff - a.diff;
                 if (b.rs !== a.rs) return b.rs - a.rs;
                 return a.ra - b.ra;
+            });
+
+            // 승차(GB) 계산 로직
+            const leader = standings[0];
+            standings = standings.map(s => {
+                const gb = ((leader.w - s.w) + (s.l - leader.l)) / 2;
+                return { ...s, gb: gb === 0 ? "-" : gb.toFixed(1) };
             });
 
             tb.innerHTML = '';
@@ -351,7 +359,7 @@
                         <td>${s.l}</td>
                         <td>${s.t}</td>
                         <td class="val-highlight">${s.pct.toFixed(3)}</td>
-                        <td>${s.rs}</td>
+                        <td style="background:#fffef0; font-weight:bold;">${s.gb}</td> <td>${s.rs}</td>
                         <td>${s.ra}</td>
                         <td style="font-weight:bold; color:${s.diff >= 0 ? '#003366' : '#d32f2f'};">${s.diff > 0 ? '+' + s.diff : s.diff}</td>
                     </tr>
@@ -447,23 +455,17 @@
 
                 const getVal = (r) => parseFloat(gv(r, vI)) || 0;
                 
-                // [핵심 수정] 수치가 0 이하인 선수는 순위에서 배제 (방어율/WHIP 제외)
                 let validRows = rows.filter(r => {
                     const val = getVal(r);
-                    const rankValue = (rankI !== -1) ? gv(r, rankI).trim() : "";
-                    
-                    // 방어율(ERA)과 WHIP은 수치가 낮아야 하므로 0보다 큰 기록이 있는지 확인
                     if (m.n === 'EARNED RUN AVERAGE' || m.n === 'WALKS HITS INNINGS PITCHED') {
                         return val >= 0 && gv(r, fi(['INNINGS PITCHED'])) > 0; 
                     }
-                    
-                    // 다승, 홈런, 타점 등은 무조건 0보다 커야 함
                     return val > 0;
                 });
 
                 const sorted = [...validRows].sort((a,b) => {
-                    const valA = getVal(a); const valB = getVal(b);
-                    return m.asc ? valA - valB : valB - valA;
+                    const vA = getVal(a); const vB = getVal(b);
+                    return m.asc ? vA - vB : vB - vA;
                 }).slice(0, 5);
 
                 if(sorted.length === 0) { 
