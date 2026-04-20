@@ -51,19 +51,24 @@ th { background: #f8f9fa; }
 .badge-final { background-color: #d32f2f; }
 .badge-default { background-color: #555; }
 
-/* 📊 Leaderboard */
+/* 📊 Leaderboard (수정 부분: 왼쪽 정렬 강제 적용) */
 .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
 @media (max-width: 992px) { .leader-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
 .leader-category { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; margin-bottom: 10px; }
 .leader-category-title { background: #eceff1; padding: 8px 6px; font-size: 0.9rem; font-weight: 800; text-align: center; color: #003366; border-bottom: 1px solid #ddd; }
 .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; white-space: normal; }
+
+/* 기록실 테이블 셀 정렬 수정 */
+.leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; text-align: left !important; } 
+
 .rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: left; }
-.player-info { display: flex; flex-direction: column; overflow: hidden; text-align: left; }
-.player-name { font-weight: bold; font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.player-team { font-size: 0.65rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.value-col { text-align: right; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
+.player-col { text-align: left !important; padding-left: 2px; } /* TD 레벨에서 왼쪽 정렬 */
+.player-info { display: flex; flex-direction: column; overflow: hidden; text-align: left !important; } /* 내부 컨테이너 왼쪽 정렬 */
+.player-name { font-weight: bold; font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-align: left !important; }
+.player-team { font-size: 0.65rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-align: left !important; }
+.value-col { text-align: right !important; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; } /* 수치 데이터는 오른쪽 정렬 유지 */
+
 .no-records { text-align: center; color: #bbb; font-size: 0.85rem; padding: 30px 10px; flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfdfd; }
 
 /* Buttons & Footer */
