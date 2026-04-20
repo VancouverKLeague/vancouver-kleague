@@ -15,7 +15,7 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* 🏆 Leaderboard Grid: 3 columns Layout */
+        /* 🏆 Leaderboard Grid: 3-column Layout for better visibility */
         .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         @media (max-width: 768px) { .leader-grid { grid-template-columns: 1fr; } }
 
@@ -120,22 +120,22 @@
         
         <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee;">Batting</h4>
         <div class="leader-grid">
-            <div><h4 style="font-size:0.8rem; text-align:center;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">HITS</h4><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">HOME RUNS</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">QAB</h4><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">HITS</h4><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">HOME RUNS</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">QAB</h4><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
         <h4 style="color: #2e7d32; text-align: center; border-bottom: 1px solid #eee; margin-top:20px;">Pitching</h4>
         <div class="leader-grid">
-            <div><h4 style="font-size:0.8rem; text-align:center;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">WINS</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">INNINGS</h4><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">STRIKEOUTS</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
-            <div><h4 style="font-size:0.8rem; text-align:center;">AVG AGAINST</h4><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">WINS</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">IP</h4><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">STRIKEOUTS</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center; background:#f8f9fa; padding:5px;">AVG AGAINST</h4><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
         </div>
         <a href="stats.html" class="btn-more">View Full Player Stats →</a>
     </div>
@@ -180,10 +180,8 @@
             if(data && gv(data, 1).trim() !== '') {
                 card.style.display = 'block';
                 document.getElementById('notice-content').innerText = gv(data, 1);
-                if(gv(data, 2)) {
-                    const btn = document.getElementById('rulebook-link');
-                    btn.href = gv(data, 2); btn.style.display = 'inline-block';
-                }
+                const btn = document.getElementById('rulebook-link');
+                if(gv(data, 2)) { btn.href = gv(data, 2); btn.style.display = 'inline-block'; }
             } else { card.style.display = 'none'; }
         }).catch(e => { document.getElementById('notice-card').style.display = 'none'; });
     }
@@ -219,7 +217,7 @@
             standings.forEach((s, idx) => {
                 const pct = (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l);
                 const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
-                let logoPath = teamLogos[s.name];
+                let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(' ', '')];
                 let logoHTML = logoPath ? `<img src="${logoPath}" style="width:18px; height:18px; vertical-align:middle; margin-right:5px; object-fit:contain;">` : '';
                 tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left; font-weight:bold;">${logoHTML}${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${pct.toFixed(3)}</td><td style="background:#fffef0;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.rs - s.ra}</td></tr>`;
             });
@@ -232,12 +230,14 @@
         .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const tb = document.getElementById('schedule-body');
-            const played = data.rows.filter(r => gv(r, 5) && gv(r, 5).includes(':')).slice(-2);
-            const next = data.rows.filter(r => (!gv(r, 5) || gv(r, 5) === '-') && gv(r, 3)).slice(0, 2);
             tb.innerHTML = '';
-            [...played, ...next].forEach(r => {
+            const played = data.rows.filter(r => gv(r, 5) && gv(r, 5).includes(':') && gv(r, 3));
+            const upcoming = data.rows.filter(r => (!gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA') && gv(r, 3));
+            const render = (r) => { 
                 tb.innerHTML += `<tr><td>${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="font-weight:bold;">${gv(r, 3)} vs ${gv(r, 4)}</td><td class="val-highlight">${gv(r, 5) || 'TBA'}</td></tr>`;
-            });
+            };
+            if (played.length > 0) { const lastD = gv(played[played.length-1], 0); played.filter(r => gv(r, 0) === lastD).forEach(render); }
+            if (upcoming.length > 0) { const nextD = gv(upcoming[0], 0); upcoming.filter(r => gv(r, 0) === nextD).forEach(render); }
         });
     }
 
@@ -249,18 +249,12 @@
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
             const fi = (n) => cols.findIndex(c => c === n);
             const metrics = [
-                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
-                {id: 'hits-leaders', n: 'HITS', d: 0, asc: false},
-                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
-                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
-                {id: 'qab-leaders', n: 'QUALITY AT-BATS', d: 0, asc: false},
-                {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
-                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
-                {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
-                {id: 'ip-leaders', n: 'INNINGS PITCHED', d: 1, asc: false},
-                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
-                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true},
-                {id: 'avga-leaders', n: 'BATTING AVERAGE AGAINST', d: 3, asc: true}
+                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false}, {id: 'hits-leaders', n: 'HITS', d: 0, asc: false},
+                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false}, {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
+                {id: 'qab-leaders', n: 'QUALITY AT-BATS', d: 0, asc: false}, {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true}, {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+                {id: 'ip-leaders', n: 'INNINGS PITCHED', d: 1, asc: false}, {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
+                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}, {id: 'avga-leaders', n: 'BATTING AVERAGE AGAINST', d: 3, asc: true}
             ];
 
             metrics.forEach(m => {
@@ -274,7 +268,10 @@
                 valid.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
                 target.innerHTML = '';
                 valid.slice(0, 5).forEach((r, i) => {
-                    target.innerHTML += `<tr><td style="width:15px;">${i+1}</td><td style="text-align:left;"><div class="player-info"><span class="player-name">${gv(r, fi('LAST NAME'))}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></div></td><td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
+                    // Full Name Logic: Check First Name and Last Name
+                    const f = gv(r, fi('FIRST NAME')), l = gv(r, fi('LAST NAME'));
+                    const name = (f && l && f !== l) ? `${f} ${l}` : (l || f || "Unknown");
+                    target.innerHTML += `<tr><td style="width:15px; font-weight:bold; color:#777;">${i+1}</td><td style="text-align:left;"><div class="player-info"><span class="player-name">${name}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></div></td><td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
                 });
             });
         });
