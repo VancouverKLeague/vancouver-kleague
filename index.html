@@ -279,7 +279,8 @@
     }
 
     function loadStats() {
-        let targetSheet = `Stats_${currentSeason}`;
+            // 2026년이면 Stats_Reg, 2025년이면 Stats_2025_Reg 이런 식으로 시트 이름을 동적으로 생성합니다.
+            let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
