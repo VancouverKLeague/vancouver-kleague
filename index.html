@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vancouver K-League | Home</title>
     <style>
-        body { font-family: 'Arial', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
+        /* 🎨 원본 한국어 페이지 디자인 스타일 완벽 복구 */
+        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
         header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
         .lang-switch { position: absolute; top: 10px; right: 20px; }
         .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
@@ -15,9 +16,9 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* 🏆 Season Honors Section (RESTORED) */
+        /* 🏆 Season Honors Section (Restored) */
         .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; letter-spacing: 1px; }
+        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; }
         .champion-box { margin: 5px; padding: 10px; border-radius: 8px; display: inline-block; min-width: 130px; vertical-align: top; }
         .champion-box .label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #666; text-transform: uppercase; }
         .champion-box .team-name { font-size: 1rem; font-weight: 900; color: #003366; }
@@ -27,24 +28,25 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
-        /* 🏆 Leaderboard Styling (Matched to Screenshot) */
-        .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        /* 📊 Leaderboard (Optimized 3-Column Design) */
+        .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         @media (max-width: 992px) { .leader-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
+        
         .leader-category { background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
         .leader-category-title { background: #f8f9fa; padding: 8px; font-size: 0.85rem; font-weight: bold; text-align: center; color: #333; border-bottom: 1px solid #eee; }
         .leader-table { width: 100%; border-collapse: collapse; }
         .leader-table td { padding: 8px 10px; border-bottom: 1px dotted #eee; vertical-align: middle; }
         .rank-col { width: 20px; font-weight: bold; color: #999; font-size: 0.8rem; text-align: left; }
         .player-col { text-align: left; padding-left: 5px; }
-        .player-name { font-weight: bold; font-size: 0.85rem; color: #333; display: block; line-height: 1.2; }
-        .player-team { font-size: 0.7rem; color: #888; display: block; }
-        .value-col { text-align: right; font-weight: 900; color: #d32f2f; font-size: 0.95rem; width: 50px; }
+        .player-name { font-weight: bold; font-size: 0.82rem; color: #333; display: block; line-height: 1.2; }
+        .player-team { font-size: 0.65rem; color: #888; display: block; }
+        .value-col { text-align: right; font-weight: 900; color: #d32f2f; font-size: 0.9rem; width: 50px; }
 
-        /* Notice & General UI */
+        /* Notice & Buttons */
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
         #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
-        .btn-rulebook { display: inline-block; padding: 10px 20px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.85rem; }
+        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
@@ -117,7 +119,7 @@
         <h3>📍 Field & Weather</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
             <div>
-                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-theme="pure">VANCOUVER WEATHER</a>
+                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
                 <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
@@ -129,7 +131,7 @@
     </div>
 
     <div class="card">
-        <h3>⚾ Recent & Upcoming Games</h3>
+        <h3>⚾ Recent Results & Upcoming Games</h3>
         <div class="table-wrapper">
             <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table>
         </div>
@@ -145,22 +147,22 @@
             </div>
         </div>
         
-        <h4 style="color: #0288d1; text-align: center; margin-bottom:10px;">Batting</h4>
+        <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee; margin-bottom:15px;">Batting</h4>
         <div class="leader-grid">
-            <div class="leader-category"><div class="leader-category-title">AVG</div><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div class="leader-category"><div class="leader-category-title">BATTING AVERAGE (AVG)</div><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">HITS</div><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">HOME RUNS</div><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">RBI</div><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
-            <div class="leader-category"><div class="leader-category-title">QUALITY AT-BATS</div><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
+            <div class="leader-category"><div class="leader-category-title">QUALITY AT-BATS (QAB)</div><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">OPS</div><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
-        <h4 style="color: #2e7d32; text-align: center; margin: 30px 0 10px 0;">Pitching</h4>
+        <h4 style="color: #2e7d32; text-align: center; border-bottom: 1px solid #eee; margin: 30px 0 15px 0;">Pitching</h4>
         <div class="leader-grid">
-            <div class="leader-category"><div class="leader-category-title">ERA</div><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div class="leader-category"><div class="leader-category-title">EARNED RUN AVERAGE (ERA)</div><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">WINS</div><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
-            <div class="leader-category"><div class="leader-category-title">INNINGS PITCHED</div><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
-            <div class="leader-category"><div class="leader-category-title">STRIKEOUTS</div><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div class="leader-category"><div class="leader-category-title">INNINGS PITCHED (IP)</div><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
+            <div class="leader-category"><div class="leader-category-title">STRIKEOUTS (SO)</div><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">WHIP</div><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
             <div class="leader-category"><div class="leader-category-title">AVG AGAINST</div><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
         </div>
@@ -259,7 +261,7 @@
                 const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
                 let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(' ', '')];
                 let logoHTML = logoPath ? `<img src="${logoPath}" style="width:18px; height:18px; vertical-align:middle; margin-right:5px; object-fit:contain;">` : '';
-                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left; font-weight:bold;">${logoHTML}${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${pct.toFixed(3)}</td><td style="background:#fffef0; font-weight:bold;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.rs - s.ra}</td></tr>`;
+                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left; font-weight:bold;">${logoHTML}${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${pct.toFixed(3)}</td><td style="background:#fffef0;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.rs - s.ra}</td></tr>`;
             });
         });
     }
