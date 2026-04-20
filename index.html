@@ -155,30 +155,53 @@
     }
 
     function loadStandings() {
-        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats", "FireBats"];
-            let stats = {}; teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
-            data.rows.forEach(r => {
-                const away = gv(r, 3).trim(), home = gv(r, 4).trim(), score = gv(r, 5);
-                if (score && score.includes(':') && stats[away] && stats[home]) {
-                    const s = score.split(':').map(Number); stats[away].rs += s[0]; stats[away].ra += s[1]; stats[away].g++;
+    // 1. 드롭다운에서 선택된 연도(currentYear)에 따라 시트 이름을 결정합니다.
+    const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
+    
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
+    .then(res => res.text())
+    .then(t => {
+        const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+        
+        // 팀 목록 및 스태츠 초기화
+        const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"];
+        let stats = {}; 
+        teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
+
+        // 2. 선택된 연도 시트의 데이터를 훑습니다.
+        data.rows.forEach((r, idx) => {
+            // ⭐ 정규리그는 36행(인덱스 35)까지만 존재하므로 그 이후(포스트시즌)는 무시합니다.
+            if (idx > 35) return; 
+
+            let away = gv(r, 3).trim();
+            let home = gv(r, 4).trim();
+            const score = gv(r, 5) ? gv(r, 5).trim() : "";
+
+            // 팀명 오타 보정
+            if (away === "FireBats") away = "Fire Bats";
+            if (home === "FireBats") home = "Fire Bats";
+
+            // 스코어가 있는 경기만 승패 계산 (MAKE UP 등 텍스트 제외)
+            if (score && score.includes(':') && stats[away] && stats[home]) {
+                const s = score.split(':').map(Number);
+                if (!isNaN(s[0]) && !isNaN(s[1])) {
+                    stats[away].rs += s[0]; stats[away].ra += s[1]; stats[away].g++;
                     stats[home].rs += s[1]; stats[home].ra += s[0]; stats[home].g++;
-                    if (s[0] > s[1]) { stats[away].w++; stats[home].l++; } else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; } else { stats[away].t++; stats[home].t++; }
+                    
+                    if (s[0] > s[1]) { stats[away].w++; stats[home].l++; } 
+                    else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; } 
+                    else { stats[away].t++; stats[home].t++; }
                 }
-            });
-            let standings = Object.values(stats).filter(s => s.g > 0 || ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"].includes(s.name)).map(s => (s.name === 'FireBats' ? {...s, name: 'Fire Bats'} : s));
-            standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
-            const leader = standings[0]; const tb = document.getElementById('standing-body'); tb.innerHTML = '';
-            standings.forEach((s, idx) => {
-                const pct = (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l);
-                const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
-                const diff = s.rs - s.ra; let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(' ', '')];
-                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left; font-weight:bold;"><img src="${logoPath}" style="width:18px; height:18px; vertical-align:middle; margin-right:5px; object-fit:contain;">${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td class="val-pct">${pct.toFixed(3)}</td><td class="bg-gb">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td class="${diff>0?'diff-plus':(diff<0?'diff-minus':'')}">${diff>0?'+'+diff:diff}</td></tr>`;
-            });
+            }
         });
-    }
+
+        // 3. 정렬 및 테이블 출력 (기존 로직과 동일)
+        let standings = Object.values(stats);
+        standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
+        
+        displayStandings(standings); // 순위표를 화면에 그리는 함수 호출
+    });
+}
 
     function loadSchedule() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
