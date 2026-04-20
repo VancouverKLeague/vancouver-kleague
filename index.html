@@ -353,50 +353,54 @@
     if (!section) return;
 
     section.style.display = 'block';
-    // 영문 페이지에 맞게 제목 설정
     if (title) title.innerText = `🔥 ${year} Postseason Bracket`;
 
     const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
     
-    // G열(Note)까지 가져오기 위해 범위를 G50까지 넓힙니다.
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G50`)
     .then(res => res.text())
     .then(t => {
-        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-        const gv = (r, i) => (r && r.c && r.c[i]) ? (r.c[i].v || '') : '';
+        const data = JSON.parse(t.substr(47).slice(0, -2));
+        const rows = data.table.rows;
+        
+        const gv = (r, i) => (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : '';
         const fmt = (v) => v ? `(${v})` : "(-)";
 
-        let htmlWC_A = '', htmlWC_B = '', htmlSF_A = '', htmlSF_B = '', htmlFinal = '', html3rd = '';
+        // 각 구역의 HTML을 담을 변수들
+        let htmlWCA = '', htmlWCB = '', htmlSFA = '', htmlSFB = '', htmlFinal = '', html3rd = '';
         let cntA = 1, cntB = 1;
 
         rows.forEach(r => {
-            const teamStr = `${gv(r, 0)} vs ${gv(r, 1)}`;
-            const scoreStr = fmt(gv(r, 2));
-            const note = gv(r, 3).toUpperCase(); // G열 (Note)
+            const team1 = gv(r, 0);
+            const team2 = gv(r, 1);
+            const score = fmt(gv(r, 2));
+            const note = gv(r, 3).toUpperCase();
 
-            if (note.includes('WC A')) {
-                htmlWC_A = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('WC B')) {
-                htmlWC_B = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('SF A')) {
-                htmlSF_A += `<div class="match-line"><span>G${cntA++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('SF B')) {
-                htmlSF_B += `<div class="match-line"><span>G${cntB++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('FINAL')) {
-                htmlFinal = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('3RD') || note.includes('3위')) {
-                html3rd = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            }
+            // 팀명이 아예 없는 행은 건너뜁니다.
+            if (!team1 && !team2) return;
+
+            const matchHtml = `<div class="match-line"><span class="team-n">${team1} vs ${team2}</span><span class="score-n">${score}</span></div>`;
+            const sfMatchHtml = (cnt) => `<div class="match-line"><span>G${cnt}</span><span class="team-n">${team1} vs ${team2}</span><span class="score-n">${score}</span></div>`;
+
+            if (note.includes('WC A')) htmlWCA = matchHtml;
+            else if (note.includes('WC B')) htmlWCB = matchHtml;
+            else if (note.includes('SF A')) htmlSFA += sfMatchHtml(cntA++);
+            else if (note.includes('SF B')) htmlSFB += sfMatchHtml(cntB++);
+            else if (note.includes('FINAL')) htmlFinal = matchHtml;
+            else if (note.includes('3RD') || note.includes('3위')) html3rd = matchHtml;
         });
 
-        // HTML에 결과 반영
-        document.getElementById('br-wca').innerHTML = htmlWC_A;
-        document.getElementById('br-wcb').innerHTML = htmlWC_B;
-        document.getElementById('br-sfa').innerHTML = htmlSF_A;
-        document.getElementById('br-sfb').innerHTML = htmlSF_B;
-        document.getElementById('br-final').innerHTML = htmlFinal;
-        if(document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
-    });
+        // 결과 반영 (값이 없으면 "TBA" 혹은 빈칸 처리)
+        document.getElementById('br-wca').innerHTML = htmlWCA || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        document.getElementById('br-wcb').innerHTML = htmlWCB || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        document.getElementById('br-sfa').innerHTML = htmlSFA || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        document.getElementById('br-sfb').innerHTML = htmlSFB || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        document.getElementById('br-final').innerHTML = htmlFinal || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        if(document.getElementById('br-3rd')) {
+            document.getElementById('br-3rd').innerHTML = html3rd || '<div class="match-line"><span class="team-n">TBA</span></div>';
+        }
+    })
+    .catch(err => console.error("Bracket Error:", err));
 }
 
 // 페이지 로드 시 자동으로 실행되는 함수
