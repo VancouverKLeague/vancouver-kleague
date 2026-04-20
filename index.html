@@ -270,11 +270,37 @@
             const played = data.rows.filter(r => gv(r, 5) && gv(r, 5).includes(':') && gv(r, 3));
             const upcoming = data.rows.filter(r => (!gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA') && gv(r, 3));
             const render = (r) => { 
-                const note = gv(r, 6).trim(); let bH = ''; if(note){ let bC = 'badge-default'; if(note.toUpperCase().includes('WC')) bC='badge-wc'; else if(note.toUpperCase().includes('SF')) bC='badge-sf'; else if(note.toUpperCase().includes('FINAL')) bC='badge-final'; bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; }
-                tb.innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">Away</span>${gv(r, 3)}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">Home</span>${gv(r, 4)}</span></div></td><td class="score-display">${gv(r, 5) || 'TBA'}</td></tr>`;
-            };
-            if (played.length > 0) { const lastD = gv(played[played.length-1], 0); played.filter(r => gv(r, 0) === lastD).forEach(render); }
-            if (upcoming.length > 0) { const nextD = gv(upcoming[0], 0); upcoming.filter(r => gv(r, 0) === nextD).forEach(render); }
+            const awayT = gv(r, 3);
+            const homeT = gv(r, 4);
+            // 1. Skip MAKE UP games
+            if (awayT.toUpperCase().includes('MAKE UP') || homeT.toUpperCase().includes('MAKE UP')) return;
+
+            const note = gv(r, 6).trim(); 
+            let bH = ''; 
+            if(note){ 
+                let bC = 'badge-default'; 
+                // 2. Fix FINAL tag color (case-insensitive)
+                if(note.toUpperCase().includes('WC')) bC='badge-wc'; 
+                else if(note.toUpperCase().includes('SF')) bC='badge-sf'; 
+                else if(note.toUpperCase().includes('FINAL')) bC='badge-final'; 
+                bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; 
+            }
+            tb.innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">Away</span>${awayT}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">Home</span>${homeT}</span></div></td><td class="score-display">${gv(r, 5) || '-'}</td></tr>`;
+        };
+
+        // 3. Display Results & Upcoming Games (Filtering out old upcoming games)
+        if (played.length > 0) { 
+            const lastD = gv(played[played.length-1], 0); 
+            played.filter(r => gv(r, 0) === lastD).forEach(render); 
+        }
+        if (upcoming.length > 0) {
+            const today = new Date().toISOString().split('T')[0].replace(/-/g, '.'); 
+            const future = upcoming.filter(r => gv(r, 0) >= today); // Only shows games from today onwards
+            if (future.length > 0) {
+                const nextD = gv(future[0], 0);
+                future.filter(r => gv(r, 0) === nextD).forEach(render);
+            }
+        }
         });
     }
 
