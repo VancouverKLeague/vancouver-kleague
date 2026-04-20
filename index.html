@@ -59,22 +59,36 @@
     </div>
 
     <div id="po-bracket-section" class="card" style="border-top: 4px solid #d32f2f; display: none; margin-top: 20px;">
-    <h3 id="bracket-title">🔥 2026 Postseason Bracket</h3>
+    <h3 id="bracket-title">🔥 Postseason Bracket</h3>
     <div class="bracket-wrapper">
         <div class="bracket-round">
             <div class="round-title">WILD CARD</div>
-            <div class="match-box"><span class="match-tag wc">WC A</span><div class="match-teams" id="br-wca">#6 Seed vs #3 Seed</div></div>
-            <div class="match-box"><span class="match-tag wc">WC B</span><div class="match-teams" id="br-wcb">#5 Seed vs #4 Seed</div></div>
+            <div class="match-box"><span class="match-tag wc">WC A</span><div class="match-teams" id="br-wca"></div></div>
+            <div class="match-box"><span class="match-tag wc">WC B</span><div class="match-teams" id="br-wcb"></div></div>
         </div>
+
         <div class="bracket-round">
             <div class="round-title">SEMI-FINAL (BO3)</div>
-            <div class="match-box"><span class="match-tag sf">SF A</span><div class="match-teams" id="br-sfa">WC A Win vs #1 Seed</div></div>
-            <div class="match-box"><span class="match-tag sf">SF B</span><div class="match-teams" id="br-sfb">WC B Win vs #2 Seed</div></div>
+            <div class="match-box">
+                <span class="match-tag sf">SF A</span>
+                <div class="match-teams bo3-list" id="br-sfa"></div>
+            </div>
+            <div class="match-box">
+                <span class="match-tag sf">SF B</span>
+                <div class="match-teams bo3-list" id="br-sfb"></div>
+            </div>
         </div>
+
         <div class="bracket-round">
             <div class="round-title">FINALS</div>
-            <div class="match-box final-highlight"><span class="match-tag final">FINAL</span><div class="match-teams" id="br-final">SF B Win vs SF A Win</div></div>
-            <div class="match-box"><span class="match-tag bronze">3RD PLACE</span><div class="match-teams" id="br-3rd">SF B L vs SF A L</div></div>
+            <div class="match-box final-highlight">
+                <span class="match-tag final">FINAL</span>
+                <div class="match-teams" id="br-final"></div>
+            </div>
+            <div class="match-box">
+                <span class="match-tag bronze">3RD PLACE</span>
+                <div class="match-teams" id="br-3rd"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -309,35 +323,47 @@
     function updateBracket(year) {
     const section = document.getElementById('po-bracket-section');
     const title = document.getElementById('bracket-title');
-    
-    // 포스트시즌 섹션 보이기
+    if (!section) return;
+
     section.style.display = 'block';
     title.innerText = `🔥 ${year} Postseason Bracket`;
 
-    if (year === '2025') {
-        // 2025년 실제 결과 (수동 입력이 가장 정확하고 깔끔합니다)
-        document.getElementById('br-wca').innerText = "Fire Bats (8) vs Van Avengers (15)";
-        document.getElementById('br-wcb').innerText = "Van Dragons (5) vs Van Bros (1)";
-        document.getElementById('br-sfa').innerText = "Van Avengers (6) vs Arirang Rays (12)"; // 예시
-        // ... 이런 식으로 2025년 최종 결과를 박아넣습니다.
-    } else {
-        // 2026년 (아직 미정이므로 기본값)
-        document.getElementById('br-wca').innerText = "#6 Seed vs #3 Seed";
-        document.getElementById('br-wcb').innerText = "#5 Seed vs #4 Seed";
-        document.getElementById('br-sfa').innerText = "WC A Win vs #1 Seed";
-        // ... 초기 상태로 되돌림
-    }
-}
+    const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
+    
+    // 37행부터 45행까지 데이터 가져오기 (범위: D37:F45)
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:F45`)
+    .then(res => res.text())
+    .then(t => {
+        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
+        
+        // 데이터 추출 보조 함수 (r: 행 인덱스, c: 열 인덱스)
+        // rows[0]이 엑셀의 37행이 됩니다.
+        const getV = (r, c) => (rows[r] && rows[r].c[c] && rows[r].c[c].v) ? rows[r].c[c].v : "";
+        const fmt = (v) => v ? `(${v})` : "(-)"; // 점수가 없으면 (-) 표시
 
-// changeYear 함수 마지막에 updateBracket(year); 를 추가하세요!
-function changeYear(year) {
-    currentYear = year;
-    updateChampions(year);
-    loadNotice();
-    loadStandings();
-    loadSchedule();
-    loadStats();
-    updateBracket(year); // 대진표 업데이트 추가
+        // 1. Wild Card (37, 38행 -> 인덱스 0, 1)
+        document.getElementById('br-wca').innerText = `${getV(0,0)} ${fmt(getV(0,2))}\nvs ${getV(0,1)}`;
+        document.getElementById('br-wcb').innerText = `${getV(1,0)} ${fmt(getV(1,2))}\nvs ${getV(1,1)}`;
+        
+        // 2. Semi-Final (39~43행 -> 인덱스 2~6)
+        // SF A: 39행(G1), 41행(G2), 42행(G3 필요시) -> 인덱스 2, 4, 5
+        const sfa = `G1: ${getV(2,0)} ${fmt(getV(2,2))} ${getV(2,1)}
+                     G2: ${getV(4,0)} ${fmt(getV(4,2))} ${getV(4,1)}
+                     G3: ${getV(5,0)} ${getV(5,2) ? fmt(getV(5,2)) : "(필요시)"} ${getV(5,1)}`;
+        document.getElementById('br-sfa').innerText = sfa;
+
+        // SF B: 40행(G1), 43행(G2), 44행?? -> 아, 엑셀 캡처 기준 40, 43행이 SF B네요.
+        // 보내주신 텍스트 기준: 39~43행이 SF이므로 배치를 조정합니다.
+        const sfb = `G1: ${getV(3,0)} ${fmt(getV(3,2))} ${getV(3,1)}
+                     G2: ${getV(6,0)} ${fmt(getV(6,2))} ${getV(6,1)}
+                     G3: (필요시)`; // SF B의 3차전 데이터 위치가 모호할 경우를 대비
+        document.getElementById('br-sfb').innerText = sfb;
+
+        // 3. Finals (44행 -> 인덱스 7) & 3rd Place (45행 -> 인덱스 8)
+        document.getElementById('br-final').innerText = `${getV(7,0)} ${fmt(getV(7,2))}\nvs ${getV(7,1)}`;
+        document.getElementById('br-3rd').innerText = `${getV(8,0)} ${fmt(getV(8,2))}\nvs ${getV(8,1)}`;
+    })
+    .catch(err => console.error("Bracket 데이터 로드 실패:", err));
 }
     
 </script>
