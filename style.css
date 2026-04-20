@@ -150,29 +150,30 @@ footer { text-align: center; padding: 30px; background: #333; color: #fff; margi
     border-bottom: none; /* 마지막 줄은 구분선 제거 */
 }
 
-/* G1, G2 라벨 너비 고정 및 정렬 */
-.match-line > span:first-child:not(.team-n):not(.score-n) {
-    display: inline-block;
-    width: 22px;
-    font-weight: bold;
-    color: #888;
-    font-size: 0.7rem;
-    flex-shrink: 0;
-    text-align: left;
+/* G1, G2, G3 라벨 열 맞추기 */
+.match-line > span:first-child {
+    display: inline-block !important;
+    width: 35px !important;    /* 너비를 35px로 확실히 고정 */
+    font-weight: bold !important;
+    color: #888 !important;
+    font-size: 0.75rem !important;
+    flex-shrink: 0 !important;  /* 절대 줄어들지 않게 */
+    text-align: left !important;
 }
 
-/* 팀명 텍스트 크기 미세 조정 */
+/* 팀명 vs 팀명 텍스트 정렬 */
 .team-n {
-    flex: 1;
-    text-align: left;
-    font-size: 0.75rem !important;
-    padding-left: 2px;
+    flex: 1 !important;
+    text-align: left !important;
+    padding-left: 2px !important;
+    white-space: nowrap;        /* 한 줄 유지 */
 }
 
-/* 점수 텍스트 크기 미세 조정 */
+/* 점수 (-) 부분 정렬 */
 .score-n {
-    font-size: 0.75rem !important;
-    margin-left: 5px;
+    min-width: 40px !important;
+    text-align: right !important;
+    font-weight: bold;
 }
 
 /* 팀명 스타일 */
