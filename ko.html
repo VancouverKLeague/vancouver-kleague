@@ -304,50 +304,68 @@
     if (!section) return;
 
     section.style.display = 'block';
-    // 한국어 제목 설정
+    // 한국어 페이지용 제목
     if (title) title.innerText = `🔥 ${year} 포스트시즌 대진표`;
 
     const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
     
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G50`)
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G55`)
     .then(res => res.text())
     .then(t => {
-        const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-        const gv = (r, i) => (r && r.c && r.c[i]) ? (r.c[i].v || '') : '';
-        const fmt = (v) => v ? `(${v})` : "(-)";
+        const data = JSON.parse(t.substr(47).slice(0, -2));
+        const rows = data.table.rows;
+        
+        // 데이터 추출 함수 (시트의 텍스트를 그대로 가져옴)
+        const gv = (r, i) => {
+            if (!r || !r.c || !r.c[i]) return '';
+            return r.c[i].f || r.c[i].v || '';
+        };
 
-        let htmlWC_A = '', htmlWC_B = '', htmlSF_A = '', htmlSF_B = '', htmlFinal = '', html3rd = '';
+        // 점수 형식: 결과가 있으면 (7:5), 없으면 (-)
+        const fmt = (v) => {
+            if (!v || v === '-' || v === null || v.toString().trim() === "") return "(-)";
+            return `(${v})`;
+        };
+
+        let htmlWCA = '', htmlWCB = '', htmlSFA = '', htmlSFB = '', htmlFinal = '', html3rd = '';
         let cntA = 1, cntB = 1;
 
         rows.forEach(r => {
-            const teamStr = `${gv(r, 0)} vs ${gv(r, 1)}`;
-            const scoreStr = fmt(gv(r, 2));
-            const note = gv(r, 3).toUpperCase(); // G열 (Note)
+            const awayText = gv(r, 0).trim(); // D열 (원정팀/시드명)
+            const homeText = gv(r, 1).trim(); // E열 (홈팀/시드명)
+            const score = fmt(gv(r, 2));     // F열 (결과)
+            const note = gv(r, 3).toUpperCase(); // G열 (비고)
 
-            if (note.includes('WC A')) {
-                htmlWC_A = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('WC B')) {
-                htmlWC_B = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('SF A')) {
-                htmlSF_A += `<div class="match-line"><span>G${cntA++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('SF B')) {
-                htmlSF_B += `<div class="match-line"><span>G${cntB++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
-            } else if (note.includes('FINAL')) {
-                htmlFinal = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            if (!awayText && !homeText) return;
+
+            // 시트에 적힌 텍스트 그대로 연결 (예: #6 Seed vs #3 Seed)
+            const matchHtml = `<div class="match-line"><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+            
+            // 비고란 핵심 단어로 매칭
+            if (note.includes('WILD CARD A') || (note.includes('WC') && note.includes('A'))) {
+                htmlWCA = matchHtml;
+            } else if (note.includes('WILD CARD B') || (note.includes('WC') && note.includes('B'))) {
+                htmlWCB = matchHtml;
+            } else if (note.includes('SEMI FINAL A') || (note.includes('SF') && note.includes('A'))) {
+                htmlSFA += `<div class="match-line"><span>G${cntA++}</span><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+            } else if (note.includes('SEMI FINAL B') || (note.includes('SF') && note.includes('B'))) {
+                htmlSFB += `<div class="match-line"><span>G${cntB++}</span><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+            } else if (note.includes('FINAL') && !note.includes('SEMI')) {
+                htmlFinal = matchHtml;
             } else if (note.includes('3RD') || note.includes('3위')) {
-                // 한국어 페이지이므로 3위 결정전 이름을 그대로 사용하거나 조정 가능
-                html3rd = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+                html3rd = matchHtml;
             }
         });
 
-        document.getElementById('br-wca').innerHTML = htmlWC_A;
-        document.getElementById('br-wcb').innerHTML = htmlWC_B;
-        document.getElementById('br-sfa').innerHTML = htmlSF_A;
-        document.getElementById('br-sfb').innerHTML = htmlSF_B;
-        document.getElementById('br-final').innerHTML = htmlFinal;
-        // 한국어 페이지의 3위 결정전 ID가 br-3rd인지 확인하세요
+        // HTML 요소에 데이터 주입
+        if(document.getElementById('br-wca')) document.getElementById('br-wca').innerHTML = htmlWCA;
+        if(document.getElementById('br-wcb')) document.getElementById('br-wcb').innerHTML = htmlWCB;
+        if(document.getElementById('br-sfa')) document.getElementById('br-sfa').innerHTML = htmlSFA;
+        if(document.getElementById('br-sfb')) document.getElementById('br-sfb').innerHTML = htmlSFB;
+        if(document.getElementById('br-final')) document.getElementById('br-final').innerHTML = htmlFinal;
         if(document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
-    });
+    })
+    .catch(err => console.error("대진표 로드 에러:", err));
 }
 </script>
 </body>
