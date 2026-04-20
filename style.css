@@ -132,3 +132,46 @@ footer { text-align: center; padding: 30px; background: #333; color: #fff; margi
     flex-direction: column;
     justify-content: center;
 }
+
+/* --- 대진표 내부 텍스트 상세 정렬 --- */
+
+/* 가로 한 줄로 팀명과 점수를 배치하는 컨테이너 */
+.match-line {
+    display: flex;
+    justify-content: space-between; /* 팀명은 왼쪽, 점수는 오른쪽 끝으로 */
+    align-items: center;
+    width: 100%;
+    padding: 3px 8px;
+    border-bottom: 1px dashed #f0f0f0; /* 경기 간 얇은 구분선 */
+    gap: 10px;
+}
+
+.match-line:last-child {
+    border-bottom: none; /* 마지막 줄은 구분선 제거 */
+}
+
+/* 팀명 스타일 */
+.team-n {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+    color: #444;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 팀명이 너무 길면 ... 처리 */
+}
+
+/* 점수 스타일 */
+.score-n {
+    font-family: 'Courier New', monospace; /* 숫자를 일정하게 정렬 */
+    font-weight: bold;
+    color: #d32f2f; /* 점수에 포인트 컬러 */
+    min-width: 45px;
+    text-align: right;
+}
+
+/* 세미파이널 BO3 리스트 스타일 보정 */
+.bo3-list {
+    width: 100%;
+    padding: 2px 0;
+}
