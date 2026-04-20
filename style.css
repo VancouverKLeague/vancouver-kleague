@@ -74,6 +74,10 @@ th { background: #f8f9fa; }
 /* 3. 기록 수치 중앙 정렬 (기존 right에서 center로 변경) */
 .value-col { text-align: center !important; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
 
+/* 기록이 없을 때 메시지 스타일 */
+.no-records {text-align: center; color: #aaaaaa !important; /* 부드러운 회색 */ font-size: 0.85rem; padding: 20px; display: flex !important; align-items: center !important;    /* 수직 정가운데 */
+    justify-content: center !important; /* 수평 정가운데 */ background-color: #fdfdfd; min-height: 150px; /* 박스 높이를 확보하여 정중앙에 배치 */ width: 100%; }
+
 /* Buttons & Footer */
 .btn-field, .btn-more { display: block; padding: 12px; border-radius: 5px; text-decoration: none; font-weight: bold; text-align: center; }
 .btn-field { background: #f8f9fa; border: 1px solid #ddd; color: #333; font-size: 0.8rem; }
