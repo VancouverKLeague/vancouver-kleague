@@ -176,7 +176,7 @@
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
     function updateChampions(year) { const section = document.getElementById('season-champions'); const data = championData[year]; if (data) { section.style.display = 'block'; document.getElementById('p-reg-1st').innerText = data.reg1st; document.getElementById('p-post-1st').innerText = data.post1st; document.getElementById('p-post-2nd').innerText = data.post2nd; document.getElementById('p-post-3rd').innerText = data.post3rd; } else { section.style.display = 'none'; } }
-    function changeYear(year) { currentYear = year; updateChampions(year); loadNotice(); loadStandings(); loadSchedule(); loadStats(); }
+    function changeYear(year) { currentYear = year; updateChampions(year); loadNotice(); loadStandings(); loadSchedule(); loadStats(); updateBracket(year); }
     function switchSeason(s) { currentSeason = s; document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : 'inactive'); document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : 'inactive'); loadStats(); }
 
     function loadNotice() {
