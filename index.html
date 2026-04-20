@@ -155,42 +155,30 @@
     }
 
     function loadStandings() {
-    const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-        const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-        
-        // 1. 팀 목록 정의 (Fire Bats 하나로 통일)
-        const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"];
-        let stats = {}; 
-        teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
-
-        // 2. 데이터 계산 시 FireBats(공백없음)가 들어와도 Fire Bats로 인식하게 보정
-        data.rows.slice(0, 36).forEach(r => {
-            let away = gv(r, 3).trim();
-            let home = gv(r, 4).trim();
-            const score = gv(r, 5);
-
-            // 오타 보정: 공백 없는 이름을 공백 있는 이름으로 변경
-            if (away === "FireBats") away = "Fire Bats";
-            if (home === "FireBats") home = "Fire Bats";
-
-            if (score && score.includes(':') && stats[away] && stats[home]) {
-                const s = score.split(':').map(Number); 
-                stats[away].rs += s[0]; stats[away].ra += s[1]; stats[away].g++;
-                stats[home].rs += s[1]; stats[home].ra += s[0]; stats[home].g++;
-                if (s[0] > s[1]) { stats[away].w++; stats[home].l++; } 
-                else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; } 
-                else { stats[away].t++; stats[home].t++; }
-            }
+        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats", "FireBats"];
+            let stats = {}; teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
+            data.rows.forEach(r => {
+                const away = gv(r, 3).trim(), home = gv(r, 4).trim(), score = gv(r, 5);
+                if (score && score.includes(':') && stats[away] && stats[home]) {
+                    const s = score.split(':').map(Number); stats[away].rs += s[0]; stats[away].ra += s[1]; stats[away].g++;
+                    stats[home].rs += s[1]; stats[home].ra += s[0]; stats[home].g++;
+                    if (s[0] > s[1]) { stats[away].w++; stats[home].l++; } else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; } else { stats[away].t++; stats[home].t++; }
+                }
+            });
+            let standings = Object.values(stats).filter(s => s.g > 0 || ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"].includes(s.name)).map(s => (s.name === 'FireBats' ? {...s, name: 'Fire Bats'} : s));
+            standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
+            const leader = standings[0]; const tb = document.getElementById('standing-body'); tb.innerHTML = '';
+            standings.forEach((s, idx) => {
+                const pct = (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l);
+                const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
+                const diff = s.rs - s.ra; let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(' ', '')];
+                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left; font-weight:bold;"><img src="${logoPath}" style="width:18px; height:18px; vertical-align:middle; margin-right:5px; object-fit:contain;">${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td class="val-pct">${pct.toFixed(3)}</td><td class="bg-gb">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td class="${diff>0?'diff-plus':(diff<0?'diff-minus':'')}">${diff>0?'+'+diff:diff}</td></tr>`;
+            });
         });
-
-        // 3. 출력용 배열 생성 (중복 제거 로직은 이제 필요 없음)
-        let standings = Object.values(stats);
-        
-        // 정렬 로직 (동일)
-        standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
-        
-        // ... 이하 출력 로직 ...
+    }
 
     function loadSchedule() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
