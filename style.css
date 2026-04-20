@@ -108,8 +108,8 @@ th { background: #f8f9fa; }
 footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
 
 /* 토너먼트 대진 */
-.bracket-wrapper { display: flex; justify-content: space-between; gap: 15px; overflow-x: auto; padding: 15px 0; }
-.bracket-round { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 15px; }
+.bracket-wrapper { display: flex; justify-content: space-between; gap: 8px; overflow-x: hidden; padding: 15px 5px; width: 100%; box-sizing: border-box; }
+.bracket-round { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 15px; }
 .round-title { font-size: 0.7rem; font-weight: bold; color: #999; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 5px; }
 .match-box { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 .match-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: bold; color: white; margin-bottom: 8px; }
@@ -148,6 +148,31 @@ footer { text-align: center; padding: 30px; background: #333; color: #fff; margi
 
 .match-line:last-child {
     border-bottom: none; /* 마지막 줄은 구분선 제거 */
+}
+
+/* G1, G2 라벨 너비 고정 및 정렬 */
+.match-line > span:first-child:not(.team-n):not(.score-n) {
+    display: inline-block;
+    width: 22px;
+    font-weight: bold;
+    color: #888;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    text-align: left;
+}
+
+/* 팀명 텍스트 크기 미세 조정 */
+.team-n {
+    flex: 1;
+    text-align: left;
+    font-size: 0.75rem !important;
+    padding-left: 2px;
+}
+
+/* 점수 텍스트 크기 미세 조정 */
+.score-n {
+    font-size: 0.75rem !important;
+    margin-left: 5px;
 }
 
 /* 팀명 스타일 */
