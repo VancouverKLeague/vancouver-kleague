@@ -150,54 +150,45 @@ footer { text-align: center; padding: 30px; background: #333; color: #fff; margi
     border-bottom: none; /* 마지막 줄은 구분선 제거 */
 }
 
-/* G1, G2, G3 라벨 열 맞추기 */
-.match-line > span:first-child {
+/* 1. G1, G2 라벨 (첫 번째 span) 너비 고정 */
+.match-line > span:first-child:not(.team-n):not(.score-n) {
     display: inline-block !important;
-    width: 35px !important;    /* 너비를 35px로 확실히 고정 */
+    width: 30px !important;    /* 방 크기 고정 */
+    min-width: 30px !important;
     font-weight: bold !important;
-    color: #888 !important;
+    color: #999 !important;
     font-size: 0.75rem !important;
-    flex-shrink: 0 !important;  /* 절대 줄어들지 않게 */
+    flex-shrink: 0 !important;
     text-align: left !important;
 }
 
-/* 팀명 vs 팀명 텍스트 정렬 */
+/* 2. 팀명 영역 (가운데) */
 .team-n {
     flex: 1 !important;
     text-align: left !important;
-    padding-left: 2px !important;
-    white-space: nowrap;        /* 한 줄 유지 */
-}
-
-/* 점수 (-) 부분 정렬 */
-.score-n {
-    min-width: 40px !important;
-    text-align: right !important;
-    font-weight: bold;
-}
-
-/* 팀명 스타일 */
-.team-n {
-    flex: 1;
-    text-align: left;
+    padding-left: 5px !important;
+    font-size: 0.75rem !important;
     font-weight: 500;
     color: #444;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* 팀명이 너무 길면 ... 처리 */
+    text-overflow: ellipsis; /* 팀명 길면 ... 처리 */
 }
 
-/* 점수 스타일 */
+/* 3. 점수 영역 (오른쪽 끝) */
 .score-n {
-    font-family: 'Courier New', monospace; /* 숫자를 일정하게 정렬 */
-    font-weight: bold;
-    color: #d32f2f; /* 점수에 포인트 컬러 */
-    min-width: 45px;
-    text-align: right;
+    width: 45px !important;
+    min-width: 45px !important;
+    text-align: right !important;
+    font-weight: bold !important;
+    color: #d32f2f !important;
+    font-family: 'Courier New', monospace; /* 숫자 간격 일정하게 */
+    font-size: 0.75rem !important;
+    flex-shrink: 0 !important;
 }
 
-/* 세미파이널 BO3 리스트 스타일 보정 */
+/* 4. 세미파이널 BO3 리스트 보정 */
 .bo3-list {
-    width: 100%;
-    padding: 2px 0;
+    width: 100% !important;
+    padding: 2px 0 !important;
 }
