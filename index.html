@@ -155,7 +155,7 @@
     }
 
     function loadStandings() {
-    // 1. 드롭다운에서 선택된 연도(currentYear)에 따라 시트 이름을 결정합니다.
+    // 1. 드롭다운 선택 연도에 따라 시트 이름 결정
     const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
     
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
@@ -168,9 +168,9 @@
         let stats = {}; 
         teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
 
-        // 2. 선택된 연도 시트의 데이터를 훑습니다.
+        // 2. 데이터 계산
         data.rows.forEach((r, idx) => {
-            // ⭐ 정규리그는 36행(인덱스 35)까지만 존재하므로 그 이후(포스트시즌)는 무시합니다.
+            // 정규리그 범위(엑셀 36행까지) 제한
             if (idx > 35) return; 
 
             let away = gv(r, 3).trim();
@@ -181,7 +181,7 @@
             if (away === "FireBats") away = "Fire Bats";
             if (home === "FireBats") home = "Fire Bats";
 
-            // 스코어가 있는 경기만 승패 계산 (MAKE UP 등 텍스트 제외)
+            // 스코어가 있는 경기만 승패 계산
             if (score && score.includes(':') && stats[away] && stats[home]) {
                 const s = score.split(':').map(Number);
                 if (!isNaN(s[0]) && !isNaN(s[1])) {
@@ -195,12 +195,36 @@
             }
         });
 
-        // 3. 정렬 및 테이블 출력 (기존 로직과 동일)
+        // 3. 정렬
         let standings = Object.values(stats);
         standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
+
+        // 4. 화면 출력 (테이블 그리기)
+        const leader = standings[0]; 
+        const tb = document.getElementById('standing-body'); 
+        if (!tb) return; // 테이블 바디가 없으면 종료
         
-        displayStandings(standings); // 순위표를 화면에 그리는 함수 호출
-    });
+        tb.innerHTML = '';
+        standings.forEach((s, idx) => {
+            const pct = (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l);
+            const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
+            const diff = s.rs - s.ra;
+            let logoPath = teamLogos[s.name] || teamLogos[s.name.replace(' ', '')];
+            
+            tb.innerHTML += `<tr>
+                <td>${idx+1}</td>
+                <td style="text-align:left; font-weight:bold;">
+                    <img src="${logoPath}" style="width:18px; height:18px; vertical-align:middle; margin-right:5px; object-fit:contain;">${s.name}
+                </td>
+                <td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td>
+                <td class="val-pct">${pct.toFixed(3)}</td>
+                <td class="bg-gb">${gb}</td>
+                <td>${s.rs}</td><td>${s.ra}</td>
+                <td class="${diff>0?'diff-plus':(diff<0?'diff-minus':'')}">${diff>0?'+'+diff:diff}</td>
+            </tr>`;
+        });
+    })
+    .catch(err => console.error("데이터 로드 실패:", err));
 }
 
     function loadSchedule() {
