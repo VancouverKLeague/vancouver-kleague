@@ -353,7 +353,7 @@
     if (!section) return;
 
     section.style.display = 'block';
-    if (title) title.innerText = `🔥 ${year} Postseason Bracket`;
+    if (title) title.innerText = `🔥 ${year} 포스트시즌 대진표`;
 
     const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
     
@@ -364,32 +364,27 @@
         const getV = (r, c) => (rows[r] && rows[r].c[c]) ? (rows[r].c[c].v || "") : "";
         const fmt = (v) => v ? `(${v})` : "(-)";
 
-        // 1. Wild Card (37, 38행)
         document.getElementById('br-wca').innerHTML = `<div class="match-line"><span class="team-n">${getV(0,0)} vs ${getV(0,1)}</span> <span class="score-n">${fmt(getV(0,2))}</span></div>`;
         document.getElementById('br-wcb').innerHTML = `<div class="match-line"><span class="team-n">${getV(1,0)} vs ${getV(1,1)}</span> <span class="score-n">${fmt(getV(1,2))}</span></div>`;
 
-        // 2. Semi-Final A (WC A Winner vs #1 Seed 관련 행: 2, 4, 5번 인덱스)
         let sfaHtml = `
             <div class="match-line"><span>G1</span> <span class="team-n">${getV(2,0)} vs ${getV(2,1)}</span> <span class="score-n">${fmt(getV(2,2))}</span></div>
             <div class="match-line"><span>G2</span> <span class="team-n">${getV(4,0)} vs ${getV(4,1)}</span> <span class="score-n">${fmt(getV(4,2))}</span></div>`;
-        if (getV(5,0)) { // 3차전 팀명이 있으면 표시
+        if (getV(5,0)) {
             sfaHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(5,0)} vs ${getV(5,1)}</span> <span class="score-n">${fmt(getV(5,2))}</span></div>`;
         }
         document.getElementById('br-sfa').innerHTML = sfaHtml;
 
-        // 3. Semi-Final B (WC B Winner vs #2 Seed 관련 행: 3, 6, 7번 인덱스)
         let sfbHtml = `
             <div class="match-line"><span>G1</span> <span class="team-n">${getV(3,0)} vs ${getV(3,1)}</span> <span class="score-n">${fmt(getV(3,2))}</span></div>
             <div class="match-line"><span>G2</span> <span class="team-n">${getV(6,0)} vs ${getV(6,1)}</span> <span class="score-n">${fmt(getV(6,2))}</span></div>`;
-        if (getV(7,0)) { // 3차전 팀명이 있으면 표시
+        if (getV(7,0)) {
             sfbHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(7,0)} vs ${getV(7,1)}</span> <span class="score-n">${fmt(getV(7,2))}</span></div>`;
         }
         document.getElementById('br-sfb').innerHTML = sfbHtml;
 
-        // 4. Finals (8번 인덱스)
         document.getElementById('br-final').innerHTML = `<div class="match-line"><span class="team-n">${getV(8,0)} vs ${getV(8,1)}</span> <span class="score-n">${fmt(getV(8,2))}</span></div>`;
-    })
-    .catch(err => console.error("Bracket load failed:", err));
+    });
 }
 
 // 페이지 로드 시 자동으로 실행되는 함수
