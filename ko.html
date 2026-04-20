@@ -210,7 +210,13 @@
     function loadSchedule() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
+            const allRows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
+            const rows = allRows.filter(r => {
+                const dateStr = gv(r, 0); // 날짜 열
+                const awayTeam = gv(r, 3); // 팀명 열
+                // 팀명이 있고, 날짜에 현재 선택된 연도(currentYear)가 포함된 경기만 필터링
+                return awayTeam && awayTeam.trim() !== "" && dateStr.includes(currentYear);
+            });
             const played = rows.filter(r => gv(r, 5) && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
             const render = (r) => { 
