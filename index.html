@@ -58,6 +58,27 @@
         <a id="rulebook-link" href="#" target="_blank" style="display:none; padding: 10px 20px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.85rem;">📖 View League Rule Book</a>
     </div>
 
+    <div id="po-bracket-section" class="card" style="border-top: 4px solid #d32f2f; display: none; margin-top: 20px;">
+    <h3 id="bracket-title">🔥 2026 Postseason Bracket</h3>
+    <div class="bracket-wrapper">
+        <div class="bracket-round">
+            <div class="round-title">WILD CARD</div>
+            <div class="match-box"><span class="match-tag wc">WC A</span><div class="match-teams" id="br-wca">#6 Seed vs #3 Seed</div></div>
+            <div class="match-box"><span class="match-tag wc">WC B</span><div class="match-teams" id="br-wcb">#5 Seed vs #4 Seed</div></div>
+        </div>
+        <div class="bracket-round">
+            <div class="round-title">SEMI-FINAL (BO3)</div>
+            <div class="match-box"><span class="match-tag sf">SF A</span><div class="match-teams" id="br-sfa">WC A Win vs #1 Seed</div></div>
+            <div class="match-box"><span class="match-tag sf">SF B</span><div class="match-teams" id="br-sfb">WC B Win vs #2 Seed</div></div>
+        </div>
+        <div class="bracket-round">
+            <div class="round-title">FINALS</div>
+            <div class="match-box final-highlight"><span class="match-tag final">FINAL</span><div class="match-teams" id="br-final">SF B Win vs SF A Win</div></div>
+            <div class="match-box"><span class="match-tag bronze">3RD PLACE</span><div class="match-teams" id="br-3rd">SF B L vs SF A L</div></div>
+        </div>
+    </div>
+</div>
+
     <div class="card">
         <h3>🏆 Standings</h3>
         <div class="table-wrapper">
@@ -284,6 +305,41 @@
         });
     }
     changeYear('2026');
+
+    function updateBracket(year) {
+    const section = document.getElementById('po-bracket-section');
+    const title = document.getElementById('bracket-title');
+    
+    // 포스트시즌 섹션 보이기
+    section.style.display = 'block';
+    title.innerText = `🔥 ${year} Postseason Bracket`;
+
+    if (year === '2025') {
+        // 2025년 실제 결과 (수동 입력이 가장 정확하고 깔끔합니다)
+        document.getElementById('br-wca').innerText = "Fire Bats (8) vs Van Avengers (15)";
+        document.getElementById('br-wcb').innerText = "Van Dragons (5) vs Van Bros (1)";
+        document.getElementById('br-sfa').innerText = "Van Avengers (6) vs Arirang Rays (12)"; // 예시
+        // ... 이런 식으로 2025년 최종 결과를 박아넣습니다.
+    } else {
+        // 2026년 (아직 미정이므로 기본값)
+        document.getElementById('br-wca').innerText = "#6 Seed vs #3 Seed";
+        document.getElementById('br-wcb').innerText = "#5 Seed vs #4 Seed";
+        document.getElementById('br-sfa').innerText = "WC A Win vs #1 Seed";
+        // ... 초기 상태로 되돌림
+    }
+}
+
+// changeYear 함수 마지막에 updateBracket(year); 를 추가하세요!
+function changeYear(year) {
+    currentYear = year;
+    updateChampions(year);
+    loadNotice();
+    loadStandings();
+    loadSchedule();
+    loadStats();
+    updateBracket(year); // 대진표 업데이트 추가
+}
+    
 </script>
 </body>
 </html>
