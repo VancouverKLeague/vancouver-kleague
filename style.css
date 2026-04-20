@@ -20,7 +20,7 @@ h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-
 .gold { background: #fff9e6; border: 1px solid #ffd700; }
 .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
 .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
-.bronze { background: #cd7f32; border: 1px solid #a0522d; color: #fff !important; }
+.bronze { background: #d99058; border: 1px solid #a0522d; color: #fff !important; }
 .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
 /* 📢 Notice Card */
