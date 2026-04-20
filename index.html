@@ -16,7 +16,7 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* 🏆 Season Honors (디자인 개선 - 줄바꿈 적용) */
+        /* 🏆 Season Honors */
         .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 15px; display: block; }
         .champion-box { margin: 5px; padding: 12px 10px; border-radius: 8px; display: inline-block; min-width: 140px; vertical-align: top; text-align: center; }
@@ -28,17 +28,45 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
-        /* 📢 Notice Card (KO 페이지와 동일한 상단 오렌지 테두리 추가) */
+        /* 📢 Notice Card */
         #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
 
-        /* 🏆 Standings & Schedule */
-        .val-pct { font-weight: bold; color: #d32f2f; } /* 🔴 PCT 빨간색 적용 */
+        /* 🏆 1. 테이블 가로 슬라이드 설정 (강화됨) */
+        .table-wrapper { 
+            width: 100%; 
+            overflow-x: auto; /* 가로 스크롤 허용 */
+            -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            table-layout: auto; /* 내용에 따라 너비 유동적 조절 */
+        }
+
+        /* 2. 순위표 & 스케줄 최소 너비 고정 (모바일 깨짐 방지) */
+        #standing-table { min-width: 700px; } /* 순위표 최소 너비 */
+        #schedule-table { min-width: 600px; } /* 스케줄표 최소 너비 */
+
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 10px 5px; 
+            font-size: 0.82rem; 
+            text-align: center;
+            white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+        }
+        th { background: #f8f9fa; }
+
+        /* 🏆 Standings & Schedule Detail */
+        .val-pct { font-weight: bold; color: #d32f2f; }
         .bg-gb { background-color: #fffef0; font-weight: bold; }
         .diff-plus { color: #003366; font-weight: bold; }
         .diff-minus { color: #d32f2f; font-weight: bold; }
         .score-display { font-size: 0.95rem; font-weight: 900; color: #d32f2f; background-color: #fffaf8; }
-        .tag-away { font-size: 0.65rem; color: #666; border: 1px solid #ccc; border-radius: 3px; padding: 1px 4px; margin-right: 3px; }
-        .tag-home { font-size: 0.65rem; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 3px; padding: 1px 4px; margin-right: 3px; }
+        .tag-away { font-size: 0.65rem; color: #666; border: 1px solid #ccc; border-radius: 3px; padding: 1px 4px; margin-right: 3px; font-weight: normal; }
+        .tag-home { font-size: 0.65rem; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 3px; padding: 1px 4px; margin-right: 3px; font-weight: normal; }
         .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
 
         /* 📊 Leaderboard (부문 타이틀 강조 및 높이 최적화) */
@@ -57,7 +85,7 @@
             border-bottom: 1px solid #ddd; 
         }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; }
+        .leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; white-space: normal; /* 기록실은 줄바꿈 허용 */ }
         .rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: left; }
         .player-col { text-align: left; padding-left: 2px; }
         .player-name { font-weight: bold; font-size: 0.82rem; color: #333; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -72,10 +100,6 @@
         .active { background: #003366; color: white; border-color: #003366; }
         .inactive { background: #eee; color: #333; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
-        th { background: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -131,20 +155,24 @@
 
     <div class="card">
         <h3>🏆 Standings</h3>
-        <div class="table-wrapper"><table style="width:100%; border-collapse:collapse;"><thead><tr><th>Rank</th><th>Team</th><th>G</th><th>W</th><th>L</th><th>T</th><th>PCT</th><th style="background:#fff9e6;">GB</th><th>RS</th><th>RA</th><th>DIFF</th></tr></thead><tbody id="standing-body"></tbody></table></div>
-    </div>
-
-    <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div><a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-theme="pure">VANCOUVER WEATHER</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script></div>
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;"><a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field">🏟️ Queen's Stadium</a><a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field">🏟️ Blundell South</a><a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field">🌳 Central Park</a></div>
+        <div class="table-wrapper">
+            <table id="standing-table">
+                <thead>
+                    <tr><th>Rank</th><th>Team</th><th>G</th><th>W</th><th>L</th><th>T</th><th>PCT</th><th style="background:#fff9e6;">GB</th><th>RS</th><th>RA</th><th>DIFF</th></tr>
+                </thead>
+                <tbody id="standing-body"></tbody>
+            </table>
         </div>
     </div>
 
     <div class="card">
         <h3>⚾ Recent & Upcoming Games</h3>
-        <div class="table-wrapper"><table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table></div>
+        <div class="table-wrapper">
+            <table id="schedule-table">
+                <thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead>
+                <tbody id="schedule-body"></tbody>
+            </table>
+        </div>
         <a href="schedule.html" class="btn-more">View Full Schedule →</a>
     </div>
 
@@ -154,7 +182,7 @@
             <div class="toggle-container"><button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')">Regular</button><button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')">Post</button></div>
         </div>
         <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee; margin-bottom:15px;">Batting</h4>
-        <div class="leader-grid">
+        <div class="leader-grid" id="bat-grid">
             <div class="leader-category"><div class="leader-category-title">AVG</div><div id="avg-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">HITS</div><div id="hits-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">HOME RUNS</div><div id="hr-leaders"></div></div>
@@ -163,7 +191,7 @@
             <div class="leader-category"><div class="leader-category-title">OPS</div><div id="ops-leaders"></div></div>
         </div>
         <h4 style="color: #2e7d32; text-align: center; border-bottom: 1px solid #eee; margin: 30px 0 15px 0;">Pitching</h4>
-        <div class="leader-grid">
+        <div class="leader-grid" id="pitching-grid">
             <div class="leader-category"><div class="leader-category-title">ERA</div><div id="era-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">WINS</div><div id="win-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">INNINGS PITCHED</div><div id="ip-leaders"></div></div>
