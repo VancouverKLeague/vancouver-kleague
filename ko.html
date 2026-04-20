@@ -4,76 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>밴쿠버 K-리그 | 홈</title>
-    <style>
-        /* 🎨 기본 디자인 테마 */
-        body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; }
-        header { background: #003366; color: #ffffff; padding: 1.5rem; text-align: center; position: relative; }
-        .lang-switch { position: absolute; top: 10px; right: 20px; }
-        .lang-switch a { color: white; text-decoration: none; border: 1px solid white; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; }
-        nav { background: #333; color: #fff; padding: 10px; text-align: center; }
-        nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
-        .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
-        .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
-        
-        /* 🏆 Season Honors */
-        .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 15px; display: block; }
-        .champion-box { margin: 5px; padding: 12px 10px; border-radius: 8px; display: inline-block; min-width: 140px; vertical-align: top; text-align: center; }
-        .champion-box .label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: #666; }
-        .champion-box .team-name { display: block; font-size: 1.05rem; font-weight: 900; color: #003366; }
-        .gold { background: #fff9e6; border: 1px solid #ffd700; }
-        .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
-        .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
-        .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
-        .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-
-        /* 📢 Notice Card */
-        #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
-        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
-        .btn-rulebook { display: inline-block; padding: 10px 20px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.85rem; }
-
-        /* 🏆 모바일 가로 슬라이드 설정 */
-        .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        #standing-table { min-width: 750px; } 
-        #schedule-table { min-width: 600px; } 
-        th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; white-space: nowrap; }
-        th { background: #f8f9fa; }
-
-        /* 🏆 포인트 스타일 */
-        .val-pct { font-weight: bold; color: #d32f2f; }
-        .bg-gb { background-color: #fffef0; font-weight: bold; }
-        .diff-plus { color: #003366; font-weight: bold; }
-        .diff-minus { color: #d32f2f; font-weight: bold; }
-        .score-display { font-size: 0.95rem; font-weight: 900; color: #d32f2f; background-color: #fffaf8; }
-        .tag-away { font-size: 0.65rem; font-weight: normal; color: #666; border: 1px solid #ccc; border-radius: 3px; padding: 1px 3px; margin-right: 3px; }
-        .tag-home { font-size: 0.65rem; font-weight: normal; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 3px; padding: 1px 3px; margin-right: 3px; }
-        .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
-
-        /* 📊 부문별 순위 (6개씩 3열 배치) */
-        .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        @media (max-width: 992px) { .leader-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
-        
-        .leader-category { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; }
-        .leader-category-title { background: #eceff1; padding: 8px 6px; font-size: 0.9rem; font-weight: 800; text-align: center; color: #003366; border-bottom: 1px solid #ddd; }
-        .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; white-space: normal; }
-        .rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: left; }
-        .player-info { display: flex; flex-direction: column; overflow: hidden; text-align: left; }
-        .player-name { font-weight: bold; font-size: 0.82rem; color: #333; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .player-team { font-size: 0.65rem; color: #999; display: block; }
-        .value-col { text-align: right; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
-        .no-records { text-align: center; color: #bbb; font-size: 0.85rem; padding: 30px 10px; flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfdfd; }
-
-        .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
-        .btn-field { display: block; padding: 12px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; }
-        .toggle-btn { padding: 6px 12px; cursor: pointer; border: 1px solid #ddd; font-weight: bold; font-size: 0.8rem; }
-        .active { background: #003366; color: white; border-color: #003366; }
-        .inactive { background: #eee; color: #333; }
-        footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
