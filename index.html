@@ -363,10 +363,10 @@
         const data = JSON.parse(t.substr(47).slice(0, -2));
         const rows = data.table.rows;
         
+        // 데이터 추출 함수: 시트에 보이는 그대로(f) 혹은 값(v)을 가져옴
         const gv = (r, i) => (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : '';
         const fmt = (v) => v ? `(${v})` : "(-)";
 
-        // 각 구역의 HTML을 담을 변수들
         let htmlWCA = '', htmlWCB = '', htmlSFA = '', htmlSFB = '', htmlFinal = '', html3rd = '';
         let cntA = 1, cntB = 1;
 
@@ -376,7 +376,7 @@
             const score = fmt(gv(r, 2));
             const note = gv(r, 3).toUpperCase();
 
-            // 팀명이 아예 없는 행은 건너뜁니다.
+            // 팀명이 하나라도 있으면 그립니다.
             if (!team1 && !team2) return;
 
             const matchHtml = `<div class="match-line"><span class="team-n">${team1} vs ${team2}</span><span class="score-n">${score}</span></div>`;
@@ -390,15 +390,13 @@
             else if (note.includes('3RD') || note.includes('3위')) html3rd = matchHtml;
         });
 
-        // 결과 반영 (값이 없으면 "TBA" 혹은 빈칸 처리)
-        document.getElementById('br-wca').innerHTML = htmlWCA || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        document.getElementById('br-wcb').innerHTML = htmlWCB || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        document.getElementById('br-sfa').innerHTML = htmlSFA || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        document.getElementById('br-sfb').innerHTML = htmlSFB || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        document.getElementById('br-final').innerHTML = htmlFinal || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        if(document.getElementById('br-3rd')) {
-            document.getElementById('br-3rd').innerHTML = html3rd || '<div class="match-line"><span class="team-n">TBA</span></div>';
-        }
+        // 결과 반영 (시트 데이터가 있을 때만 업데이트)
+        if(htmlWCA) document.getElementById('br-wca').innerHTML = htmlWCA;
+        if(htmlWCB) document.getElementById('br-wcb').innerHTML = htmlWCB;
+        if(htmlSFA) document.getElementById('br-sfa').innerHTML = htmlSFA;
+        if(htmlSFB) document.getElementById('br-sfb').innerHTML = htmlSFB;
+        if(htmlFinal) document.getElementById('br-final').innerHTML = htmlFinal;
+        if(html3rd && document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
     })
     .catch(err => console.error("Bracket Error:", err));
 }
