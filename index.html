@@ -353,37 +353,49 @@
     if (!section) return;
 
     section.style.display = 'block';
-    if (title) title.innerText = `🔥 ${year} 포스트시즌 대진표`;
+    // 영문 페이지에 맞게 제목 설정
+    if (title) title.innerText = `🔥 ${year} Postseason Bracket`;
 
     const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
     
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:F45`)
+    // G열(Note)까지 가져오기 위해 범위를 G50까지 넓힙니다.
+    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G50`)
     .then(res => res.text())
     .then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-        const getV = (r, c) => (rows[r] && rows[r].c[c]) ? (rows[r].c[c].v || "") : "";
+        const gv = (r, i) => (r && r.c && r.c[i]) ? (r.c[i].v || '') : '';
         const fmt = (v) => v ? `(${v})` : "(-)";
 
-        document.getElementById('br-wca').innerHTML = `<div class="match-line"><span class="team-n">${getV(0,0)} vs ${getV(0,1)}</span> <span class="score-n">${fmt(getV(0,2))}</span></div>`;
-        document.getElementById('br-wcb').innerHTML = `<div class="match-line"><span class="team-n">${getV(1,0)} vs ${getV(1,1)}</span> <span class="score-n">${fmt(getV(1,2))}</span></div>`;
+        let htmlWC_A = '', htmlWC_B = '', htmlSF_A = '', htmlSF_B = '', htmlFinal = '', html3rd = '';
+        let cntA = 1, cntB = 1;
 
-        let sfaHtml = `
-            <div class="match-line"><span>G1</span> <span class="team-n">${getV(2,0)} vs ${getV(2,1)}</span> <span class="score-n">${fmt(getV(2,2))}</span></div>
-            <div class="match-line"><span>G2</span> <span class="team-n">${getV(4,0)} vs ${getV(4,1)}</span> <span class="score-n">${fmt(getV(4,2))}</span></div>`;
-        if (getV(5,0)) {
-            sfaHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(5,0)} vs ${getV(5,1)}</span> <span class="score-n">${fmt(getV(5,2))}</span></div>`;
-        }
-        document.getElementById('br-sfa').innerHTML = sfaHtml;
+        rows.forEach(r => {
+            const teamStr = `${gv(r, 0)} vs ${gv(r, 1)}`;
+            const scoreStr = fmt(gv(r, 2));
+            const note = gv(r, 3).toUpperCase(); // G열 (Note)
 
-        let sfbHtml = `
-            <div class="match-line"><span>G1</span> <span class="team-n">${getV(3,0)} vs ${getV(3,1)}</span> <span class="score-n">${fmt(getV(3,2))}</span></div>
-            <div class="match-line"><span>G2</span> <span class="team-n">${getV(6,0)} vs ${getV(6,1)}</span> <span class="score-n">${fmt(getV(6,2))}</span></div>`;
-        if (getV(7,0)) {
-            sfbHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(7,0)} vs ${getV(7,1)}</span> <span class="score-n">${fmt(getV(7,2))}</span></div>`;
-        }
-        document.getElementById('br-sfb').innerHTML = sfbHtml;
+            if (note.includes('WC A')) {
+                htmlWC_A = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            } else if (note.includes('WC B')) {
+                htmlWC_B = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            } else if (note.includes('SF A')) {
+                htmlSF_A += `<div class="match-line"><span>G${cntA++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            } else if (note.includes('SF B')) {
+                htmlSF_B += `<div class="match-line"><span>G${cntB++}</span> <span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            } else if (note.includes('FINAL')) {
+                htmlFinal = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            } else if (note.includes('3RD') || note.includes('3위')) {
+                html3rd = `<div class="match-line"><span class="team-n">${teamStr}</span> <span class="score-n">${scoreStr}</span></div>`;
+            }
+        });
 
-        document.getElementById('br-final').innerHTML = `<div class="match-line"><span class="team-n">${getV(8,0)} vs ${getV(8,1)}</span> <span class="score-n">${fmt(getV(8,2))}</span></div>`;
+        // HTML에 결과 반영
+        document.getElementById('br-wca').innerHTML = htmlWC_A;
+        document.getElementById('br-wcb').innerHTML = htmlWC_B;
+        document.getElementById('br-sfa').innerHTML = htmlSF_A;
+        document.getElementById('br-sfb').innerHTML = htmlSF_B;
+        document.getElementById('br-final').innerHTML = htmlFinal;
+        if(document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
     });
 }
 
