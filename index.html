@@ -14,26 +14,13 @@
         .container { padding: 15px; max-width: 1100px; margin: auto; background: #fff; min-height: 100vh; }
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
-        
-        .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; letter-spacing: 1px; }
-        .champion-box { margin: 5px; padding: 10px; border-radius: 8px; display: inline-block; min-width: 130px; vertical-align: top; }
-        .champion-box .label { display: block; font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; color: #666; text-transform: uppercase; }
-        .champion-box .team-name { font-size: 1rem; font-weight: 900; color: #003366; }
-        .gold { background: #fff9e6; border: 1px solid #ffd700; }
-        .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
-        .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
-        .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
-        .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-
         .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .leader-table td { padding: 6px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
         .player-info { display: flex; flex-direction: column; overflow: hidden; }
         .player-name { font-weight: bold; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        .player-team { font-size: 0.6rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-team { font-size: 0.6rem; color: #888; }
         .val-highlight { color: #d32f2f; font-weight: bold; }
-        
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
@@ -56,6 +43,14 @@
     <a href="stats.html">Player Stats</a>
 </nav>
 
+<div style="background: #eee; padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+    <label for="season-select" style="font-weight: bold; margin-right: 10px;">Season:</label>
+    <select id="season-select" onchange="changeYear(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer;">
+        <option value="2026" selected>2026 Season</option>
+        <option value="2025">2025 Season</option>
+    </select>
+</div>
+
 <div class="container">
     <div class="card">
         <h3>🏆 Standings</h3>
@@ -71,27 +66,37 @@
         </div>
     </div>
 
+    <div class="card">
+        <h3>⚾ Recent Results & Upcoming Games</h3>
+        <div class="table-wrapper">
+            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table>
+        </div>
+        <a href="schedule.html" class="btn-more">View Full Season Schedule →</a>
+    </div>
+
     <div class="card" style="border-top: 4px solid #ffc107;">
         <h3>🔥 League Leaders (Top 5)</h3>
-        
-        <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Batting</h4>
-        <div class="leader-grid">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">HITS</h4><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">HR</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">QAB</h4><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
+        <div class="toggle-container" style="text-align: right; margin-bottom: 10px;">
+            <button id="btn-Reg" class="active" onclick="switchSeason('Reg')">Regular</button>
+            <button id="btn-Post" class="inactive" onclick="switchSeason('Post')">Post</button>
         </div>
-
-        <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Pitching</h4>
+        <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee;">Batting</h4>
         <div class="leader-grid">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">Wins</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">IP</h4><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">SO</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">AVG AG</h4><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">HITS</h4><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">HR</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">QAB</h4><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
+        </div>
+        <h4 style="color: #2e7d32; text-align: center; border-bottom: 1px solid #eee; margin-top:20px;">Pitching</h4>
+        <div class="leader-grid">
+            <div><h4 style="font-size:0.8rem; text-align:center;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">Wins</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">IP</h4><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">SO</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
+            <div><h4 style="font-size:0.8rem; text-align:center;">AVG AG</h4><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
         </div>
         <a href="stats.html" class="btn-more">View Full Player Stats →</a>
     </div>
@@ -104,12 +109,6 @@
     let currentYear = '2026';
     let currentSeason = 'Reg';
 
-    const teamLogos = {
-        "Van Avengers": "logos/Van Avengers.png", "Van Dragons": "logos/Van Dragons.png",
-        "Karis Cubs": "logos/Karis Cubs.png", "Arirang Rays": "logos/Arirang Rays.png",
-        "Fire Bats": "logos/Fire Bats.png", "Van Bros": "logos/Van Bros.png"
-    };
-
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
     function changeYear(year) {
@@ -117,37 +116,62 @@
         loadStandings(); loadSchedule(); loadStats();
     }
 
+    function switchSeason(s) {
+        currentSeason = s;
+        document.getElementById('btn-Reg').className = (s === 'Reg' ? 'active' : 'inactive');
+        document.getElementById('btn-Post').className = (s === 'Post' ? 'active' : 'inactive');
+        loadStats();
+    }
+
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
         .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"];
+            const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats", "FireBats"];
             let stats = {};
             teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
 
             data.rows.forEach(r => {
-                const away = gv(r, 3); const home = gv(r, 4); const score = gv(r, 5);
+                const away = gv(r, 3).trim(); const home = gv(r, 4).trim(); const score = gv(r, 5);
                 if (score && score.includes(':') && stats[away] && stats[home]) {
                     const s = score.split(':').map(Number);
-                    stats[away].rs += s[0]; stats[away].ra += s[1];
-                    stats[home].rs += s[1]; stats[homeTeam = home].ra += s[0];
-                    stats[away].g++; stats[home].g++;
+                    stats[away].rs += s[0]; stats[away].ra += s[1]; stats[away].g++;
+                    stats[home].rs += s[1]; stats[home].ra += s[0]; stats[home].g++;
                     if (s[0] > s[1]) { stats[away].w++; stats[home].l++; }
                     else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; }
                     else { stats[away].t++; stats[home].t++; }
                 }
             });
 
-            let standings = Object.values(stats).map(s => ({ ...s, pct: (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l), diff: s.rs - s.ra }));
-            standings.sort((a, b) => (b.pct - a.pct) || (b.w - a.w) || (b.diff - a.diff));
+            let standings = Object.values(stats).filter(s => s.g > 0 || ["Arirang Rays", "Van Avengers"].includes(s.name));
+            // Unified FireBats name for display
+            standings = standings.map(s => (s.name === 'FireBats' ? {...s, name: 'Fire Bats'} : s));
+            
+            standings.sort((a, b) => (b.w / (b.w+b.l || 1)) - (a.w / (a.w+a.l || 1)) || (b.w - a.w) || (b.rs - b.ra) - (a.rs - a.ra));
 
             const leader = standings[0];
             const tb = document.getElementById('standing-body');
             tb.innerHTML = '';
             standings.forEach((s, idx) => {
+                const pct = (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l);
                 const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
-                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left;">${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${s.pct.toFixed(3)}</td><td style="background:#fffef0;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.diff}</td></tr>`;
+                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left;">${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${pct.toFixed(3)}</td><td style="background:#fffef0;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.rs - s.ra}</td></tr>`;
+            });
+        });
+    }
+
+    function loadSchedule() {
+        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
+        .then(res => res.text()).then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2)).table;
+            const tb = document.getElementById('schedule-body');
+            tb.innerHTML = '';
+            const played = data.rows.filter(r => gv(r, 5) && gv(r, 5).includes(':')).slice(-2);
+            const next = data.rows.filter(r => (!gv(r, 5) || gv(r, 5) === '-') && gv(r, 3)).slice(0, 2);
+            [...played, ...next].forEach(r => {
+                tb.innerHTML += `<tr><td>${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="font-weight:bold;">${gv(r, 3)} vs ${gv(r, 4)}</td><td class="val-highlight">${gv(r, 5) || 'TBA'}</td></tr>`;
             });
         });
     }
@@ -157,10 +181,8 @@
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`)
         .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows;
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
             const fi = (n) => cols.findIndex(c => c === n);
-
             const metrics = [
                 {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
                 {id: 'hits-leaders', n: 'HITS', d: 0, asc: false},
@@ -176,33 +198,22 @@
                 {id: 'avga-leaders', n: 'BATTING AVERAGE AGAINST', d: 3, asc: true}
             ];
 
-            const pIdx = fi('PLAYER'), tmIdx = fi('TEAM'), ipIdx = fi('INNINGS PITCHED'), lNameIdx = fi('LAST NAME');
-
             metrics.forEach(m => {
-                const vIdx = fi(m.n);
-                const target = document.getElementById(m.id);
+                const vIdx = fi(m.n); const target = document.getElementById(m.id);
                 if (vIdx === -1 || !target) return;
-
-                let validRows = rows.filter(r => {
+                let valid = data.rows.filter(r => {
                     const val = parseFloat(gv(r, vIdx)) || 0;
-                    const ip = parseFloat(gv(r, ipIdx)) || 0;
-                    if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) return ip > 0;
-                    return val > 0;
+                    const ip = parseFloat(gv(r, fi('INNINGS PITCHED'))) || 0;
+                    return (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) ? ip > 0 : val > 0;
                 });
-
-                validRows.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
-                
-                target.innerHTML = validRows.length ? "" : '<tr><td colspan="3" style="text-align:center;font-size:0.7rem;">No data</td></tr>';
-                validRows.slice(0, 5).forEach((r, i) => {
-                    // Combine First/Last names or use Last Name if it contains the full name
-                    let name = gv(r, pIdx) || gv(r, lNameIdx); 
-                    target.innerHTML += `<tr><td style="width:15px;font-weight:bold;color:#777;">${i+1}</td><td style="text-align:left;"><div class="player-info"><span class="player-name">${name}</span><span class="player-team">${gv(r, tmIdx)}</span></div></td><td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
+                valid.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
+                target.innerHTML = '';
+                valid.slice(0, 5).forEach((r, i) => {
+                    target.innerHTML += `<tr><td style="width:15px;">${i+1}</td><td style="text-align:left;"><div class="player-info"><span class="player-name">${gv(r, fi('LAST NAME'))}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></div></td><td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
                 });
             });
         });
     }
-
-    function loadSchedule() { /* Existing logic to display last 2 played and next 2 upcoming games */ }
 
     changeYear('2026');
 </script>
