@@ -184,7 +184,7 @@
 
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=A1:G36`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats", "FireBats"];
             let stats = {}; teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
