@@ -16,7 +16,7 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* 🏆 Season Honors (디자인 개선) */
+        /* 🏆 Season Honors (디자인 개선 - 줄바꿈 적용) */
         .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 15px; display: block; }
         .champion-box { margin: 5px; padding: 12px 10px; border-radius: 8px; display: inline-block; min-width: 140px; vertical-align: top; text-align: center; }
@@ -28,8 +28,8 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
-        /* 🏆 Standings & Schedule */
-        .val-pct { font-weight: bold; color: #333; }
+        /* 🏆 Standings & Schedule (PCT Red Highlight) */
+        .val-pct { font-weight: bold; color: #d32f2f; } /* 🔴 PCT 빨간색 적용 */
         .bg-gb { background-color: #fffef0; font-weight: bold; }
         .diff-plus { color: #003366; font-weight: bold; }
         .diff-minus { color: #d32f2f; font-weight: bold; }
@@ -38,13 +38,21 @@
         .tag-home { font-size: 0.65rem; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 3px; padding: 1px 4px; margin-right: 3px; }
         .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
 
-        /* 📊 Leaderboard (3열 가로 배치 및 높이 최적화) */
+        /* 📊 Leaderboard (부문 타이틀 강조 및 높이 최적화) */
         .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
         @media (max-width: 992px) { .leader-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
         
         .leader-category { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; }
-        .leader-category-title { background: #f8f9fa; padding: 6px; font-size: 0.8rem; font-weight: bold; text-align: center; color: #555; border-bottom: 1px solid #ddd; }
+        .leader-category-title { 
+            background: #eceff1; 
+            padding: 8px 6px; 
+            font-size: 0.9rem; 
+            font-weight: 800; 
+            text-align: center; 
+            color: #003366; 
+            border-bottom: 1px solid #ddd; 
+        }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; }
         .rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: left; }
