@@ -221,11 +221,37 @@
             const played = rows.filter(r => gv(r, 5) && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
             const render = (r) => { 
-                const note = gv(r, 6).trim(); let bH = ''; if(note){ let bC = 'badge-default'; if(note.toUpperCase().includes('WC') || note.includes('와일드')) bC='badge-wc'; else if(note.toUpperCase().includes('SF') || note.includes('준결승')) bC='badge-sf'; else if(note.toUpperCase().includes('FINAL') || note.includes('결승')) bC='badge-final'; bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; }
-                document.getElementById('schedule-body').innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">원정</span>${gv(r, 3)}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">홈</span>${gv(r, 4)}</span></div></td><td class="score-display">${gv(r, 5) || '-'}</td></tr>`;
+                const awayT = gv(r, 3);
+                const homeT = gv(r, 4);
+                // 1. MAKE UP 경기 제외
+                if (awayT.toUpperCase().includes('MAKE UP') || homeT.toUpperCase().includes('MAKE UP')) return;
+
+                const note = gv(r, 6).trim(); 
+                let bH = ''; 
+                if(note){ 
+                    let bC = 'badge-default'; 
+                    // 2. 대소문자 상관없이 태그 색상 적용
+                    if(note.toUpperCase().includes('WC') || note.includes('와일드')) bC='badge-wc'; 
+                    else if(note.toUpperCase().includes('SF') || note.includes('준결승')) bC='badge-sf'; 
+                    else if(note.toUpperCase().includes('FINAL') || note.includes('결승')) bC='badge-final'; 
+                    bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; 
+                }
+                document.getElementById('schedule-body').innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">원정</span>${awayT}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">홈</span>${homeT}</span></div></td><td class="score-display">${gv(r, 5) || '-'}</td></tr>`;
             };
-            if (played.length > 0) { const lastD = gv(played[played.length-1], 0); played.filter(r => gv(r, 0) === lastD).forEach(render); }
-            if (upcoming.length > 0) { const nextD = gv(upcoming[0], 0); upcoming.filter(r => gv(r, 0) === nextD).forEach(render); }
+
+            // 3. 실제 화면 출력 (이미 진행된 경기 & 오늘 이후 예정 경기)
+            if (played.length > 0) { 
+                const lastD = gv(played[played.length-1], 0); 
+                played.filter(r => gv(r, 0) === lastD).forEach(render); 
+            }
+            if (upcoming.length > 0) {
+                const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '.'); 
+                const futureGames = upcoming.filter(r => gv(r, 0) >= todayStr); // 오늘 이후 경기만 필터링
+                if (futureGames.length > 0) {
+                    const nextD = gv(futureGames[0], 0);
+                    futureGames.filter(r => gv(r, 0) === nextD).forEach(render);
+                }
+            }
         });
     }
 
