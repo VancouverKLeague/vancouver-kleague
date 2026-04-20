@@ -353,55 +353,43 @@
     if (!section) return;
 
     section.style.display = 'block';
-    title.innerText = `🔥 ${year} Postseason Bracket`;
+    if (title) title.innerText = `🔥 ${year} Postseason Bracket`;
 
     const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
     
-    // 37행부터 45행까지 데이터 가져오기 (범위: D37:F45)
     fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:F45`)
     .then(res => res.text())
     .then(t => {
         const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
-        
-        // 데이터 추출 보조 함수 (r: 행 인덱스, c: 열 인덱스)
-        // rows[0]이 엑셀의 37행이 됩니다.
-        const getV = (r, c) => (rows[r] && rows[r].c[c] && rows[r].c[c].v) ? rows[r].c[c].v : "";
-        const fmt = (v) => v ? `(${v})` : "(-)"; // 점수가 없으면 (-) 표시
+        const getV = (r, c) => (rows[r] && rows[r].c[c]) ? (rows[r].c[c].v || "") : "";
+        const fmt = (v) => v ? `(${v})` : "(-)";
 
         // 1. Wild Card (37, 38행)
-        document.getElementById('br-wca').innerHTML = `
-            <div class="match-line"><span class="team-n">${getV(0,0)} vs ${getV(0,1)}</span> <span class="score-n">${fmt(getV(0,2))}</span></div>`;
-        document.getElementById('br-wcb').innerHTML = `
-            <div class="match-line"><span class="team-n">${getV(1,0)} vs ${getV(1,1)}</span> <span class="score-n">${fmt(getV(1,2))}</span></div>`;
+        document.getElementById('br-wca').innerHTML = `<div class="match-line"><span class="team-n">${getV(0,0)} vs ${getV(0,1)}</span> <span class="score-n">${fmt(getV(0,2))}</span></div>`;
+        document.getElementById('br-wcb').innerHTML = `<div class="match-line"><span class="team-n">${getV(1,0)} vs ${getV(1,1)}</span> <span class="score-n">${fmt(getV(1,2))}</span></div>`;
 
-        // 2. Semi-Final (39~43행)
-        // SF A: 5행(인덱스 5)에 데이터가 있을 때만 G3 줄을 생성합니다.
+        // 2. Semi-Final A (WC A Winner vs #1 Seed 관련 행: 2, 4, 5번 인덱스)
         let sfaHtml = `
             <div class="match-line"><span>G1</span> <span class="team-n">${getV(2,0)} vs ${getV(2,1)}</span> <span class="score-n">${fmt(getV(2,2))}</span></div>
             <div class="match-line"><span>G2</span> <span class="team-n">${getV(4,0)} vs ${getV(4,1)}</span> <span class="score-n">${fmt(getV(4,2))}</span></div>`;
-        if (getV(5,2)) { // 3차전 점수가 있을 때만 추가
+        if (getV(5,0)) { // 3차전 팀명이 있으면 표시
             sfaHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(5,0)} vs ${getV(5,1)}</span> <span class="score-n">${fmt(getV(5,2))}</span></div>`;
         }
         document.getElementById('br-sfa').innerHTML = sfaHtml;
 
-        // SF B: 시트 구조상 3차전 데이터가 있는 행을 체크해야 합니다. (예: 인덱스 6 또는 9 등)
-        // 여기서는 예시로 인덱스 6에 데이터가 있는지 확인하는 로직입니다.
+        // 3. Semi-Final B (WC B Winner vs #2 Seed 관련 행: 3, 6, 7번 인덱스)
         let sfbHtml = `
             <div class="match-line"><span>G1</span> <span class="team-n">${getV(3,0)} vs ${getV(3,1)}</span> <span class="score-n">${fmt(getV(3,2))}</span></div>
             <div class="match-line"><span>G2</span> <span class="team-n">${getV(6,0)} vs ${getV(6,1)}</span> <span class="score-n">${fmt(getV(6,2))}</span></div>`;
-        // 만약 SF B의 3차전 데이터가 다른 행에 있다면 (6,2) 부분을 해당 인덱스로 바꾸세요.
-        if (getV(9,2)) { 
-            sfbHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(9,0)} vs ${getV(9,1)}</span> <span class="score-n">${fmt(getV(9,2))}</span></div>`;
+        if (getV(7,0)) { // 3차전 팀명이 있으면 표시
+            sfbHtml += `<div class="match-line"><span>G3</span> <span class="team-n">${getV(7,0)} vs ${getV(7,1)}</span> <span class="score-n">${fmt(getV(7,2))}</span></div>`;
         }
         document.getElementById('br-sfb').innerHTML = sfbHtml;
 
-        // 3. Finals & 3rd Place (44, 45행)
-        document.getElementById('br-final').innerHTML = `
-            <div class="match-line"><span class="team-n">${getV(7,0)} vs ${getV(7,1)}</span> <span class="score-n">${fmt(getV(7,2))}</span></div>`;
-        document.getElementById('br-3rd').innerHTML = `
-            <div class="match-line"><span class="team-n">${getV(8,0)} vs ${getV(8,1)}</span> <span class="score-n">${fmt(getV(8,2))}</span></div>`;
+        // 4. Finals (8번 인덱스)
+        document.getElementById('br-final').innerHTML = `<div class="match-line"><span class="team-n">${getV(8,0)} vs ${getV(8,1)}</span> <span class="score-n">${fmt(getV(8,2))}</span></div>`;
     })
-    .catch(err => console.error("Bracket 데이터 로드 실패:", err));
+    .catch(err => console.error("Bracket load failed:", err));
 }
 
 // 페이지 로드 시 자동으로 실행되는 함수
