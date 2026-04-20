@@ -16,11 +16,12 @@
         .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         h3 { border-left: 5px solid #cc0000; padding-left: 10px; color: #003366; margin-bottom: 15px; font-size: 1.1rem; }
         
-        /* 🏆 Season Honors */
+        /* 🏆 Season Honors (디자인 개선) */
         .champions-container { background: #fff; border: 2px solid #003366; border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 10px; display: block; }
-        .champion-box { margin: 5px; padding: 10px; border-radius: 8px; display: inline-block; min-width: 130px; vertical-align: top; }
-        .champion-box .team-name { font-size: 1rem; font-weight: 900; color: #003366; }
+        .champion-group-title { font-size: 0.9rem; font-weight: bold; color: #cc0000; margin-bottom: 15px; display: block; }
+        .champion-box { margin: 5px; padding: 12px 10px; border-radius: 8px; display: inline-block; min-width: 140px; vertical-align: top; text-align: center; }
+        .champion-box .label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 8px; color: #666; text-transform: uppercase; }
+        .champion-box .team-name { display: block; font-size: 1.05rem; font-weight: 900; color: #003366; }
         .gold { background: #fff9e6; border: 1px solid #ffd700; }
         .crown { background: #f0f7ff; border: 2px solid #003366; display: block; margin: 0 auto 15px auto; max-width: 250px; }
         .silver { background: #f5f5f5; border: 1px solid #c0c0c0; }
@@ -32,17 +33,17 @@
         .bg-gb { background-color: #fffef0; font-weight: bold; }
         .diff-plus { color: #003366; font-weight: bold; }
         .diff-minus { color: #d32f2f; font-weight: bold; }
-        .score-display { font-size: 0.95rem; font-weight: 900; color: #d32f2f; background-color: #fffaf8; } /* 폰트 사이즈 줄임 */
+        .score-display { font-size: 0.95rem; font-weight: 900; color: #d32f2f; background-color: #fffaf8; }
         .tag-away { font-size: 0.65rem; color: #666; border: 1px solid #ccc; border-radius: 3px; padding: 1px 4px; margin-right: 3px; }
         .tag-home { font-size: 0.65rem; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 3px; padding: 1px 4px; margin-right: 3px; }
         .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
 
-        /* 📊 Leaderboard (3열 가로 배치 고정) */
+        /* 📊 Leaderboard (3열 가로 배치 및 높이 최적화) */
         .leader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
         @media (max-width: 992px) { .leader-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .leader-grid { grid-template-columns: 1fr; } }
         
-        .leader-category { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 245px; }
+        .leader-category { background: #fff; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-height: 160px; }
         .leader-category-title { background: #f8f9fa; padding: 6px; font-size: 0.8rem; font-weight: bold; text-align: center; color: #555; border-bottom: 1px solid #ddd; }
         .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; }
@@ -51,9 +52,9 @@
         .player-name { font-weight: bold; font-size: 0.82rem; color: #333; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .player-team { font-size: 0.65rem; color: #999; display: block; }
         .value-col { text-align: right; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
-        .no-records { text-align: center; color: #bbb; font-size: 0.8rem; padding: 60px 10px; flex-grow: 1; display: flex; align-items: center; justify-content: center; height: 100%; }
+        .no-records { text-align: center; color: #bbb; font-size: 0.85rem; padding: 30px 10px; flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfdfd; }
 
-        /* General Buttons & Elements */
+        /* Buttons & UI */
         .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
         .toggle-btn { padding: 6px 12px; cursor: pointer; border: 1px solid #ddd; font-weight: bold; font-size: 0.8rem; border-radius: 5px; margin-left: 5px; }
@@ -91,11 +92,23 @@
 <div class="container">
     <div id="season-champions" class="champions-container" style="display:none;">
         <span class="champion-group-title">🏆 SEASON HONORS</span>
-        <div class="champion-box gold crown"><span class="label" style="display: block; font-size: 0.7rem; color: #666; margin-bottom:5px;">👑 Postseason Champions</span><span id="p-post-1st" class="team-name">-</span></div>
+        <div class="champion-box gold crown">
+            <span class="label">👑 Postseason Champions</span>
+            <span id="p-post-1st" class="team-name">In Progress</span>
+        </div>
         <div class="rank-boxes">
-            <div class="champion-box gold"><span class="label">🥇 League 1st</span><span id="p-reg-1st" class="team-name">-</span></div>
-            <div class="champion-box silver"><span class="label">🥈 Runner-up</span><span id="p-post-2nd" class="team-name">-</span></div>
-            <div class="champion-box bronze"><span class="label">🥉 3rd Place</span><span id="p-post-3rd" class="team-name">-</span></div>
+            <div class="champion-box gold">
+                <span class="label">🥇 League 1st</span>
+                <span id="p-reg-1st" class="team-name">In Progress</span>
+            </div>
+            <div class="champion-box silver">
+                <span class="label">🥈 Runner-up</span>
+                <span id="p-post-2nd" class="team-name">-</span>
+            </div>
+            <div class="champion-box bronze">
+                <span class="label">🥉 3rd Place</span>
+                <span id="p-post-3rd" class="team-name">-</span>
+            </div>
         </div>
     </div>
 
@@ -129,9 +142,8 @@
             <h3>🔥 League Leaders (Top 5)</h3>
             <div class="toggle-container"><button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')">Regular</button><button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')">Post</button></div>
         </div>
-        
         <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee; margin-bottom:15px;">Batting</h4>
-        <div class="leader-grid" id="batting-grid">
+        <div class="leader-grid">
             <div class="leader-category"><div class="leader-category-title">AVG</div><div id="avg-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">HITS</div><div id="hits-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">HOME RUNS</div><div id="hr-leaders"></div></div>
@@ -139,9 +151,8 @@
             <div class="leader-category"><div class="leader-category-title">QUALITY AT-BATS</div><div id="qab-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">OPS</div><div id="ops-leaders"></div></div>
         </div>
-
         <h4 style="color: #2e7d32; text-align: center; border-bottom: 1px solid #eee; margin: 30px 0 15px 0;">Pitching</h4>
-        <div class="leader-grid" id="pitching-grid">
+        <div class="leader-grid">
             <div class="leader-category"><div class="leader-category-title">ERA</div><div id="era-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">WINS</div><div id="win-leaders"></div></div>
             <div class="leader-category"><div class="leader-category-title">INNINGS PITCHED</div><div id="ip-leaders"></div></div>
@@ -244,7 +255,6 @@
             metrics.forEach(m => {
                 const target = document.getElementById(m.id); if (!target) return;
                 const vIdx = fi(m.n);
-                
                 let valid = (vIdx === -1) ? [] : data.rows.filter(r => {
                     const val = parseFloat(gv(r, vIdx)) || 0;
                     const ip = parseFloat(gv(r, fi('INNINGS PITCHED'))) || 0;
