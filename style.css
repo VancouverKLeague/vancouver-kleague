@@ -74,9 +74,29 @@ th { background: #f8f9fa; }
 /* 3. 기록 수치 중앙 정렬 (기존 right에서 center로 변경) */
 .value-col { text-align: center !important; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
 
-/* 기록이 없을 때 메시지 스타일 */
-.no-records {text-align: center; color: #aaaaaa !important; /* 부드러운 회색 */ font-size: 0.85rem; padding: 20px; display: flex !important; align-items: center !important;    /* 수직 정가운데 */
-    justify-content: center !important; /* 수평 정가운데 */ background-color: #fdfdfd; min-height: 150px; /* 박스 높이를 확보하여 정중앙에 배치 */ width: 100%; }
+/* 기록이 없을 때 메시지 스타일 수정 */
+.no-records { 
+    display: flex !important;
+    align-items: center !important;    /* 수직 중앙 정렬 강화 */
+    justify-content: center !important; /* 수평 중앙 정렬 강화 */
+    text-align: center !important;
+    
+    color: #aaaaaa !important;
+    font-size: 0.85rem; 
+    
+    width: 100% !important;
+    min-height: 120px !important; /* 박스 자체의 높이를 명시적으로 확보 */
+    
+    /* 부모 박스 내에서 꽉 차게 하도록 설정 */
+    flex-grow: 1; 
+    margin: 0 auto;
+}
+
+/* 부모 컨테이너가 높이를 꽉 채우도록 보정 */
+.leader-category {
+    display: flex;
+    flex-direction: column;
+}
 
 /* Buttons & Footer */
 .btn-field, .btn-more { display: block; padding: 12px; border-radius: 5px; text-decoration: none; font-weight: bold; text-align: center; }
