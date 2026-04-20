@@ -107,88 +107,90 @@ th { background: #f8f9fa; }
 .toggle-btn.inactive { background: #eee; color: #333; }
 footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
 
-/* 토너먼트 대진 */
-.bracket-wrapper { display: flex; justify-content: space-between; gap: 8px; overflow-x: hidden; padding: 15px 5px; width: 100%; box-sizing: border-box; }
-.bracket-round { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 15px; }
-.round-title { font-size: 0.7rem; font-weight: bold; color: #999; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-.match-box { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.match-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: bold; color: white; margin-bottom: 8px; }
-.match-teams { font-size: 0.8rem; font-weight: bold; color: #333; line-height: 1.4; }
-.wc { background: #007bff; } .sf { background: #fd7e14; } .final { background: #dc3545; } .bronze { background: #6c757d; }
-.final-highlight { border: 2px solid #dc3545; background: #fffefe; }
-
-/* Semi-Final 여러 경기 결과가 들어갈 때 줄바꿈과 정렬 처리 */
-.match-teams { 
-    white-space: pre-line; /* 스크립트에서 넣은 줄바꿈(\n)을 인식하게 함 */
-    font-size: 0.75rem;     /* 여러 줄이므로 기존 0.8rem에서 아주 살짝 줄임 */
-    line-height: 1.5;      /* 줄 간격을 넓혀서 읽기 편하게 함 */
+/* --- 토너먼트 대진표 최종 정렬 설정 --- */
+.bracket-wrapper {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    overflow-x: hidden; /* 슬라이드 제거 */
+    padding: 15px 5px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* 박스 높이가 내용에 따라 유연하게 늘어나도록 설정 */
-.match-box { 
-    height: auto; 
-    min-height: 80px; 
+.bracket-round {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.round-title { font-size: 0.7rem; font-weight: bold; color: #999; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+.match-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 5px !important;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-height: 80px;
 }
 
-/* --- 대진표 내부 텍스트 상세 정렬 --- */
-
-/* 가로 한 줄로 팀명과 점수를 배치하는 컨테이너 */
+/* 개별 경기 줄 설정 */
 .match-line {
-    display: flex;
-    justify-content: space-between; /* 팀명은 왼쪽, 점수는 오른쪽 끝으로 */
-    align-items: center;
-    width: 100%;
-    padding: 3px 8px;
-    border-bottom: 1px dashed #f0f0f0; /* 경기 간 얇은 구분선 */
-    gap: 10px;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 3px 0 !important;
+    border-bottom: 1px dashed #f0f0f0;
 }
+.match-line:last-child { border-bottom: none; }
 
-.match-line:last-child {
-    border-bottom: none; /* 마지막 줄은 구분선 제거 */
-}
-
-/* 1. G1, G2 라벨 (첫 번째 span) 너비 고정 */
-.match-line > span:first-child:not(.team-n):not(.score-n) {
+/* 핵심: G1 라벨 영역과 팀명 시작점 강제 통일 */
+/* G1, G2 같은 라벨이 들어가는 공간을 30px로 고정 */
+.match-line > span:first-child:not(.team-n) {
     display: inline-block !important;
-    width: 30px !important;    /* 방 크기 고정 */
+    width: 30px !important;
     min-width: 30px !important;
+    flex-shrink: 0 !important;
     font-weight: bold !important;
     color: #999 !important;
-    font-size: 0.75rem !important;
-    flex-shrink: 0 !important;
+    font-size: 0.7rem !important;
     text-align: left !important;
 }
 
-/* 2. 팀명 영역 (가운데) */
+/* 팀명 영역: 라벨이 없는 경우(WC, Final) 왼쪽 여백을 30px 주어 시작점 통일 */
 .team-n {
     flex: 1 !important;
     text-align: left !important;
-    padding-left: 5px !important;
     font-size: 0.75rem !important;
-    font-weight: 500;
     color: #444;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* 팀명 길면 ... 처리 */
+    text-overflow: ellipsis;
+    /* 첫 번째 요소가 팀명일 때만 여백 추가 */
+}
+.match-line > .team-n:first-child {
+    margin-left: 30px !important;
 }
 
-/* 3. 점수 영역 (오른쪽 끝) */
+/* 점수 영역 */
 .score-n {
     width: 45px !important;
     min-width: 45px !important;
     text-align: right !important;
     font-weight: bold !important;
     color: #d32f2f !important;
-    font-family: 'Courier New', monospace; /* 숫자 간격 일정하게 */
     font-size: 0.75rem !important;
     flex-shrink: 0 !important;
+    font-family: 'Courier New', monospace;
 }
 
-/* 4. 세미파이널 BO3 리스트 보정 */
-.bo3-list {
-    width: 100% !important;
-    padding: 2px 0 !important;
-}
+.match-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: bold; color: white; margin-bottom: 8px; }
+.wc { background: #007bff; } .sf { background: #fd7e14; } .final { background: #dc3545; }
