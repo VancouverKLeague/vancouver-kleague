@@ -60,16 +60,19 @@ th { background: #f8f9fa; }
 .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
 /* 기록실 테이블 셀 정렬 수정 */
-.leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; text-align: left !important; } 
+.leader-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; height: 42px; } 
 
-.rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: left; }
-.player-col { text-align: left !important; padding-left: 2px; } /* TD 레벨에서 왼쪽 정렬 */
-.player-info { display: flex; flex-direction: column; overflow: hidden; text-align: left !important; } /* 내부 컨테이너 왼쪽 정렬 */
+/* 1. 순위 숫자 중앙 정렬 */
+.rank-col { width: 22px; font-weight: bold; color: #bbb; font-size: 0.75rem; text-align: center !important; }
+
+/* 2. 선수명/팀명은 왼쪽 정렬 유지 */
+.player-col { text-align: left !important; padding-left: 2px; } 
+.player-info { display: flex; flex-direction: column; overflow: hidden; text-align: left !important; }
 .player-name { font-weight: bold; font-size: 0.82rem; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-align: left !important; }
 .player-team { font-size: 0.65rem; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-align: left !important; }
-.value-col { text-align: right !important; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; } /* 수치 데이터는 오른쪽 정렬 유지 */
 
-.no-records { text-align: center; color: #bbb; font-size: 0.85rem; padding: 30px 10px; flex-grow: 1; display: flex; align-items: center; justify-content: center; background-color: #fdfdfd; }
+/* 3. 기록 수치 중앙 정렬 (기존 right에서 center로 변경) */
+.value-col { text-align: center !important; font-weight: bold; color: #d32f2f; font-size: 0.85rem; width: 45px; }
 
 /* Buttons & Footer */
 .btn-field, .btn-more { display: block; padding: 12px; border-radius: 5px; text-decoration: none; font-weight: bold; text-align: center; }
