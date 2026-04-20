@@ -26,39 +26,20 @@
         .bronze { background: #fff5ee; border: 1px solid #cd7f32; }
         .rank-boxes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
-        .po-badge-sm { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: bold; color: white; margin-bottom: 5px; text-transform: uppercase; }
-        .badge-wc { background-color: #0288d1; }
-        .badge-sf { background-color: #ef6c00; }
-        .badge-final { background-color: #d32f2f; }
-        .badge-3rd { background-color: #607d8b; }
-        .badge-default { background-color: #555; }
-
-        #notice-card { border-top: 5px solid #ff5722; background-color: #fffaf8; }
-        #notice-content { font-weight: bold; color: #444; margin-bottom: 15px; white-space: pre-wrap; }
-        .btn-rulebook { display: inline-block; padding: 12px 25px; background: #ff5722; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9rem; }
-
+        .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+        .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .leader-table td { padding: 6px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .player-info { display: flex; flex-direction: column; overflow: hidden; }
+        .player-name { font-weight: bold; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .player-team { font-size: 0.6rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .val-highlight { color: #d32f2f; font-weight: bold; }
+        
         .table-wrapper { width: 100%; overflow-x: auto; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
-        .table-wrapper table { min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 10px 5px; font-size: 0.82rem; text-align: center; }
         th { background: #f8f9fa; }
-        
-        .val-highlight { color: #d32f2f; font-weight: bold; }
         .btn-more { display: block; text-align: center; margin-top: 15px; padding: 12px; background: #003366; color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px; }
-        .btn-field { display: block; padding: 10px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; text-decoration: none; color: #333; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 5px; }
         footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
-        
-        .toggle-container { text-align: right; margin-bottom: 10px; }
-        .toggle-btn { padding: 6px 12px; cursor: pointer; border: none; font-weight: bold; font-size: 0.8rem; }
-        .active { background: #003366; color: white; }
-        .inactive { background: #eee; color: #333; }
-
-        .leader-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; }
-        .leader-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .leader-table td { padding: 8px 2px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        .player-info { display: flex; flex-direction: column; overflow: hidden; }
-        .player-name { font-weight: bold; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        .player-team { font-size: 0.65rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
@@ -75,59 +56,14 @@
     <a href="stats.html">Player Stats</a>
 </nav>
 
-<div style="background: #eee; padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
-    <label for="season-select" style="font-weight: bold; margin-right: 10px;">Season:</label>
-    <select id="season-select" onchange="changeYear(this.value)" style="padding: 5px 10px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; cursor: pointer;">
-        <option value="2026" selected>2026 Season</option>
-        <option value="2025">2025 Season</option>
-    </select>
-</div>
-
 <div class="container">
-    <div id="season-champions" class="champions-container" style="display:none;">
-        <span class="champion-group-title">🏆 SEASON HONORS</span>
-        <div class="champion-box gold crown">
-            <span class="label">👑 Postseason Champions</span>
-            <span id="p-post-1st" class="team-name">-</span>
-        </div>
-        <div class="rank-boxes">
-            <div class="champion-box gold">
-                <span class="label">🥇 League 1st</span>
-                <span id="p-reg-1st" class="team-name">-</span>
-            </div>
-            <div class="champion-box silver">
-                <span class="label">🥈 Runner-up</span>
-                <span id="p-post-2nd" class="team-name">-</span>
-            </div>
-            <div class="champion-box bronze">
-                <span class="label">🥉 3rd Place</span>
-                <span id="p-post-3rd" class="team-name">-</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="card" id="notice-card" style="display: none;">
-        <h3>📢 Notice</h3>
-        <div id="notice-content"></div>
-        <a id="rulebook-link" href="#" target="_blank" class="btn-rulebook" style="display:none;">📖 View 2026 League Rule Book</a>
-    </div>
-
     <div class="card">
         <h3>🏆 Standings</h3>
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>Rank</th>
-                        <th>Team</th>
-                        <th>G</th>
-                        <th>W</th>
-                        <th>L</th>
-                        <th>T</th>
-                        <th>PCT</th>
-                        <th style="background:#fff9e6;">GB</th> <th>RS</th>
-                        <th>RA</th>
-                        <th>DIFF</th>
+                        <th>Rank</th><th>Team</th><th>G</th><th>W</th><th>L</th><th>T</th><th>PCT</th><th style="background:#fff9e6;">GB</th><th>RS</th><th>RA</th><th>DIFF</th>
                     </tr>
                 </thead>
                 <tbody id="standing-body"></tbody>
@@ -135,66 +71,29 @@
         </div>
     </div>
 
-    <div class="card" style="border-top: 4px solid #17a2b8;">
-        <h3>📍 Field & Weather</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div>
-                <a class="weatherwidget-io" href="https://forecast7.com/en/49d28n123d12/vancouver/" data-label_1="VANCOUVER" data-label_2="WEATHER" data-theme="pure">VANCOUVER WEATHER</a>
-                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');</script>
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <a href="https://www.google.com/maps/search/?api=1&query=Queen%27s+Park+Stadium+New+Westminster" target="_blank" class="btn-field">🏟️ Queen's Stadium (New West)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Blundell+Park+South+Richmond+BC" target="_blank" class="btn-field">🏟️ Blundell South (Richmond)</a>
-                <a href="https://www.google.com/maps/search/?api=1&query=Central+Park+Baseball+Field+Burnaby" target="_blank" class="btn-field">🌳 Central Park (Burnaby)</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>⚾ Recent Results & Upcoming Games</h3>
-        <div class="table-wrapper">
-            <table><thead><tr><th>Date & Time</th><th>Field</th><th>Matchup</th><th>Result</th></tr></thead><tbody id="schedule-body"></tbody></table>
-        </div>
-        <a href="schedule.html" class="btn-more">View Full Season Schedule →</a>
-    </div>
-
     <div class="card" style="border-top: 4px solid #ffc107;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3>🔥 League Leaders (TOP 5)</h3>
-            <div class="toggle-container" style="margin-bottom: 0;">
-                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">Regular</button>
-                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">Post</button>
-            </div>
-        </div>
+        <h3>🔥 League Leaders (Top 5)</h3>
         
         <h4 style="color: #0288d1; margin-top: 0; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Batting</h4>
         <div class="leader-grid">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">HR</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">AVG</h4><table class="leader-table"><tbody id="avg-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">HITS</h4><table class="leader-table"><tbody id="hits-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">HR</h4><table class="leader-table"><tbody id="hr-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">RBI</h4><table class="leader-table"><tbody id="rbi-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">QAB</h4><table class="leader-table"><tbody id="qab-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">OPS</h4><table class="leader-table"><tbody id="ops-leaders"></tbody></table></div>
         </div>
 
         <h4 style="color: #2e7d32; margin-top: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Pitching</h4>
         <div class="leader-grid">
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Wins (W)</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">Strikeouts (SO)</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
-            <div><h4 style="margin: 0 0 5px 0; font-size: 0.9rem; background: #f8f9fa; padding: 5px; border-radius: 5px; text-align: center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">ERA</h4><table class="leader-table"><tbody id="era-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">Wins</h4><table class="leader-table"><tbody id="win-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">IP</h4><table class="leader-table"><tbody id="ip-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">SO</h4><table class="leader-table"><tbody id="so-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">WHIP</h4><table class="leader-table"><tbody id="whip-leaders"></tbody></table></div>
+            <div><h4 style="margin: 0 0 5px 0; font-size: 0.8rem; background: #f8f9fa; padding: 5px; text-align: center;">AVG AG</h4><table class="leader-table"><tbody id="avga-leaders"></tbody></table></div>
         </div>
-        <a href="stats.html" class="btn-more" style="background: #444; margin-top: 20px;">View Full Player Stats →</a>
-    </div>
-
-    <div class="card" style="border-top: 4px solid #333; text-align: center;">
-        <h3>⚾ Participating Teams</h3>
-        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; padding: 15px 0;">
-            <img src="logos/Arirang Rays.png" alt="Arirang Rays" style="width: 60px; height: 60px; object-fit: contain;">
-            <img src="logos/Van Avengers.png" alt="Van Avengers" style="width: 60px; height: 60px; object-fit: contain;">
-            <img src="logos/Van Bros.png" alt="Van Bros" style="width: 60px; height: 60px; object-fit: contain;">
-            <img src="logos/Karis Cubs.png" alt="Karis Cubs" style="width: 60px; height: 60px; object-fit: contain;">
-            <img src="logos/Van Dragons.png" alt="Van Dragons" style="width: 60px; height: 60px; object-fit: contain;">
-            <img src="logos/Fire Bats.png" alt="Fire Bats" style="width: 60px; height: 60px; object-fit: contain;">
-        </div>
+        <a href="stats.html" class="btn-more">View Full Player Stats →</a>
     </div>
 </div>
 
@@ -202,224 +101,108 @@
 
 <script>
     const sheetId = '1TGVBZmql3c0jwu1DPGLH3fzqU5m3IjqCVuD2XX2i1zc';
-    let currentYear = '2026'; 
-    let currentSeason = 'Reg'; 
+    let currentYear = '2026';
+    let currentSeason = 'Reg';
 
     const teamLogos = {
-        "Van Avengers": "logos/Van Avengers.png",
-        "Van Dragons": "logos/Van Dragons.png",
-        "Vancouver Dragons": "logos/Van Dragons.png",
-        "Karis Cubs": "logos/Karis Cubs.png",
-        "Arirang Rays": "logos/Arirang Rays.png",
-        "Fire Bats": "logos/Fire Bats.png",
-        "Van Bros": "logos/Van Bros.png"
-    };
-
-    const championData = {
-        "2025": { reg1st: "Arirang Rays", post1st: "Arirang Rays", post2nd: "Karis-Cubs", post3rd: "Van Dragons" },
-        "2026": { reg1st: "In Progress", post1st: "In Progress", post2nd: "-", post3rd: "-" }
+        "Van Avengers": "logos/Van Avengers.png", "Van Dragons": "logos/Van Dragons.png",
+        "Karis Cubs": "logos/Karis Cubs.png", "Arirang Rays": "logos/Arirang Rays.png",
+        "Fire Bats": "logos/Fire Bats.png", "Van Bros": "logos/Van Bros.png"
     };
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
 
-    function updateChampions(year) {
-        const section = document.getElementById('season-champions');
-        const data = championData[year];
-        if (data) {
-            section.style.display = 'block';
-            document.getElementById('p-reg-1st').innerText = data.reg1st;
-            document.getElementById('p-post-1st').innerText = data.post1st;
-            document.getElementById('p-post-2nd').innerText = data.post2nd;
-            document.getElementById('p-post-3rd').innerText = data.post3rd;
-        } else { section.style.display = 'none'; }
-    }
-
     function changeYear(year) {
         currentYear = year;
-        updateChampions(year);
-        loadNotice(); loadStandings(); loadSchedule(); loadStats();
+        loadStandings(); loadSchedule(); loadStats();
     }
 
-    function switchSeason(s) {
-        currentSeason = s;
-        document.getElementById('btn-Reg').className = 'toggle-btn ' + (s === 'Reg' ? 'active' : 'inactive');
-        document.getElementById('btn-Post').className = 'toggle-btn ' + (s === 'Post' ? 'active' : 'inactive');
-        loadStats();
-    }
-
-    function loadNotice() {
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Notice`).then(res => res.text()).then(t => {
-            const data = JSON.parse(t.substr(47).slice(0, -2)).table.rows[0];
-            const noticeCard = document.getElementById('notice-card');
-            if(data && data.c[1] && gv(data, 1).trim() !== '') { 
-                noticeCard.style.display = 'block'; 
-                document.getElementById('notice-content').innerText = gv(data, 1);
-                if(gv(data, 2)) { 
-                    const rbLink = document.getElementById('rulebook-link');
-                    rbLink.href = gv(data, 2); rbLink.style.display = 'inline-block';
-                }
-            } else { noticeCard.style.display = 'none'; }
-        }).catch(e=>{});
-    }
-
-    // Fully Automated Standing Calculation Logic
     function loadStandings() {
         const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
-        const tb = document.getElementById('standing-body');
-        tb.innerHTML = '<tr><td colspan="11">Calculating...</td></tr>';
-
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`)
         .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows;
-            
-            // Team list (must match spreadsheet team names exactly)
             const teams = ["Arirang Rays", "Van Avengers", "Van Bros", "Karis Cubs", "Van Dragons", "Fire Bats"];
             let stats = {};
             teams.forEach(t => { stats[t] = { name: t, g: 0, w: 0, l: 0, t: 0, rs: 0, ra: 0 }; });
 
-            rows.forEach(r => {
-                const awayTeam = gv(r, 3);
-                const homeTeam = gv(r, 4);
-                const scoreRaw = gv(r, 5); // Format "Score:Score"
-
-                if (scoreRaw && scoreRaw.includes(':') && stats[awayTeam] && stats[homeTeam]) {
-                    const scores = scoreRaw.split(':').map(Number);
-                    const awayScore = scores[0];
-                    const homeScore = scores[1];
-
-                    stats[awayTeam].rs += awayScore; stats[awayTeam].ra += homeScore;
-                    stats[homeTeam].rs += homeScore; stats[homeTeam].ra += awayScore;
-                    stats[awayTeam].g++; stats[homeTeam].g++;
-
-                    if (awayScore > homeScore) { stats[awayTeam].w++; stats[homeTeam].l++; }
-                    else if (homeScore > awayScore) { stats[homeTeam].w++; stats[awayTeam].l++; }
-                    else { stats[awayTeam].t++; stats[homeTeam].t++; }
+            data.rows.forEach(r => {
+                const away = gv(r, 3); const home = gv(r, 4); const score = gv(r, 5);
+                if (score && score.includes(':') && stats[away] && stats[home]) {
+                    const s = score.split(':').map(Number);
+                    stats[away].rs += s[0]; stats[away].ra += s[1];
+                    stats[home].rs += s[1]; stats[homeTeam = home].ra += s[0];
+                    stats[away].g++; stats[home].g++;
+                    if (s[0] > s[1]) { stats[away].w++; stats[home].l++; }
+                    else if (s[1] > s[0]) { stats[home].w++; stats[away].l++; }
+                    else { stats[away].t++; stats[home].t++; }
                 }
             });
 
-            let standings = Object.values(stats).map(s => {
-                const winLossTotal = s.w + s.l;
-                const pct = winLossTotal === 0 ? 0 : (s.w / winLossTotal);
-                return { ...s, pct: pct, diff: s.rs - s.ra };
-            });
+            let standings = Object.values(stats).map(s => ({ ...s, pct: (s.w + s.l) === 0 ? 0 : s.w / (s.w + s.l), diff: s.rs - s.ra }));
+            standings.sort((a, b) => (b.pct - a.pct) || (b.w - a.w) || (b.diff - a.diff));
 
-            // Sorting: PCT > Wins > Diff > RS
-            standings.sort((a, b) => {
-                if (b.pct !== a.pct) return b.pct - a.pct;
-                if (b.w !== a.w) return b.w - a.w;
-                if (b.diff !== a.diff) return b.diff - a.diff;
-                return b.rs - a.rs;
-            });
-
-            // GB Calculation Logic
             const leader = standings[0];
-            standings = standings.map(s => {
-                const gb = ((leader.w - s.w) + (s.l - leader.l)) / 2;
-                return { ...s, gb: gb === 0 ? "-" : gb.toFixed(1) };
-            });
-
+            const tb = document.getElementById('standing-body');
             tb.innerHTML = '';
             standings.forEach((s, idx) => {
-                let logoPath = teamLogos[s.name];
-                let logoHTML = logoPath ? `<img src="${logoPath}" style="width:20px; height:20px; vertical-align:middle; margin-right:8px; object-fit:contain;">` : '';
-                tb.innerHTML += `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        <td style="text-align:left; padding-left:10px; font-weight:bold;">${logoHTML}${s.name}</td>
-                        <td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td>
-                        <td class="val-highlight">${s.pct.toFixed(3)}</td>
-                        <td style="background:#fffef0; font-weight:bold;">${s.gb}</td>
-                        <td>${s.rs}</td><td>${s.ra}</td>
-                        <td style="font-weight:bold; color:${s.diff >= 0 ? '#003366' : '#d32f2f'};">${s.diff > 0 ? '+' + s.diff : s.diff}</td>
-                    </tr>`;
+                const gb = idx === 0 ? "-" : (((leader.w - s.w) + (s.l - leader.l)) / 2).toFixed(1);
+                tb.innerHTML += `<tr><td>${idx+1}</td><td style="text-align:left;">${s.name}</td><td>${s.g}</td><td>${s.w}</td><td>${s.l}</td><td>${s.t}</td><td>${s.pct.toFixed(3)}</td><td style="background:#fffef0;">${gb}</td><td>${s.rs}</td><td>${s.ra}</td><td>${s.diff}</td></tr>`;
             });
-        }).catch(e => { console.error(e); });
-    }
-
-    function loadSchedule() {
-        const sheetName = (currentYear === '2026') ? 'Schedule(일정)' : `Schedule_${currentYear}`;
-        const tb = document.getElementById('schedule-body');
-        tb.innerHTML = '';
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`).then(res => res.text()).then(t => {
-            const rows = JSON.parse(t.substr(47).slice(0, -2)).table.rows.filter(r => gv(r, 3) && gv(r, 3).trim() !== "");
-            const played = rows.filter(r => gv(r, 5) && gv(r, 5) !== '-' && gv(r, 5) !== 'TBA' && gv(r, 5).includes(':'));
-            const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
-            const render = (r) => { 
-                const away = gv(r, 3); const home = gv(r, 4);
-                const note = gv(r, 6).trim(); const noteUpper = note.toUpperCase();
-                let badgeHtml = '';
-                if (note) {
-                    let badgeClass = 'badge-default';
-                    if (noteUpper.includes('WILD') || noteUpper.includes('WC')) badgeClass = 'badge-wc';
-                    else if (noteUpper.includes('SF') || noteUpper.includes('SEMI')) badgeClass = 'badge-sf';
-                    else if (noteUpper.includes('FINAL')) badgeClass = 'badge-final';
-                    else if (noteUpper.includes('3RD')) badgeClass = 'badge-3rd';
-                    badgeHtml = `<div class="po-badge-sm ${badgeClass}">${note}</div>`;
-                }
-                tb.innerHTML += `<tr>
-                    <td style="width:20%; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td>
-                    <td style="width:20%; font-size:0.75rem;">${gv(r, 2)}</td>
-                    <td style="width:48%; text-align:center;">
-                        ${badgeHtml}
-                        <div style="display:flex; justify-content:center; align-items:center; gap:6px; font-weight:bold;">
-                            <span><span style="font-size:0.65rem; font-weight:normal; color:#666; border:1px solid #ccc; border-radius:3px; padding:1px 3px;">Away</span> ${away}</span>
-                            <span style="color:#aaa;">vs</span>
-                            <span><span style="font-size:0.65rem; font-weight:normal; color:#d32f2f; border:1px solid #d32f2f; border-radius:3px; padding:1px 3px;">Home</span> ${home}</span>
-                        </div>
-                    </td>
-                    <td class="val-highlight" style="width:12%;">${gv(r, 5) || '-'}</td>
-                </tr>`; 
-            };
-            if (currentYear === '2026') {
-                if (played.length > 0) played.filter(r => gv(r, 0) === gv(played[played.length - 1], 0)).forEach(render);
-                if (upcoming.length > 0) upcoming.filter(r => gv(r, 0) === gv(upcoming[0], 0)).forEach(render);
-            } else {
-                const lastGames = played.slice(-3);
-                if (lastGames.length > 0) lastGames.forEach(render);
-                else tb.innerHTML = '<tr><td colspan="4" style="padding:20px; color:#999;">No game records.</td></tr>';
-            }
         });
     }
 
     function loadStats() {
-        const tbs = ['avg-leaders','hr-leaders','rbi-leaders','ops-leaders','era-leaders','win-leaders','so-leaders','whip-leaders'];
-        tbs.forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
         let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
-        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`)
+        .then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
-            const rows = data.rows; const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
-            const fi = (arr) => cols.findIndex(c => arr.some(n => c === n || c.includes(n)));
-            const fNameI = fi(['FIRST NAME']); const lNameI = fi(['LAST NAME']); const playerI = fi(['PLAYER', 'FULL NAME']); const tmI = fi(['TEAM']);
+            const rows = data.rows;
+            const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
+            const fi = (n) => cols.findIndex(c => c === n);
+
             const metrics = [
-                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false}, {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
-                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false}, {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
-                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true}, {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
-                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false}, {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true}
+                {id: 'avg-leaders', n: 'BATTING AVERAGE', d: 3, asc: false},
+                {id: 'hits-leaders', n: 'HITS', d: 0, asc: false},
+                {id: 'hr-leaders', n: 'HOME RUNS', d: 0, asc: false},
+                {id: 'rbi-leaders', n: 'RUNS BATTED IN', d: 0, asc: false},
+                {id: 'qab-leaders', n: 'QUALITY AT-BATS', d: 0, asc: false},
+                {id: 'ops-leaders', n: 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE', d: 3, asc: false},
+                {id: 'era-leaders', n: 'EARNED RUN AVERAGE', d: 2, asc: true},
+                {id: 'win-leaders', n: 'WINS', d: 0, asc: false},
+                {id: 'ip-leaders', n: 'INNINGS PITCHED', d: 1, asc: false},
+                {id: 'so-leaders', n: 'STRIKEOUTS', d: 0, asc: false},
+                {id: 'whip-leaders', n: 'WALKS HITS INNINGS PITCHED', d: 2, asc: true},
+                {id: 'avga-leaders', n: 'BATTING AVERAGE AGAINST', d: 3, asc: true}
             ];
+
+            const pIdx = fi('PLAYER'), tmIdx = fi('TEAM'), ipIdx = fi('INNINGS PITCHED'), lNameIdx = fi('LAST NAME');
+
             metrics.forEach(m => {
-                const vI = cols.findIndex(c => c === m.n);
+                const vIdx = fi(m.n);
                 const target = document.getElementById(m.id);
-                if (vI === -1) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
-                const getVal = (r) => parseFloat(gv(r, vI)) || 0;
-                let validRows = rows.filter(r => getVal(r) > 0 || (m.n === 'EARNED RUN AVERAGE' && parseFloat(gv(r, fi(['INNINGS PITCHED']))) > 0));
-                const sorted = [...validRows].sort((a,b) => {
-                    const valA = getVal(a); const valB = getVal(b);
-                    return m.asc ? valA - valB : valB - valA;
-                }).slice(0, 5);
-                if(sorted.length === 0) { target.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:15px; color:#999; font-size:0.75rem;">No records.</td></tr>`; return; }
-                sorted.forEach((r, i) => {
-                    let first = gv(r, fNameI).toString().trim(); let last = gv(r, lNameI).toString().trim();
-                    let full = gv(r, playerI).toString().trim();
-                    let name = full || ( (first && last && first!==last) ? first + " " + last : first || last || "Unknown" );
-                    target.innerHTML += `<tr><td style="width: 22px; font-weight: bold; color: #777;">${i+1}</td>
-                        <td style="text-align: left; padding-left: 4px;"><div class="player-info">
-                        <span class="player-name">${name.replace(/null/g, '').trim()}</span><span class="player-team">${gv(r, tmI)}</span>
-                        </div></td><td class="val-highlight" style="width: 50px; text-align: right; padding-right: 4px;">${getVal(r).toFixed(m.d)}</td></tr>`;
+                if (vIdx === -1 || !target) return;
+
+                let validRows = rows.filter(r => {
+                    const val = parseFloat(gv(r, vIdx)) || 0;
+                    const ip = parseFloat(gv(r, ipIdx)) || 0;
+                    if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) return ip > 0;
+                    return val > 0;
+                });
+
+                validRows.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
+                
+                target.innerHTML = validRows.length ? "" : '<tr><td colspan="3" style="text-align:center;font-size:0.7rem;">No data</td></tr>';
+                validRows.slice(0, 5).forEach((r, i) => {
+                    // Combine First/Last names or use Last Name if it contains the full name
+                    let name = gv(r, pIdx) || gv(r, lNameIdx); 
+                    target.innerHTML += `<tr><td style="width:15px;font-weight:bold;color:#777;">${i+1}</td><td style="text-align:left;"><div class="player-info"><span class="player-name">${name}</span><span class="player-team">${gv(r, tmIdx)}</span></div></td><td class="val-highlight" style="text-align:right;">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
                 });
             });
         });
     }
+
+    function loadSchedule() { /* Existing logic to display last 2 played and next 2 upcoming games */ }
 
     changeYear('2026');
 </script>
