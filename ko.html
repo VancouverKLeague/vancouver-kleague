@@ -221,7 +221,7 @@
             const played = rows.filter(r => gv(r, 5) && gv(r, 5).includes(':'));
             const upcoming = rows.filter(r => !gv(r, 5) || gv(r, 5) === '-' || gv(r, 5) === 'TBA');
             const render = (r) => { 
-                const note = gv(r, 6).trim(); let bH = ''; if(note){ let bC = 'badge-default'; if(note.includes('WC') || note.includes('와일드')) bC='badge-wc'; else if(note.includes('SF') || note.includes('준결승')) bC='badge-sf'; else if(note.includes('FINAL') || note.includes('결승')) bC='badge-final'; bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; }
+                const note = gv(r, 6).trim(); let bH = ''; if(note){ let bC = 'badge-default'; if(note.toUpperCase().includes('WC') || note.includes('와일드')) bC='badge-wc'; else if(note.toUpperCase().includes('SF') || note.includes('준결승')) bC='badge-sf'; else if(note.toUpperCase().includes('FINAL') || note.includes('결승')) bC='badge-final'; bH = `<div class="po-badge-sm ${bC}">${note}</div><br>`; }
                 document.getElementById('schedule-body').innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">원정</span>${gv(r, 3)}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">홈</span>${gv(r, 4)}</span></div></td><td class="score-display">${gv(r, 5) || '-'}</td></tr>`;
             };
             if (played.length > 0) { const lastD = gv(played[played.length-1], 0); played.filter(r => gv(r, 0) === lastD).forEach(render); }
