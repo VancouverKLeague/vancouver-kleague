@@ -106,3 +106,13 @@ th { background: #f8f9fa; }
 .toggle-btn.active { background: #003366; color: white; border-color: #003366; }
 .toggle-btn.inactive { background: #eee; color: #333; }
 footer { text-align: center; padding: 30px; background: #333; color: #fff; margin-top: 20px; }
+
+/* 토너먼트 대진 */
+.bracket-wrapper { display: flex; justify-content: space-between; gap: 15px; overflow-x: auto; padding: 15px 0; }
+.bracket-round { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 15px; }
+.round-title { font-size: 0.7rem; font-weight: bold; color: #999; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+.match-box { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.match-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: bold; color: white; margin-bottom: 8px; }
+.match-teams { font-size: 0.8rem; font-weight: bold; color: #333; line-height: 1.4; }
+.wc { background: #007bff; } .sf { background: #fd7e14; } .final { background: #dc3545; } .bronze { background: #6c757d; }
+.final-highlight { border: 2px solid #dc3545; background: #fffefe; }
