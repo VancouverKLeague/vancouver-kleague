@@ -343,26 +343,33 @@
         const fmt = (v) => v ? `(${v})` : "(-)"; // 점수가 없으면 (-) 표시
 
         // 1. Wild Card (37, 38행 -> 인덱스 0, 1)
-        document.getElementById('br-wca').innerText = `${getV(0,0)} ${fmt(getV(0,2))}\nvs ${getV(0,1)}`;
-        document.getElementById('br-wcb').innerText = `${getV(1,0)} ${fmt(getV(1,2))}\nvs ${getV(1,1)}`;
-        
-        // 2. Semi-Final (39~43행 -> 인덱스 2~6)
-        // SF A: 39행(G1), 41행(G2), 42행(G3 필요시) -> 인덱스 2, 4, 5
-        const sfa = `G1: ${getV(2,0)} ${fmt(getV(2,2))} ${getV(2,1)}
-                     G2: ${getV(4,0)} ${fmt(getV(4,2))} ${getV(4,1)}
-                     G3: ${getV(5,0)} ${getV(5,2) ? fmt(getV(5,2)) : "(필요시)"} ${getV(5,1)}`;
-        document.getElementById('br-sfa').innerText = sfa;
+        document.getElementById('br-wca').innerHTML = `
+            <div class="match-line"><span class="team-n">${getV(0,0)}</span> <span class="score-n">${fmt(getV(0,2))}</span></div>
+            <div class="match-line"><span class="team-n">${getV(0,1)}</span></div>`;
+        document.getElementById('br-wcb').innerHTML = `
+            <div class="match-line"><span class="team-n">${getV(1,0)}</span> <span class="score-n">${fmt(getV(1,2))}</span></div>
+            <div class="match-line"><span class="team-n">${getV(1,1)}</span></div>`;
 
-        // SF B: 40행(G1), 43행(G2), 44행?? -> 아, 엑셀 캡처 기준 40, 43행이 SF B네요.
-        // 보내주신 텍스트 기준: 39~43행이 SF이므로 배치를 조정합니다.
-        const sfb = `G1: ${getV(3,0)} ${fmt(getV(3,2))} ${getV(3,1)}
-                     G2: ${getV(6,0)} ${fmt(getV(6,2))} ${getV(6,1)}
-                     G3: (필요시)`; // SF B의 3차전 데이터 위치가 모호할 경우를 대비
-        document.getElementById('br-sfb').innerText = sfb;
+        // 2. Semi-Final (39~43행 -> 인덱스 2~6)
+        const sfaHtml = `
+            <div class="match-line"><span>G1</span> <span class="team-n">${getV(2,0)} vs ${getV(2,1)}</span> <span class="score-n">${fmt(getV(2,2))}</span></div>
+            <div class="match-line"><span>G2</span> <span class="team-n">${getV(4,0)} vs ${getV(4,1)}</span> <span class="score-n">${fmt(getV(4,2))}</span></div>
+            <div class="match-line"><span>G3</span> <span class="team-n">${getV(5,2) ? getV(5,0)+' vs '+getV(5,1) : '(필요시)'}</span> <span class="score-n">${getV(5,2) ? fmt(getV(5,2)) : ''}</span></div>`;
+        document.getElementById('br-sfa').innerHTML = sfaHtml;
+
+        const sfbHtml = `
+            <div class="match-line"><span>G1</span> <span class="team-n">${getV(3,0)} vs ${getV(3,1)}</span> <span class="score-n">${fmt(getV(3,2))}</span></div>
+            <div class="match-line"><span>G2</span> <span class="team-n">${getV(6,0)} vs ${getV(6,1)}</span> <span class="score-n">${fmt(getV(6,2))}</span></div>
+            <div class="match-line"><span>G3</span> <span class="team-n">(필요시)</span></div>`;
+        document.getElementById('br-sfb').innerHTML = sfbHtml;
 
         // 3. Finals (44행 -> 인덱스 7) & 3rd Place (45행 -> 인덱스 8)
-        document.getElementById('br-final').innerText = `${getV(7,0)} ${fmt(getV(7,2))}\nvs ${getV(7,1)}`;
-        document.getElementById('br-3rd').innerText = `${getV(8,0)} ${fmt(getV(8,2))}\nvs ${getV(8,1)}`;
+        document.getElementById('br-final').innerHTML = `
+            <div class="match-line"><span class="team-n">${getV(7,0)}</span> <span class="score-n">${fmt(getV(7,2))}</span></div>
+            <div class="match-line"><span class="team-n">${getV(7,1)}</span></div>`;
+        document.getElementById('br-3rd').innerHTML = `
+            <div class="match-line"><span class="team-n">${getV(8,0)}</span> <span class="score-n">${fmt(getV(8,2))}</span></div>
+            <div class="match-line"><span class="team-n">${getV(8,1)}</span></div>`;
     })
     .catch(err => console.error("Bracket 데이터 로드 실패:", err));
 }
