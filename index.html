@@ -388,15 +388,19 @@
 
             // 핵심: 시트에 적힌 텍스트를 그대로 연결 (예: #6 Seed vs #3 Seed)
             const matchHtml = `<div class="match-line"><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
-            
+
             if (note.includes('WILD CARD A') || (note.includes('WC') && note.includes('A'))) {
                 htmlWCA = matchHtml;
             } else if (note.includes('WILD CARD B') || (note.includes('WC') && note.includes('B'))) {
                 htmlWCB = matchHtml;
             } else if (note.includes('SEMI FINAL A') || (note.includes('SF') && note.includes('A'))) {
-                htmlSFA += `<div class="match-line"><span>G${cntA++}</span><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+                // G3일 때만 (If nec.) 추가
+                let suffix = (cntA === 3) ? ' <small style="font-size:0.75rem; color:#888;">(If nec.)</small>' : '';
+                htmlSFA += `<div class="match-line"><span>G${cntA++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
             } else if (note.includes('SEMI FINAL B') || (note.includes('SF') && note.includes('B'))) {
-                htmlSFB += `<div class="match-line"><span>G${cntB++}</span><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+                // G3일 때만 (If nec.) 추가
+                let suffix = (cntB === 3) ? ' <small style="font-size:0.75rem; color:#888;">(If nec.)</small>' : '';
+                htmlSFB += `<div class="match-line"><span>G${cntB++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
             } else if (note.includes('FINAL') && !note.includes('SEMI')) {
                 htmlFinal = matchHtml;
             } else if (note.includes('3RD') || note.includes('3위')) {
