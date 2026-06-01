@@ -306,8 +306,7 @@
     }
 
     function loadStats() {
-            // 2026년이면 Stats_Reg, 2025년이면 Stats_2025_Reg 이런 식으로 시트 이름을 동적으로 생성합니다.
-            let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
@@ -324,11 +323,28 @@
             metrics.forEach(m => {
                 const target = document.getElementById(m.id); if (!target) return;
                 const vIdx = fi(m.n);
+                
                 let valid = (vIdx === -1) ? [] : data.rows.filter(r => {
                     const val = parseFloat(gv(r, vIdx)) || 0;
                     const ip = parseFloat(gv(r, fi('INNINGS PITCHED'))) || 0;
-                    return (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) ? ip > 0 : val > 0;
+                    
+                    let paIdx = fi('PA');
+                    if(paIdx === -1) paIdx = fi('PLATE APPEARANCES');
+                    const pa = parseFloat(gv(r, paIdx)) || 0;
+
+                    // [7이닝 경기 맞춤형 기준 적용]
+                    // 1. 투수 비율 지표 (ERA, WHIP, 피안타율) -> 5이닝 이상만!
+                    if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) {
+                        return ip >= 5;
+                    }
+                    // 2. 타자 비율 지표 (타율, OPS) -> 10타석 이상만!
+                    if (['BATTING AVERAGE', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'].includes(m.n)) {
+                        return pa >= 10;
+                    }
+                    // 3. 누적 지표 -> 기록만 있으면 통과!
+                    return val > 0;
                 });
+                
                 valid.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
                 
                 if (valid.length === 0) {
