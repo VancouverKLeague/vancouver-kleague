@@ -123,9 +123,17 @@
     </div>
 
     <div class="card" style="border-top: 4px solid #ffc107;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3>🔥 부문별 순위 (TOP 5)</h3>
-            <div class="toggle-container"><button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규시즌</button><button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트시즌</button></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h3 style="margin: 0;">🔥 부문별 순위 (TOP 5)</h3>
+                <span style="font-size: 0.8rem; color: #666; background: #eef7ff; padding: 4px 8px; border-radius: 4px; border: 1px solid #cee5f2; font-weight: bold;">
+                    📋 자격 기준: 10타석 / 5이닝
+                </span>
+            </div>
+            <div class="toggle-container">
+                <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')" style="border-radius: 5px 0 0 5px;">정규시즌</button>
+                <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')" style="border-radius: 0 5px 5px 0;">포스트시즌</button>
+            </div>
         </div>
         
         <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee; margin-bottom:15px;">타자 부문 (Batting)</h4>
@@ -213,9 +221,8 @@
             document.getElementById('schedule-body').innerHTML = '';
             const allRows = JSON.parse(t.substr(47).slice(0, -2)).table.rows;
             const rows = allRows.filter(r => {
-                const dateStr = gv(r, 0); // 날짜 열
-                const awayTeam = gv(r, 3); // 팀명 열
-                // 팀명이 있고, 날짜에 현재 선택된 연도(currentYear)가 포함된 경기만 필터링
+                const dateStr = gv(r, 0); 
+                const awayTeam = gv(r, 3); 
                 return awayTeam && awayTeam.trim() !== "" && dateStr.includes(currentYear);
             });
             const played = rows.filter(r => gv(r, 5) && gv(r, 5).includes(':'));
@@ -223,14 +230,12 @@
             const render = (r) => { 
                 const awayT = gv(r, 3);
                 const homeT = gv(r, 4);
-                // 1. MAKE UP 경기 제외
                 if (awayT.toUpperCase().includes('MAKE UP') || homeT.toUpperCase().includes('MAKE UP')) return;
 
                 const note = gv(r, 6).trim(); 
                 let bH = ''; 
                 if(note){ 
                     let bC = 'badge-default'; 
-                    // 2. 대소문자 상관없이 태그 색상 적용
                     if(note.toUpperCase().includes('WC') || note.includes('와일드')) bC='badge-wc'; 
                     else if(note.toUpperCase().includes('SF') || note.includes('준결승')) bC='badge-sf'; 
                     else if(note.toUpperCase().includes('FINAL') || note.includes('결승')) bC='badge-final'; 
@@ -239,14 +244,13 @@
                 document.getElementById('schedule-body').innerHTML += `<tr><td style="color:#666; font-size:0.75rem;">${gv(r, 0)}<br>${gv(r, 1)}</td><td>${gv(r, 2)}</td><td style="text-align:center;">${bH}<div style="display:flex; justify-content:center; align-items:center; gap:8px;"><span><span class="tag-away">원정</span>${awayT}</span><span style="color:#bbb; font-weight:normal;">vs</span><span><span class="tag-home">홈</span>${homeT}</span></div></td><td class="score-display">${gv(r, 5) || '-'}</td></tr>`;
             };
 
-            // 3. 실제 화면 출력 (이미 진행된 경기 & 오늘 이후 예정 경기)
             if (played.length > 0) { 
                 const lastD = gv(played[played.length-1], 0); 
                 played.filter(r => gv(r, 0) === lastD).forEach(render); 
             }
             if (upcoming.length > 0) {
                 const todayStr = new Date().toISOString().split('T')[0].replace(/-/g, '.'); 
-                const futureGames = upcoming.filter(r => gv(r, 0) >= todayStr); // 오늘 이후 경기만 필터링
+                const futureGames = upcoming.filter(r => gv(r, 0) >= todayStr); 
                 if (futureGames.length > 0) {
                     const nextD = gv(futureGames[0], 0);
                     futureGames.filter(r => gv(r, 0) === nextD).forEach(render);
@@ -256,8 +260,7 @@
     }
 
     function loadStats() {
-        // 연도에 따라 Stats_Reg 또는 Stats_2025_Reg 등으로 시트 이름을 생성합니다.
-            let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
+        let targetSheet = (currentYear === '2026') ? `Stats_${currentSeason}` : `Stats_${currentYear}_${currentSeason}`;
         fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(targetSheet)}`).then(res => res.text()).then(t => {
             const data = JSON.parse(t.substr(47).slice(0, -2)).table;
             const cols = data.cols.map(c => (c.label || '').toUpperCase().trim());
@@ -274,12 +277,41 @@
             metrics.forEach(m => {
                 const target = document.getElementById(m.id); if (!target) return;
                 const vIdx = fi(m.n);
+                
                 let valid = (vIdx === -1) ? [] : data.rows.filter(r => {
                     const val = parseFloat(gv(r, vIdx)) || 0;
                     const ip = parseFloat(gv(r, fi('INNINGS PITCHED'))) || 0;
-                    return (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) ? ip > 0 : val > 0;
+                    
+                    let paIdx = fi('PA');
+                    if(paIdx === -1) paIdx = fi('PLATE APPEARANCES');
+                    const pa = parseFloat(gv(r, paIdx)) || 0;
+
+                    // [7이닝 경기 맞춤형 한국어 페이지 기준 적용]
+                    if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) {
+                        return ip >= 5;
+                    }
+                    if (['BATTING AVERAGE', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'].includes(m.n)) {
+                        return pa >= 10;
+                    }
+                    return val > 0;
                 });
-                valid.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
+                
+                // [타석 동률 정밀 타이브레이크 규칙 반영]
+                valid.sort((a, b) => {
+                    const valA = parseFloat(gv(a, vIdx)) || 0;
+                    const valB = parseFloat(gv(b, vIdx)) || 0;
+                    if (valA !== valB) {
+                        return m.asc ? (valA - valB) : (valB - valA);
+                    }
+                    let paIdx = fi('PLATE APPEARANCES');
+                    if (paIdx === -1) paIdx = fi('PA');
+                    if (paIdx !== -1) {
+                        const paA = parseFloat(gv(a, paIdx)) || 0;
+                        const paB = parseFloat(gv(b, paIdx)) || 0;
+                        if (paA !== paB) return paA - paB;
+                    }
+                    return 0;
+                });
                 
                 if (valid.length === 0) {
                     target.innerHTML = `<div class="no-records">기록이 없습니다.</div>`;
@@ -288,7 +320,8 @@
                     valid.slice(0, 5).forEach((r, i) => {
                         const first = gv(r, fi('FIRST NAME')), last = gv(r, fi('LAST NAME'));
                         const name = (first && last && first !== last) ? first + " " + last : (last || first || "Unknown");
-                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-info"><span class="player-name">${name}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
+                        // <td> 태그와 내부 구조를 영어 페이지와 완전히 똑같이 매칭 (div 제거)
+                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-col"><span class="player-name">${name}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
                     });
                     html += `</table>`;
                     target.innerHTML = html;
@@ -299,78 +332,70 @@
     changeYear('2026');
 
     function updateBracket(year) {
-    const section = document.getElementById('po-bracket-section');
-    const title = document.getElementById('bracket-title');
-    if (!section) return;
+        const section = document.getElementById('po-bracket-section');
+        const title = document.getElementById('bracket-title');
+        if (!section) return;
 
-    section.style.display = 'block';
-    // 한국어 페이지용 제목
-    if (title) title.innerText = `🔥 ${year} 포스트시즌 대진표`;
+        section.style.display = 'block';
+        if (title) title.innerText = `🔥 ${year} 포스트시즌 대진표`;
 
-    const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
-    
-    fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G55`)
-    .then(res => res.text())
-    .then(t => {
-        const data = JSON.parse(t.substr(47).slice(0, -2));
-        const rows = data.table.rows;
+        const sheetName = (year === '2026') ? 'Schedule(일정)' : `Schedule_${year}`;
         
-        // 데이터 추출 함수 (시트의 텍스트를 그대로 가져옴)
-        const gv = (r, i) => {
-            if (!r || !r.c || !r.c[i]) return '';
-            return r.c[i].f || r.c[i].v || '';
-        };
-
-        // 점수 형식: 결과가 있으면 (7:5), 없으면 (-)
-        const fmt = (v) => {
-            if (!v || v === '-' || v === null || v.toString().trim() === "") return "(-)";
-            return `(${v})`;
-        };
-
-        let htmlWCA = '', htmlWCB = '', htmlSFA = '', htmlSFB = '', htmlFinal = '', html3rd = '';
-        let cntA = 1, cntB = 1;
-
-        rows.forEach(r => {
-            const awayText = gv(r, 0).trim(); // D열 (원정팀/시드명)
-            const homeText = gv(r, 1).trim(); // E열 (홈팀/시드명)
-            const score = fmt(gv(r, 2));     // F열 (결과)
-            const note = gv(r, 3).toUpperCase(); // G열 (비고)
-
-            if (!awayText && !homeText) return;
-
-            // 시트에 적힌 텍스트 그대로 연결 (예: #6 Seed vs #3 Seed)
-            const matchHtml = `<div class="match-line"><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+        fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=D37:G55`)
+        .then(res => res.text())
+        .then(t => {
+            const data = JSON.parse(t.substr(47).slice(0, -2));
+            const rows = data.table.rows;
             
-            // 비고란 핵심 단어로 매칭
-            if (note.includes('WILD CARD A') || (note.includes('WC') && note.includes('A'))) {
-                htmlWCA = matchHtml;
-            } else if (note.includes('WILD CARD B') || (note.includes('WC') && note.includes('B'))) {
-                htmlWCB = matchHtml;
-            } else if (note.includes('SEMI FINAL A') || (note.includes('SF') && note.includes('A'))) {
-                // G3일 때만 (필요시) 문구 추가
-                let suffix = (cntA === 3) ? ' <small style="font-size:0.75rem; color:#888;">(필요시)</small>' : '';
-                htmlSFA += `<div class="match-line"><span>G${cntA++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
-            } else if (note.includes('SEMI FINAL B') || (note.includes('SF') && note.includes('B'))) {
-                // G3일 때만 (필요시) 문구 추가
-                let suffix = (cntB === 3) ? ' <small style="font-size:0.75rem; color:#888;">(필요시)</small>' : '';
-                htmlSFB += `<div class="match-line"><span>G${cntB++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
-            } else if (note.includes('FINAL') && !note.includes('SEMI')) {
-                htmlFinal = matchHtml;
-            } else if (note.includes('3RD') || note.includes('3위')) {
-                html3rd = matchHtml;
-            }
-        });
+            const gv = (r, i) => {
+                if (!r || !r.c || !r.c[i]) return '';
+                return r.c[i].f || r.c[i].v || '';
+            };
 
-        // HTML 요소에 데이터 주입
-        if(document.getElementById('br-wca')) document.getElementById('br-wca').innerHTML = htmlWCA;
-        if(document.getElementById('br-wcb')) document.getElementById('br-wcb').innerHTML = htmlWCB;
-        if(document.getElementById('br-sfa')) document.getElementById('br-sfa').innerHTML = htmlSFA;
-        if(document.getElementById('br-sfb')) document.getElementById('br-sfb').innerHTML = htmlSFB;
-        if(document.getElementById('br-final')) document.getElementById('br-final').innerHTML = htmlFinal;
-        if(document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
-    })
-    .catch(err => console.error("대진표 로드 에러:", err));
-}
+            const fmt = (v) => {
+                if (!v || v === '-' || v === null || v.toString().trim() === "") return "(-)";
+                return `(${v})`;
+            };
+
+            let htmlWCA = '', htmlWCB = '', htmlSFA = '', htmlSFB = '', htmlFinal = '', html3rd = '';
+            let cntA = 1, cntB = 1;
+
+            rows.forEach(r => {
+                const awayText = gv(r, 0).trim(); 
+                const homeText = gv(r, 1).trim(); 
+                const score = fmt(gv(r, 2));     
+                const note = gv(r, 3).toUpperCase(); 
+
+                if (!awayText && !homeText) return;
+
+                const matchHtml = `<div class="match-line"><span class="team-n">${awayText} vs ${homeText}</span><span class="score-n">${score}</span></div>`;
+                
+                if (note.includes('WILD CARD A') || (note.includes('WC') && note.includes('A'))) {
+                    htmlWCA = matchHtml;
+                } else if (note.includes('WILD CARD B') || (note.includes('WC') && note.includes('B'))) {
+                    htmlWCB = matchHtml;
+                } else if (note.includes('SEMI FINAL A') || (note.includes('SF') && note.includes('A'))) {
+                    let suffix = (cntA === 3) ? ' <small style="font-size:0.75rem; color:#888;">(필요시)</small>' : '';
+                    htmlSFA += `<div class="match-line"><span>G${cntA++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
+                } else if (note.includes('SEMI FINAL B') || (note.includes('SF') && note.includes('B'))) {
+                    let suffix = (cntB === 3) ? ' <small style="font-size:0.75rem; color:#888;">(필요시)</small>' : '';
+                    htmlSFB += `<div class="match-line"><span>G${cntB++}</span><span class="team-n">${awayText} vs ${homeText}${suffix}</span><span class="score-n">${score}</span></div>`;
+                } else if (note.includes('FINAL') && !note.includes('SEMI')) {
+                    htmlFinal = matchHtml;
+                } else if (note.includes('3RD') || note.includes('3위')) {
+                    html3rd = matchHtml;
+                }
+            });
+
+            if(document.getElementById('br-wca')) document.getElementById('br-wca').innerHTML = htmlWCA;
+            if(document.getElementById('br-wcb')) document.getElementById('br-wcb').innerHTML = htmlWCB;
+            if(document.getElementById('br-sfa')) document.getElementById('br-sfa').innerHTML = htmlSFA;
+            if(document.getElementById('br-sfb')) document.getElementById('br-sfb').innerHTML = htmlSFB;
+            if(document.getElementById('br-final')) document.getElementById('br-final').innerHTML = htmlFinal;
+            if(document.getElementById('br-3rd')) document.getElementById('br-3rd').innerHTML = html3rd;
+        })
+        .catch(err => console.error("대진표 로드 에러:", err));
+    }
 </script>
 </body>
 </html>
