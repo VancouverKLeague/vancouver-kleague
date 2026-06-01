@@ -132,11 +132,18 @@
         <a href="schedule.html" class="btn-more">View Full Schedule →</a>
     </div>
 
-    <div class="card" style="border-top: 4px solid #ffc107;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3>🔥 League Leaders (Top 5)</h3>
-            <div class="toggle-container"><button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')">Regular</button><button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')">Post</button></div>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <h3 style="margin: 0;">🔥 League Leaders (Top 5)</h3>
+        <span style="font-size: 0.8rem; color: #666; background: #eef7ff; padding: 4px 8px; border-radius: 4px; border: 1px solid #cee5f2; font-weight: bold;">
+            📋 Qualification: 10 PA / 5 IP
+        </span>
+    </div>
+    <div class="toggle-container">
+        <button id="btn-Reg" class="toggle-btn active" onclick="switchSeason('Reg')">Regular</button>
+        <button id="btn-Post" class="toggle-btn inactive" onclick="switchSeason('Post')">Post</button>
+    </div>
+</div>
         <h4 style="color: #0288d1; text-align: center; border-bottom: 1px solid #eee; margin-bottom:15px;">Batting</h4>
         <div class="leader-grid" id="bat-grid">
             <div class="leader-category"><div class="leader-category-title">AVG</div><div id="avg-leaders"></div></div>
