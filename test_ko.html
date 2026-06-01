@@ -320,7 +320,8 @@
                     valid.slice(0, 5).forEach((r, i) => {
                         const first = gv(r, fi('FIRST NAME')), last = gv(r, fi('LAST NAME'));
                         const name = (first && last && first !== last) ? first + " " + last : (last || first || "Unknown");
-                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-info"><span class="player-name">${name}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
+                        // <td> 태그와 내부 구조를 영어 페이지와 완전히 똑같이 매칭 (div 제거)
+                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-col"><span class="player-name">${name}</span><span class="player-team">${gv(r, fi('TEAM'))}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
                     });
                     html += `</table>`;
                     target.innerHTML = html;
