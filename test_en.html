@@ -352,17 +352,21 @@
                     return val > 0;
                 });
                 
-                valid.sort((a, b) => m.asc ? (parseFloat(gv(a, vIdx)) - parseFloat(gv(b, vIdx))) : (parseFloat(gv(b, vIdx)) - parseFloat(gv(a, vIdx))));
-                
-                if (valid.length === 0) {
-                    target.innerHTML = `<div class="no-records">No records found</div>`;
-                } else {
-                    let html = `<table class="leader-table">`;
-                    valid.slice(0, 5).forEach((r, i) => {
-                        const f = gv(r, fi('FIRST NAME')), l = gv(r, fi('LAST NAME')), tm = gv(r, fi('TEAM'));
-                        const name = (f && l && f !== l) ? f + ' ' + l : (l || f || "Unknown");
-                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-col"><span class="player-name">${name}</span><span class="player-team">${tm}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
-                    });
+                valid.sort((a, b) => {
+                    const valA = parseFloat(gv(a, vIdx)) || 0;
+                    const valB = parseFloat(gv(b, vIdx)) || 0;
+                    if (valA !== valB) {
+                        return m.asc ? (valA - valB) : (valB - valA);
+                    }
+                    let paIdx = fi('PLATE APPEARANCES');
+                    if (paIdx === -1) paIdx = fi('PA');
+                    if (paIdx !== -1) {
+                        const paA = parseFloat(gv(a, paIdx)) || 0;
+                        const paB = parseFloat(gv(b, paIdx)) || 0;
+                        if (paA !== paB) return paA - paB;
+                    }
+                    return 0;
+                });
                     html += `</table>`;
                     target.innerHTML = html;
                 }
