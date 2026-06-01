@@ -339,16 +339,12 @@
                     if(paIdx === -1) paIdx = fi('PLATE APPEARANCES');
                     const pa = parseFloat(gv(r, paIdx)) || 0;
 
-                    // [7이닝 경기 맞춤형 기준 적용]
-                    // 1. 투수 비율 지표 (ERA, WHIP, 피안타율) -> 5이닝 이상만!
                     if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) {
                         return ip >= 5;
                     }
-                    // 2. 타자 비율 지표 (타율, OPS) -> 10타석 이상만!
                     if (['BATTING AVERAGE', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'].includes(m.n)) {
                         return pa >= 10;
                     }
-                    // 3. 누적 지표 -> 기록만 있으면 통과!
                     return val > 0;
                 });
                 
@@ -367,6 +363,16 @@
                     }
                     return 0;
                 });
+                
+                if (valid.length === 0) {
+                    target.innerHTML = `<div class="no-records">No records found</div>`;
+                } else {
+                    let html = `<table class="leader-table">`;
+                    valid.slice(0, 5).forEach((r, i) => {
+                        const f = gv(r, fi('FIRST NAME')), l = gv(r, fi('LAST NAME')), tm = gv(r, fi('TEAM'));
+                        const name = (f && l && f !== l) ? f + ' ' + l : (l || f || "Unknown");
+                        html += `<tr><td class="rank-col">${i+1}</td><td class="player-col"><span class="player-name">${name}</span><span class="player-team">${tm}</span></td><td class="value-col">${(parseFloat(gv(r, vIdx)) || 0).toFixed(m.d)}</td></tr>`;
+                    });
                     html += `</table>`;
                     target.innerHTML = html;
                 }
