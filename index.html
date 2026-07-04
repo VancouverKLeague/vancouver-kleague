@@ -136,7 +136,7 @@
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <h3 style="margin: 0;">🔥 League Leaders (Top 5)</h3>
         <span style="font-size: 0.8rem; color: #666; background: #eef7ff; padding: 4px 8px; border-radius: 4px; border: 1px solid #cee5f2; font-weight: bold;">
-            📋 Qualification: 10 PA / 5 IP
+            📋 Qualification: 25 PA / 8 IP
         </span>
     </div>
     <div class="toggle-container">
@@ -340,10 +340,10 @@
                     const pa = parseFloat(gv(r, paIdx)) || 0;
 
                     if (['EARNED RUN AVERAGE', 'WALKS HITS INNINGS PITCHED', 'BATTING AVERAGE AGAINST'].includes(m.n)) {
-                        return ip >= 5;
+                        return ip >= 8;
                     }
                     if (['BATTING AVERAGE', 'ON-BASE PERCENTAGE + SLUGGING PERCENTAGE'].includes(m.n)) {
-                        return pa >= 10;
+                        return pa >= 25;
                     }
                     return val > 0;
                 });
