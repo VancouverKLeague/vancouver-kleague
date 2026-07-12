@@ -178,8 +178,12 @@
             const valB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx].val : b.pitcherStats[sortColIdx].val;
             
             if (isRatioMetric.includes(colId)) {
-                let isQualifiedA = currentCategory === 'Hitter' ? a.pa >= 10 : a.ip >= 5;
-                let isQualifiedB = currentCategory === 'Hitter' ? b.pa >= 10 : b.ip >= 5;
+                // 시즌에 따라 25타석/8이닝 vs 1타석/1이닝 자동 연동
+                let targetPa = (currentSeason === 'Reg') ? 25 : 1;
+                let targetIp = (currentSeason === 'Reg') ? 8 : 1;
+
+                let isQualifiedA = currentCategory === 'Hitter' ? a.pa >= targetPa : a.ip >= targetIp;
+                let isQualifiedB = currentCategory === 'Hitter' ? b.pa >= targetPa : b.ip >= targetIp;
 
                 if (isQualifiedA && !isQualifiedB) return -1;
                 if (!isQualifiedA && isQualifiedB) return 1;
@@ -204,7 +208,11 @@
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
             const val = stats[sortColIdx].val;
 
-            let hasQualification = currentCategory === 'Hitter' ? d.pa >= 10 : d.ip >= 5;
+            // 시즌에 따라 자격 기준 자동 연동
+            let targetPa = (currentSeason === 'Reg') ? 25 : 1;
+            let targetIp = (currentSeason === 'Reg') ? 8 : 1;
+
+            let hasQualification = currentCategory === 'Hitter' ? d.pa >= targetPa : d.ip >= targetIp;
             const isCumulative = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS', 'INNINGS PITCHED'];
             
             if (isCumulative.includes(colId) && val > 0) {
