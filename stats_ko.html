@@ -173,8 +173,12 @@
             const valB = currentCategory === 'Hitter' ? b.hitterStats[sortColIdx].val : b.pitcherStats[sortColIdx].val;
             
             if (isRatioMetric.includes(colId)) {
-                let isQualifiedA = currentCategory === 'Hitter' ? a.pa >= 10 : a.ip >= 5;
-                let isQualifiedB = currentCategory === 'Hitter' ? b.pa >= 10 : b.ip >= 5;
+                // 시즌(정규 vs 포스트)에 따라 거름망 타석/이닝 기준 자동 전환
+                let targetPa = (currentSeason === 'Reg') ? 25 : 1;
+                let targetIp = (currentSeason === 'Reg') ? 8 : 1;
+
+                let isQualifiedA = currentCategory === 'Hitter' ? a.pa >= targetPa : a.ip >= targetIp;
+                let isQualifiedB = currentCategory === 'Hitter' ? b.pa >= targetPa : b.ip >= targetIp;
 
                 if (isQualifiedA && !isQualifiedB) return -1;
                 if (!isQualifiedA && isQualifiedB) return 1;
@@ -199,14 +203,17 @@
             const stats = currentCategory === 'Hitter' ? d.hitterStats : d.pitcherStats;
             const val = stats[sortColIdx].val;
 
-            let hasQualification = currentCategory === 'Hitter' ? d.pa >= 10 : d.ip >= 5;
+            // 시즌 유형에 따른 타석/이닝 자격 요건 동적 지정
+            let targetPa = (currentSeason === 'Reg') ? 25 : 1;
+            let targetIp = (currentSeason === 'Reg') ? 8 : 1;
+
+            let hasQualification = currentCategory === 'Hitter' ? d.pa >= targetPa : d.ip >= targetIp;
             const isCumulative = ['HOME RUNS', 'RUNS BATTED IN', 'WINS', 'STRIKEOUTS', 'HITS', 'INNINGS PITCHED'];
             
             if (isCumulative.includes(colId) && val > 0) {
                 hasQualification = true;
             }
 
-            // 한글 매칭에 맞게 '미달' 뱃지로 표기
             const rankDisplay = hasQualification ? `<span class="rank-tag">${runningRank++}위</span>` : '<span class="rank-tag" style="background:#eee; color:#666;">미달</span>';
 
             let statsHtml = '';
@@ -215,7 +222,6 @@
                 statsHtml += `<td class="${idx === sortColIdx ? 'val-highlight' : ''}">${(activeColDef.fix !== undefined) ? s.val.toFixed(activeColDef.fix) : s.val}</td>`;
             });
 
-            // 우측 테두리가 깨지지 않도록 정석 격자 tr-td 구조 유지
             tr.innerHTML = `<td class="player-info-sticky"><div class="player-info"><span class="p-name">${rankDisplay}${d.name}</span><span class="p-team">${d.team}</span></div></td>${statsHtml}`;
             body.appendChild(tr);
         });
@@ -234,3 +240,5 @@
     }
     loadData();
 </script>
+</body>
+</html>
