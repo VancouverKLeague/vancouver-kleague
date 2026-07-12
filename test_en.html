@@ -180,7 +180,7 @@
     let currentYear = '2026'; let currentSeason = 'Reg';
 
     const teamLogos = { "Van Avengers": "logos/Van Avengers.png", "Van Dragons": "logos/Van Dragons.png", "Karis Cubs": "logos/Karis Cubs.png", "Arirang Rays": "logos/Arirang Rays.png", "Fire Bats": "logos/Fire Bats.png", "FireBats": "logos/Fire Bats.png", "Van Bros": "logos/Van Bros.png" };
-    const championData = { "2025": { reg1st: "Arirang Rays", post1st: "Arirang Rays", post2nd: "Karis Cubs", post3rd: "Van Dragons" }, "2026": { reg1st: "In Progress", post1st: "In Progress", post2nd: "-", post3rd: "-" } };
+    const championData = { "2025": { reg1st: "Arirang Rays", post1st: "Arirang Rays", post2nd: "Karis Cubs", post3rd: "Van Dragons" }, "2026": { reg1st: "Van Dragons", post1st: "In Progress", post2nd: "-", post3rd: "-" } };
 
     function gv(r, i) { return (r && r.c && r.c[i]) ? (r.c[i].f || r.c[i].v || '') : ''; }
     function updateChampions(year) { const section = document.getElementById('season-champions'); const data = championData[year]; if (data) { section.style.display = 'block'; document.getElementById('p-reg-1st').innerText = data.reg1st; document.getElementById('p-post-1st').innerText = data.post1st; document.getElementById('p-post-2nd').innerText = data.post2nd; document.getElementById('p-post-3rd').innerText = data.post3rd; } else { section.style.display = 'none'; } }
